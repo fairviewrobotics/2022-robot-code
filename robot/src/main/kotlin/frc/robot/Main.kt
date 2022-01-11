@@ -17,6 +17,7 @@ object Main {
      *
      * If you change your main robot class, change the parameter type.
      */
+    @JvmStatic
     fun main(vararg args: String?) {
         RobotBase.startRobot { Robot() }
     }
