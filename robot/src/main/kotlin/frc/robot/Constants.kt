@@ -13,17 +13,28 @@ private data class ConstantsListener(val func: () -> Unit, val id: Int)
 class Constants {
     companion object {
         // ask edward: does allowing all constants to be modified via network tables put a penalty on performance/security/something else
-        val constants = mutableMapOf(
-            "kDrivetrainFrontLeftPort" to 0.0,
-            "kDrivetrainFrontRightPort" to 1.0,
-            "kDrivetrainBottomLeftPort" to 2.0,
-            "kDrivetrainBottomRightPort" to 3.0
-        )
+        private val constants = mutableMapOf<String, Double>()
+
+        private fun<T> generateConstantGetter(key: String, default: Double): () -> T {
+            constants[key] = default
+            return fun(): T {
+                return (constants[key] ?: default) as T
+            }
+        }
+
+        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("kDrivetrainFrontLeftPort", 0.0)()
+        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
+        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
+        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
 
         /** NetworkTables Constants Management **/
         private lateinit var table: NetworkTable
         private var listeners = mutableListOf<ConstantsListener>()
         private var listenersId = 0
+
+        init {
+            loadConstants()
+        }
 
         /**
          * Load constants from network tables
