@@ -22,10 +22,13 @@ class Constants {
             }
         }
 
-        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("kDrivetrainFrontLeftPort", 0.0)()
-        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
-        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
-        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
+        // PORTS
+        val drivetrainFrontLeftPort get() = generateConstantGetter<Int>("drivetrainFrontLeftPort", 0.0)()
+        val drivetrainFrontRightPort get() = generateConstantGetter<Int>("drivetrainFrontRightPort", 1.0)()
+        val drivetrainBackLeftPort get() = generateConstantGetter<Int>("drivetrainBottomLeftPort", 2.0)()
+        val drivetrainBackRightPort get() = generateConstantGetter<Int>("drivetrainBottomRightPort", 3.0)()
+
+        val encoderDistancePerPulse get() = generateConstantGetter<Double>("encoderDistancePerPulse", 1.0)()
 
         /** NetworkTables Constants Management **/
         private lateinit var table: NetworkTable

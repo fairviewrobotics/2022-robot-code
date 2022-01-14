@@ -5,8 +5,6 @@ package frc.robot
 
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
-import frc.robot.commands.ExampleCommand
-import frc.robot.subsystems.ExampleSubsystem
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 
 import edu.wpi.first.wpilibj2.command.Command
@@ -19,18 +17,16 @@ import edu.wpi.first.wpilibj2.command.Command
  */
 class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private val m_exampleSubsystem: ExampleSubsystem = ExampleSubsystem()
-    private val m_autoCommand: ExampleCommand = ExampleCommand(m_exampleSubsystem)
-
+    // val m_autoCommand: Command =
     val controller0 = XboxController(1)
     /* controller1 - primary driver controller (overriden by controller0) */
     val controller1 = XboxController(0)
 
     /** --- setup drivetrain --- **/
-    val motorFrontLeft = WPI_TalonSRX(Constants.kDrivetrainFrontLeftPort)
-    val motorBackLeft = WPI_TalonSRX(Constants.kDrivetrainBackLeftPort)
-    val motorFrontRight = WPI_TalonSRX(Constants.kDrivetrainFrontRightPort)
-    val motorBackRight = WPI_TalonSRX(Constants.kDrivetrainBackRightPort)
+    val motorFrontLeft = WPI_TalonSRX(Constants.drivetrainFrontLeftPort)
+    val motorBackLeft = WPI_TalonSRX(Constants.drivetrainBackLeftPort)
+    val motorFrontRight = WPI_TalonSRX(Constants.drivetrainFrontRightPort)
+    val motorBackRight = WPI_TalonSRX(Constants.drivetrainBackRightPort)
     /** The container for the robot. Contains subsystems, OI devices, and commands.  */
     init {
         // Configure the button bindings
@@ -47,7 +43,7 @@ class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    val autonomousCommand: Command
-        get() =// An ExampleCommand will run in autonomous
-            m_autoCommand
+    //val autonomousCommand: Command
+    //    get() =// An ExampleCommand will run in autonomous
+    //        m_autoCommand
 }
