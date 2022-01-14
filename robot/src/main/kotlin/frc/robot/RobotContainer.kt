@@ -7,6 +7,8 @@ import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
 import frc.robot.commands.ExampleCommand
 import frc.robot.subsystems.ExampleSubsystem
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
+
 import edu.wpi.first.wpilibj2.command.Command
 
 /**
@@ -20,12 +22,20 @@ class RobotContainer {
     private val m_exampleSubsystem: ExampleSubsystem = ExampleSubsystem()
     private val m_autoCommand: ExampleCommand = ExampleCommand(m_exampleSubsystem)
 
+    val controller0 = XboxController(1)
+    /* controller1 - primary driver controller (overriden by controller0) */
+    val controller1 = XboxController(0)
+
+    /** --- setup drivetrain --- **/
+    val motorFrontLeft = WPI_TalonSRX(Constants.kDrivetrainFrontLeftPort)
+    val motorBackLeft = WPI_TalonSRX(Constants.kDrivetrainBackLeftPort)
+    val motorFrontRight = WPI_TalonSRX(Constants.kDrivetrainFrontRightPort)
+    val motorBackRight = WPI_TalonSRX(Constants.kDrivetrainBackRightPort)
     /** The container for the robot. Contains subsystems, OI devices, and commands.  */
     init {
         // Configure the button bindings
         configureButtonBindings()
     }
-
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
      * instantiating a [GenericHID] or one of its subclasses ([ ] or [XboxController]), and then passing it to a [ ].
