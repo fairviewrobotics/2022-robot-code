@@ -26,6 +26,25 @@ class Constants {
         val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
         val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
         val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
+        
+        
+        val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 3.0)()
+        val shooterFFV get() = generateConstantGetter<Double>("shooterFeedForwardV", 3.0)()
+        val shooterFFA get() = generateConstantGetter<Double>("shooterFeedForwardA", 3.0)()
+
+        val shooterP get() = generateConstantGetter<Double>("shooterP", 3.0)()
+        val shooterI get() = generateConstantGetter<Double>("shooterI", 3.0)()
+        val shooterD get() = generateConstantGetter<Double>("shooterD", 3.0)()
+
+        // constants for flywheel LQR
+        val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
+        val shooterGearing get() = generateConstantGetter<Double>("shooterGearing", 1.0)() // output over input, unitless
+        val shooterStateStdev get() = generateConstantGetter<Double>("shooterStateStdev", 3.0)()
+        val shooterEncStdev get() = generateConstantGetter<Double>("shooterEncStdev", 0.01)()
+        val shooterQ get() = generateConstantGetter<Double>("shooterQ", 8.0)()
+        val shooterR get() = generateConstantGetter<Double>("shooterR", 12.0)()
+        val shooterVolts get() =generateConstantGetter<Double>("shooterVolts", 12.0)()
+        val shooterSpinupRadS get() = generateConstantGetter<Double>("shooterSpinupRadS", 3.0)()
 
         /** NetworkTables Constants Management **/
         private lateinit var table: NetworkTable
