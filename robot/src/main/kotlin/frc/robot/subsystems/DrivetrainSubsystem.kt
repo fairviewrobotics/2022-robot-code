@@ -36,7 +36,7 @@ object DrivetrainSubsystemConstants {
 /**
  * DrivetrainSubsystem is the subsystem that controls the robot's tank drive.
  */
-class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors: MotorControllerGroup, val leftEncoder: Encoder, val rightEncoder: Encoder, val gyro: Gyro) : SubsystemBase() {
+class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors: MotorControllerGroup, val leftEncoder: Encoder, val rightEncoder: Encoder, val gyro: ADXRS450_Gyro) : SubsystemBase() {
     val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
 
@@ -68,7 +68,7 @@ class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors:
 
         leftEncoderSim = EncoderSim(leftEncoder)
         rightEncoderSim = EncoderSim(rightEncoder)
-        gyroSim = ADXRS450_GyroSim(gyro as ADXRS450_Gyro)
+        gyroSim = ADXRS450_GyroSim(gyro)
 
         fieldSim = Field2d()
         SmartDashboard.putData("Field", fieldSim)
