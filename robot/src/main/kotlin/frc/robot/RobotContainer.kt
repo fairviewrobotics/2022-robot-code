@@ -6,16 +6,16 @@ package frc.robot
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
-import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.ADXRS450_Gyro
 import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup
 
-import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import frc.robot.subsystems.DrivetrainSubsystem
-import frc.robot.subsystems.DrivetrainSubsystemConstants
 
 object RobotContainerConstants {
+    val simulated = true;
+
     val drivetrainFrontLeftPort = 0;
     val drivetrainFrontRightPort = 1;
     val drivetrainBackLeftPort = 2;
@@ -39,18 +39,18 @@ object RobotContainerConstants {
 class RobotContainer {
     // The robot's subsystems and commands are defined here...
     // val m_autoCommand: Command =
-    val controller0 = XboxController(1)
+    val controller0 = XboxController(0)
     /* controller1 - primary driver controller (overriden by controller0) */
-    val controller1 = XboxController(0)
+    val controller1 = XboxController(1)
 
     /** --- setup drivetrain --- **/
-    val motorFrontLeft = WPI_TalonSRX(Constants.drivetrainFrontLeftPort)
-    val motorBackLeft = WPI_TalonSRX(Constants.drivetrainBackLeftPort)
-    val motorFrontRight = WPI_TalonSRX(Constants.drivetrainFrontRightPort)
-    val motorBackRight = WPI_TalonSRX(Constants.drivetrainBackRightPort)
+    val motorFrontLeft = WPI_TalonSRX(RobotContainerConstants.drivetrainFrontLeftPort)
+    val motorBackLeft = WPI_TalonSRX(RobotContainerConstants.drivetrainBackLeftPort)
+    val motorFrontRight = WPI_TalonSRX(RobotContainerConstants.drivetrainFrontRightPort)
+    val motorBackRight = WPI_TalonSRX(RobotContainerConstants.drivetrainBackRightPort)
 
     val leftMotors = MotorControllerGroup(motorFrontLeft, motorFrontRight)
-    val rightMotors = MotorControllerGroup(motorFrontRight, motorFrontRight)
+    val rightMotors = MotorControllerGroup(motorBackLeft, motorBackRight)
 
     val leftDrivetrainEncoder = Encoder(RobotContainerConstants.drivetrainLeftEncoderPortA, RobotContainerConstants.drivetrainLeftEncoderPortB, RobotContainerConstants.drivetrainEncoderAReversed)
     val rightDrivetrainEncoder = Encoder(RobotContainerConstants.drivetrainRightEncoderPortA, RobotContainerConstants.drivetrainRightEncoderPortB, RobotContainerConstants.drivetrainEncoderBReversed)
@@ -67,7 +67,9 @@ class RobotContainer {
      * Use this method to define your button->command mappings. Buttons can be created by
      * instantiating a [GenericHID] or one of its subclasses ([ ] or [XboxController]), and then passing it to a [ ].
      */
-    private fun configureButtonBindings() {}// An ExampleCommand will run in autonomous
+    private fun configureButtonBindings() {
+
+    }// An ExampleCommand will run in autonomous
 
     /**
      * Use this to pass the autonomous command to the main [Robot] class.

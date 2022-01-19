@@ -88,7 +88,7 @@ class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors:
             it.setInputs(
                 leftMotors.get() * RobotController.getBatteryVoltage(),
                 rightMotors.get() * RobotController.getBatteryVoltage())
-            it.update(0.020)
+            it.update(.020)
 
             leftEncoderSim.distance = it.leftPositionMeters
             leftEncoderSim.rate = it.leftVelocityMetersPerSecond
@@ -109,7 +109,7 @@ class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors:
         odometry.resetPosition(pose, Rotation2d.fromDegrees(heading))
     }
 
-    fun arcadeDrvie(fwd: Double, rot: Double) {
+    fun arcadeDrive(fwd: Double, rot: Double) {
         drive.arcadeDrive(fwd, rot)
     }
 
