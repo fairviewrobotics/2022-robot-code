@@ -23,6 +23,7 @@ class Constants {
         }
 
         // PORTS
+        val debugMode get() = true // false
         val drivetrainFrontLeftPort get() = generateConstantGetter<Int>("drivetrainFrontLeftPort", 0.0)()
         val drivetrainFrontRightPort get() = generateConstantGetter<Int>("drivetrainFrontRightPort", 1.0)()
         val drivetrainBackLeftPort get() = generateConstantGetter<Int>("drivetrainBottomLeftPort", 2.0)()

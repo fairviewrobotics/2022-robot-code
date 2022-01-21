@@ -30,12 +30,11 @@ object DrivetrainSubsystemConstants {
     const val driveGearing = 8.0
     const val trackWidthMeters = 0.69 // nice
     const val wheelDiameterMeters = 0.15
+
     const val gyroReversed = false
+    const val encoderDistancePerPulse = 1.0
 }
 
-/**
- * DrivetrainSubsystem is the subsystem that controls the robot's tank drive.
- */
 class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors: MotorControllerGroup, val leftEncoder: Encoder, val rightEncoder: Encoder, val gyro: ADXRS450_Gyro) : SubsystemBase() {
     val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
@@ -50,20 +49,17 @@ class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors:
     init {
         rightMotors.inverted = true
 
-        leftEncoder.distancePerPulse = Constants.encoderDistancePerPulse
-        rightEncoder.distancePerPulse = Constants.encoderDistancePerPulse
+        leftEncoder.distancePerPulse = DrivetrainSubsystemConstants.encoderDistancePerPulse
+        rightEncoder.distancePerPulse = DrivetrainSubsystemConstants.encoderDistancePerPulse
 
         resetEncoders()
         odometry = DifferentialDriveOdometry(Rotation2d.fromDegrees(heading))
         
         if (RobotBase.isSimulation()) {
-            driveSim = DifferentialDrivetrainSim(
-                DrivetrainSubsystemConstants.drivetrainPlant,
-                DrivetrainSubsystemConstants.driveGearbox,
-                DrivetrainSubsystemConstants.driveGearing,
-                DrivetrainSubsystemConstants.trackWidthMeters,
-                DrivetrainSubsystemConstants.wheelDiameterMeters / 2.0,
-                VecBuilder.fill(0.0, 0.0, 0.0001, 0.1, 0.1, 0.005, 0.005))
+            driveSim = DifferentialDrivetrainSim.createKitbotSim(
+                DifferentialDrivetrainSim.KitbotMotor.kDoubleNEOPerSide,
+
+            )
         }
 
         leftEncoderSim = EncoderSim(leftEncoder)
@@ -109,8 +105,9 @@ class DrivetrainSubsystem(val leftMotors: MotorControllerGroup, val rightMotors:
         odometry.resetPosition(pose, Rotation2d.fromDegrees(heading))
     }
 
-    fun arcadeDrive(fwd: Double, rot: Double) {
-        drive.arcadeDrive(fwd, rot)
+    fun tankDriveSpeed(leftSpeed: Double, rightSpeed: Double) {
+        leftMotors.set(leftSpeed)
+        rightMotors.set(rightSpeed)
     }
 
     fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {

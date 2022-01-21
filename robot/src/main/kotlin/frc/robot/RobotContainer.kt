@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup
 
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
+import frc.robot.commands.TankDriveCommand
 import frc.robot.subsystems.DrivetrainSubsystem
 
 object RobotContainerConstants {
@@ -68,7 +69,9 @@ class RobotContainer {
      * instantiating a [GenericHID] or one of its subclasses ([ ] or [XboxController]), and then passing it to a [ ].
      */
     private fun configureButtonBindings() {
-
+        JoystickButton(controller0, XboxController.Button.kA.value).whenPressed(
+            TankDriveCommand(drivetrain, controller0)
+        )
     }// An ExampleCommand will run in autonomous
 
     /**
