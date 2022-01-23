@@ -5,11 +5,15 @@ package frc.robot
 
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
-import frc.robot.commands.ExampleCommand
-import frc.robot.subsystems.ExampleSubsystem
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
+import edu.wpi.first.wpilibj.ADXRS450_Gyro
+import edu.wpi.first.wpilibj.Encoder
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup
 
-import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.button.JoystickButton
+import frc.robot.commands.ArcadeDriveCommand
+import frc.robot.commands.DebugDriveCommand
+import frc.robot.subsystems.DrivetrainSubsystem
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -18,36 +22,44 @@ import edu.wpi.first.wpilibj2.command.Command
  * subsystems, commands, and button mappings) should be declared here.
  */
 class RobotContainer {
-    // The robot's subsystems and commands are defined here...
-    private val m_exampleSubsystem: ExampleSubsystem = ExampleSubsystem()
-    private val m_autoCommand: ExampleCommand = ExampleCommand(m_exampleSubsystem)
+    // MARK: Hardware initialization -- anything that needs a port
+    val controller0 = XboxController(0)
+    val controller1 = XboxController(1)
 
-    val controller0 = XboxController(1)
-    /* controller1 - primary driver controller (overriden by controller0) */
-    val controller1 = XboxController(0)
-
-    /** --- setup drivetrain --- **/
     val motorFrontLeft = WPI_TalonSRX(Constants.kDrivetrainFrontLeftPort)
     val motorBackLeft = WPI_TalonSRX(Constants.kDrivetrainBackLeftPort)
     val motorFrontRight = WPI_TalonSRX(Constants.kDrivetrainFrontRightPort)
     val motorBackRight = WPI_TalonSRX(Constants.kDrivetrainBackRightPort)
-    /** The container for the robot. Contains subsystems, OI devices, and commands.  */
+
+    val leftDrivetrainEncoder = Encoder(Constants.kDrivetrainLeftEncoderPortA, Constants.kDrivetrainLeftEncoderPortB, Constants.kDrivetrainEncoderAReversed)
+    val rightDrivetrainEncoder = Encoder(Constants.kDrivetrainRightEncoderPortA, Constants.kDrivetrainRightEncoderPortB, Constants.kDrivetrainEncoderBReversed)
+
+    val gyro = ADXRS450_Gyro()
+
+    // MARK: Controllers and groups
+    val leftMotors = MotorControllerGroup(motorFrontLeft, motorFrontRight)
+    val rightMotors = MotorControllerGroup(motorBackLeft, motorBackRight)
+
+    // MARK: Subsystems
+    val drivetrain = DrivetrainSubsystem(leftMotors, rightMotors, leftDrivetrainEncoder, rightDrivetrainEncoder, gyro)
+
     init {
-        // Configure the button bindings
         configureButtonBindings()
     }
+
     /**
-     * Use this method to define your button->command mappings. Buttons can be created by
-     * instantiating a [GenericHID] or one of its subclasses ([ ] or [XboxController]), and then passing it to a [ ].
+     * Controller ([GenericHID], [XboxController]) mapping.
      */
-    private fun configureButtonBindings() {}// An ExampleCommand will run in autonomous
+    private fun configureButtonBindings() {
+
+    }
 
     /**
      * Use this to pass the autonomous command to the main [Robot] class.
      *
      * @return the command to run in autonomous
      */
-    val autonomousCommand: Command
-        get() =// An ExampleCommand will run in autonomous
-            m_autoCommand
+    //val autonomousCommand: Command
+    //    get() =// An ExampleCommand will run in autonomous
+    //        m_autoCommand
 }

@@ -30,7 +30,6 @@ class Robot : TimedRobot() {
         // autonomous chooser on the dashboard.
         m_robotContainer = RobotContainer()
     }
-
     /**
      * This function is called every robot packet, no matter the mode. Use this for items like
      * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
@@ -57,7 +56,7 @@ class Robot : TimedRobot() {
 
     /** This autonomous runs the autonomous command selected by your [RobotContainer] class.  */
     override fun autonomousInit() {
-        m_autonomousCommand = m_robotContainer?.autonomousCommand
+        //m_autonomousCommand = m_robotContainer?.autonomousCommand
 
         // schedule the autonomous command (example)
         m_autonomousCommand?.schedule()
