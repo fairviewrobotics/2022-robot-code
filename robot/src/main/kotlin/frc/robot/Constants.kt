@@ -8,65 +8,37 @@ import edu.wpi.first.networktables.NetworkTable
 import edu.wpi.first.networktables.NetworkTableInstance
 
 
-private data class ConstantsListener(val func: () -> Unit, val id: Int)
+private data class ConstantsListener(val func: (newValue: Double) -> Unit, val id: Int)
 
 class Constants {
     companion object {
-        // ask edward: does allowing all constants to be modified via network tables put a penalty on performance/security/something else
         private val constants = mutableMapOf<String, Double>()
 
+        /** NetworkTables Constants Management **/
+        private val table: NetworkTable = NetworkTableInstance.getDefault().getTable("Constants")
+        private var listeners = mutableMapOf<String, MutableList<ConstantsListener>>()
+        private var listenersId = 0
+
         private fun<T> generateConstantGetter(key: String, default: Double): () -> T {
-            constants[key] = default
+            val entry = table.getEntry(key)
+
+            entry.setDefaultDouble(default)
+            entry.setPersistent()
+            constants[key] = entry.getDouble(default)
+
+            entry.addListener({ event ->
+                onNetworkTablesChange(event.name, event.value.value as Double)
+            }, EntryListenerFlags.kNew or EntryListenerFlags.kUpdate)
+
             return fun(): T {
                 return (constants[key] ?: default) as T
             }
         }
 
-        // PORTS
-        val debugMode get() = true // false
-        val drivetrainFrontLeftPort get() = generateConstantGetter<Int>("drivetrainFrontLeftPort", 0.0)()
-        val drivetrainFrontRightPort get() = generateConstantGetter<Int>("drivetrainFrontRightPort", 1.0)()
-        val drivetrainBackLeftPort get() = generateConstantGetter<Int>("drivetrainBottomLeftPort", 2.0)()
-        val drivetrainBackRightPort get() = generateConstantGetter<Int>("drivetrainBottomRightPort", 3.0)()
-
-        val encoderDistancePerPulse get() = generateConstantGetter<Double>("encoderDistancePerPulse", 1.0)()
-
-        /** NetworkTables Constants Management **/
-        private lateinit var table: NetworkTable
-        private var listeners = mutableListOf<ConstantsListener>()
-        private var listenersId = 0
-
-        init {
-            loadConstants()
-        }
-
-        /**
-         * Load constants from network tables
-         */
-        fun loadConstants() {
-            table = NetworkTableInstance.getDefault().getTable("Constants")
-            for (key in constants.keys) {
-                if (constants[key] == null) continue
-
-                val entry = table.getEntry(key)
-
-                entry.setDefaultDouble(constants[key] ?: 0.0)
-                entry.setPersistent()
-                constants[key] = entry.getDouble(constants[key] ?: 0.0)
-
-                entry.addListener({ event ->
-                    onNetworkTablesChange()
-                }, EntryListenerFlags.kNew or EntryListenerFlags.kUpdate)
-            }
-        }
-
-        private fun onNetworkTablesChange() {
+        private fun onNetworkTablesChange(key: String, value: Double) {
             /** update map **/
-            for (key in constants.keys) {
-                val entry = table.getEntry(key)
-                constants[key] = entry.getDouble(constants[key] ?: 0.0)
-            }
-            listeners.map { listen -> listen.func() }
+            constants[key] = value
+            listeners[key]?.map { listen -> listen.func(value) }
         }
 
         /**
@@ -74,17 +46,46 @@ class Constants {
          * listeners will be called on any change
          * Return an id for the listener that can latter be passed to removeListener
          */
-        fun addListener(listener: () -> Unit): Int {
+        fun addListener(key: String, listener: (value: Double) -> Unit): Int {
             val id = listenersId++
-            listeners.add(ConstantsListener(listener, id))
+            if(listeners[key] == null) {
+                listeners[key] = mutableListOf()
+            }
+            listeners[key]?.add(ConstantsListener(listener, id))
             return id
         }
 
         /**
          * Remove a listener with an id created by a call to AddListener
          */
-        fun removeListener(id: Int) {
-            listeners.removeIf { listen -> listen.id == id }
+        fun removeListener(key: String, id: Int) {
+            listeners[key]?.removeIf { listen -> listen.id == id }
         }
+
+        // MARK: Ports
+        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("drivetrainFrontLeftPort", 0.0)()
+        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("drivetrainFrontRightPort", 1.0)()
+        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("drivetrainBottomLeftPort", 2.0)()
+        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("drivetrainBottomRightPort", 3.0)()
+
+        val kDrivetrainLeftEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortA", 4.0)()
+        val kDrivetrainLeftEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortB", 5.0)()
+        val kDrivetrainRightEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortA", 6.0)()
+        val kDrivetrainRightEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortB", 7.0)()
+
+        // MARK: Drivetrain Systems
+        val kDrivetrainEncoderAReversed get() = false
+        val kDrivetrainEncoderBReversed get() = false
+
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
+        val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+
+        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 5.0)()
+        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 2.0)()
+        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 1.0)()
+
+
+
     }
 }
