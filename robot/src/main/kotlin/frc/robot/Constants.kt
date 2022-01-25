@@ -7,13 +7,13 @@ import edu.wpi.first.networktables.EntryListenerFlags
 import edu.wpi.first.networktables.NetworkTable
 import edu.wpi.first.networktables.NetworkTableInstance
 
-
 private data class ConstantsListener(val func: (newValue: Double) -> Unit, val id: Int)
 
 class Constants {
     companion object {
+        val refreshInterval = 0.02
+
         private val constants = mutableMapOf<String, Double>()
-        // constants for flywheel LQR
 
         /** NetworkTables Constants Management **/
         private val table: NetworkTable = NetworkTableInstance.getDefault().getTable("Constants")
@@ -35,6 +35,34 @@ class Constants {
                 return (constants[key] ?: default) as T
             }
         }
+
+        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("kDrivetrainFrontLeftPort", 0.0)()
+        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
+        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
+        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
+        
+        /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
+        // baseline (static) gain [V]
+        val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 0.0)()
+        // feedforward velocity gain [V / (rad/s)]
+        // this should be approx: 12 V / (free speed in rad/s) = 1 / (kV in V/(rad/s))
+        val shooterFFV get() = generateConstantGetter<Double>("shooterFeedForwardV", 0.002114165)()
+        // feedforward acceleration gain [V / (rad/s^2)]
+        // this should be approx: 12 V * (moment of inertia) /  (stall torque in Nm)
+        val shooterFFA get() = generateConstantGetter<Double>("shooterFeedForwardA", 0.009757685)()
+
+        val shooterP get() = generateConstantGetter<Double>("shooterP", 0.5)()
+        val shooterI get() = generateConstantGetter<Double>("shooterI", 0.0)()
+        val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
+
+        // constants for flywheel LQR
+        val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
+        val shooterGearing get() = generateConstantGetter<Double>("shooterGearing", 1.0)() // output over input, unitless
+        val shooterStateStdev get() = generateConstantGetter<Double>("shooterStateStdev", 3.0)()
+        val shooterEncStdev get() = generateConstantGetter<Double>("shooterEncStdev", 0.01)()
+        val shooterQ get() = generateConstantGetter<Double>("shooterQ", 8.0)()
+        val shooterR get() = generateConstantGetter<Double>("shooterR", 12.0)()
+        val shooterVolts get() =generateConstantGetter<Double>("shooterVolts", 12.0)()
 
         private fun onNetworkTablesChange(key: String, value: Double) {
             /** update map **/

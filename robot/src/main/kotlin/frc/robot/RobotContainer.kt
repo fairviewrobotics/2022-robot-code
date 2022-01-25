@@ -15,6 +15,9 @@ import frc.robot.commands.ArcadeDriveCommand
 import frc.robot.commands.DebugDriveCommand
 import frc.robot.subsystems.DrivetrainSubsystem
 
+import frc.robot.subsystems.*
+import frc.robot.commands.*
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the [Robot]
