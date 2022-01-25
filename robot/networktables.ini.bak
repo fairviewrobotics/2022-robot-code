@@ -4,4 +4,4 @@ double "/Constants/kDrivetrainMaxAngularVelocity"=10
 double "/Constants/kDrivetrainMaxVelocity"=5
 double "/Constants/kDrivetrainPidD"=0
 double "/Constants/kDrivetrainPidI"=0
-double "/Constants/kDrivetrainPidP"=20
+double "/Constants/kDrivetrainPidP"=2000

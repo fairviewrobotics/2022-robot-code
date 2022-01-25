@@ -40,7 +40,23 @@ class Constants {
         val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
         val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
         val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
-        
+
+        val kDrivetrainLeftEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortA", 4.0)()
+        val kDrivetrainLeftEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortB", 5.0)()
+        val kDrivetrainRightEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortA", 6.0)()
+        val kDrivetrainRightEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortB", 7.0)()
+
+        val kDrivetrainEncoderAReversed = true
+        val kDrivetrainEncoderBReversed = true
+
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
+        val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+
+        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 5.0)()
+        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 1.0)()
+        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 1.0)()
+
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
         val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 0.0)()
@@ -90,46 +106,5 @@ class Constants {
         fun removeListener(key: String, id: Int) {
             listeners[key]?.removeIf { listen -> listen.id == id }
         }
-
-        // MARK: Ports
-        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("drivetrainFrontLeftPort", 0.0)()
-        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("drivetrainFrontRightPort", 1.0)()
-        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("drivetrainBottomLeftPort", 2.0)()
-        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("drivetrainBottomRightPort", 3.0)()
-
-        val kDrivetrainLeftEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortA", 4.0)()
-        val kDrivetrainLeftEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortB", 5.0)()
-        val kDrivetrainRightEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortA", 6.0)()
-        val kDrivetrainRightEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortB", 7.0)()
-
-        // MARK: Drivetrain Systems
-        val kDrivetrainEncoderAReversed get() = false
-        val kDrivetrainEncoderBReversed get() = false
-
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
-        val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
-
-        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 5.0)()
-        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 2.0)()
-        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 1.0)()
-
-        // MARK: Shooter
-        val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 3.0)()
-        val shooterFFA get() = generateConstantGetter<Double>("shooterFeedForwardA", 3.0)()
-        val shooterFFV get() = generateConstantGetter<Double>("shooterFeedForwardV", 3.0)()
-
-        val shooterP get() = generateConstantGetter<Double>("shooterP", 3.0)()
-        val shooterI get() = generateConstantGetter<Double>("shooterI", 3.0)()
-        val shooterD get() = generateConstantGetter<Double>("shooterD", 3.0)()
-        val shooterSpinupRadS get() = generateConstantGetter<Double>("shooterSpinupRadS", 3.0)()
-        val shooterVolts get() =generateConstantGetter<Double>("shooterVolts", 12.0)()
-        val shooterR get() = generateConstantGetter<Double>("shooterR", 12.0)()
-        val shooterQ get() = generateConstantGetter<Double>("shooterQ", 8.0)()
-        val shooterEncStdev get() = generateConstantGetter<Double>("shooterEncStdev", 0.01)()
-        val shooterStateStdev get() = generateConstantGetter<Double>("shooterStateStdev", 3.0)()
-        val shooterGearing get() = generateConstantGetter<Double>("shooterGearing", 1.0)() // output over input, unitless
-        val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
-
     }
 }
