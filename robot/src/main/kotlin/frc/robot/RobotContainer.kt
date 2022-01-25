@@ -51,7 +51,7 @@ class RobotContainer {
      * instantiating a [GenericHID] or one of its subclasses ([ ] or [XboxController]), and then passing it to a [ ].
      */
     private fun configureButtonBindings() {
-        JoystickButton(controller0, 1).whenHeld(ShooterBangBang(shooter, { 400.0 }))
+        JoystickButton(controller0, 1).whenHeld(ShooterPID(shooter, { 400.0 }))
     }// An ExampleCommand will run in autonomous
 
     /**

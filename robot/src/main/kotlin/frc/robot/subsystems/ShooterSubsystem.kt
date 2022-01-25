@@ -8,6 +8,7 @@ import edu.wpi.first.math.*
 import edu.wpi.first.math.estimator.KalmanFilter
 import edu.wpi.first.math.controller.*
 import edu.wpi.first.math.system.LinearSystemLoop
+import edu.wpi.first.math.util.Units
 import edu.wpi.first.wpilibj.Encoder
 import frc.robot.Constants
 import edu.wpi.first.wpilibj.RobotBase
@@ -15,7 +16,6 @@ import edu.wpi.first.wpilibj.RobotController
 import edu.wpi.first.wpilibj.simulation.EncoderSim
 import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
-import frc.robot.Units
 
 // subsystem for shooter (hypothetical for now)
 
@@ -31,7 +31,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             flywheelPlant,
             VecBuilder.fill(Constants.shooterStateStdev), // state stdev
             VecBuilder.fill(Constants.shooterEncStdev), // encoder stdev
-            Units.refreshInterval // refresh rate
+            Constants.refreshInterval // refresh rate
     )
 
     var lqrEnabled = false
@@ -39,7 +39,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             flywheelPlant,
             VecBuilder.fill(Constants.shooterQ),
             VecBuilder.fill(Constants.shooterR),
-            Units.refreshInterval
+            Constants.refreshInterval
     )
 
     val loop = LinearSystemLoop(
@@ -47,7 +47,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             controller,
             observer,
             Constants.shooterVolts,
-            Units.refreshInterval
+            Constants.refreshInterval
     )
 
     var flywheelSim: FlywheelSim? = null
@@ -64,8 +64,8 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
     }
 
     override fun periodic() {
-        loop.correct(VecBuilder.fill(Units.rpmToRadPerSec(encoder.getVelocity()))) // may not have right units
-        loop.predict(Units.refreshInterval)
+        loop.correct(VecBuilder.fill(Units.degreesToRadians(encoder.getVelocity()))) // may not have right units
+        loop.predict(Constants.refreshInterval)
         val nextVoltage = loop.getU(0)
         if(lqrEnabled) {
             flywheelMotor.setVoltage(nextVoltage)
@@ -85,7 +85,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
     /* get current encoder velocity (in rad / s) */
     fun getVelocity(): Double {
         if(!RobotBase.isSimulation()) {
-            return Units.rpmToRadPerSec(encoder.velocity)
+            return Units.degreesToRadians(encoder.velocity)
         } else {
             return encoderSim?.rate ?: 0.0
         }
@@ -94,6 +94,10 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
     /* set a motor speed */
     fun setSpeed(speed: Double) {
         flywheelMotor.setVoltage(speed * 12)
+    }
+
+    fun setVoltage(volts: Double) {
+        flywheelMotor.setVoltage(volts)
     }
 
     /* set spark to coast. Needed for bang bang */
@@ -110,7 +114,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
 
         flywheelSim?.let { flywheelSim ->
             flywheelSim.setInputVoltage(Math.min(flywheelMotor.appliedOutput, 12.0))
-            flywheelSim.update(Units.refreshInterval)
+            flywheelSim.update(Constants.refreshInterval)
             encoderSim?.rate = flywheelSim.angularVelocityRadPerSec
         }
     }

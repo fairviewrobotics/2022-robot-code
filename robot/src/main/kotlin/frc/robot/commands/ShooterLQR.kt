@@ -30,6 +30,7 @@ class ShooterLQR(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double
     // Called once the command ends or is interrupted.
     override fun end(interrupted: Boolean) {
         shooterSubsystem.LQROff()
+        shooterSubsystem.setSpeed(0.0)
     }
 
     // Returns true when the command should end.

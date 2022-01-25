@@ -27,11 +27,11 @@ class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> D
     override fun execute() {
         // use 0.9 * feed forward to not go over speed
         val speed = controller.calculate(shooterSubsystem.getVelocity(), setPt()) + 0.9 * feedForward.calculate(setPt())
-        shooterSubsystem.setSpeed(speed)
+        shooterSubsystem.setVoltage(speed)
     }
 
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.setSpeed(0.0)
+        shooterSubsystem.setVoltage(0.0)
     }
 
     override fun isFinished() = false
