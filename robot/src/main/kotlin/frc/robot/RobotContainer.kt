@@ -9,6 +9,10 @@ import frc.robot.commands.ExampleCommand
 import frc.robot.subsystems.ExampleSubsystem
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 
+import edu.wpi.first.wpilibj.Compressor
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import edu.wpi.first.wpilibj.PneumaticsModuleType
+
 import edu.wpi.first.wpilibj2.command.Command
 
 /**
@@ -25,6 +29,9 @@ class RobotContainer {
     val controller0 = XboxController(1)
     /* controller1 - primary driver controller (overriden by controller0) */
     val controller1 = XboxController(0)
+
+    val compressor = Compressor(Constants.compressorID, PneumaticsModuleType.CTREPCM)
+    val solenoid = DoubleSolenoid​(Constants.solenoidModuleID, PneumaticsModuleType.CTREPCM, Constants.solenoidFChan, Constants.solenoidRChan)
 
     /** --- setup drivetrain --- **/
     val motorFrontLeft = WPI_TalonSRX(Constants.kDrivetrainFrontLeftPort)
