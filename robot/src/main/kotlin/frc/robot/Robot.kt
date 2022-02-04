@@ -6,6 +6,10 @@ package frc.robot
 import edu.wpi.first.wpilibj.TimedRobot
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
+import com.revrobotics.CANSparkMax
+import com.revrobotics.CANSparkMaxLowLevel.MotorType
+import com.revrobotics.REVPhysicsSim
+import edu.wpi.first.math.system.plant.*
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -30,7 +34,6 @@ class Robot : TimedRobot() {
         // autonomous chooser on the dashboard.
         m_robotContainer = RobotContainer()
     }
-
     /**
      * This function is called every robot packet, no matter the mode. Use this for items like
      * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
@@ -57,7 +60,7 @@ class Robot : TimedRobot() {
 
     /** This autonomous runs the autonomous command selected by your [RobotContainer] class.  */
     override fun autonomousInit() {
-        m_autonomousCommand = m_robotContainer?.autonomousCommand
+        //m_autonomousCommand = m_robotContainer?.autonomousCommand
 
         // schedule the autonomous command (example)
         m_autonomousCommand?.schedule()

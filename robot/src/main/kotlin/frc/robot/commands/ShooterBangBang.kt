@@ -12,29 +12,26 @@ import frc.robot.subsystems.ShooterSubsystem
 import edu.wpi.first.math.controller.BangBangController
 import edu.wpi.first.math.controller.SimpleMotorFeedforward
 import frc.robot.Constants
+
 /**
- * Drive the shooter based on some setpoint (probably not a direct mapping to a joystick value), using a Bang-Bang control scheme.
+ * Drive the shooter at some angular velocity setpoint (radians / s), using a Bang-Bang control scheme.
  */
 class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double) : CommandBase() {
     val controller = BangBangController()
-    val enc = shooterSubsystem.getEncoder()
     val feedForward = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
     init {
         addRequirements(shooterSubsystem)
-        shooterSubsystem.setCoast() // THIS MUST BE DONE, OTHERWISE MOTOR GO STOP [BREAKS]
+        shooterSubsystem.setCoast()
     }
 
     override fun execute() {
-        shooterSubsystem.setCoast()
-        if (shooterSubsystem.isCoast()) {
-            // this verification is probably unnecessary but
-            shooterSubsystem.setSpeed(controller.calculate(enc.getVelocity(), setPt()) + 0.8 * feedForward.calculate(setPt()))
-            // the tutorial used 0.9 as the modifier for feed forward, but recommended not setting it too high so as to not break things
-        }
+        // use 0.9 * feed forward to not go over speed
+        val speed = controller.calculate(shooterSubsystem.getVelocity(), setPt()) + 0.9 * feedForward.calculate(setPt())
+        shooterSubsystem.setVoltage(speed)
     }
 
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.setSpeed(0.0)
+        shooterSubsystem.setVoltage(0.0)
     }
 
     override fun isFinished() = false
