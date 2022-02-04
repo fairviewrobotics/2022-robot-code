@@ -1,11 +1,13 @@
 package frc.robot.commands
 
+import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.controller.ProfiledPIDController
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.XboxController
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
@@ -18,22 +20,17 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem, val speeds: (
     var kDrivetrainMaxAcceleration = Constants.kDrivetrainMaxAcceleration
 
 
-    val leftPIDController = ProfiledPIDController(
-        kDrivetrainPidP,
+    val leftPIDController = PIDController(
+        -kDrivetrainPidP,
         kDrivetrainPidI,
-        kDrivetrainPidD,
-        TrapezoidProfile.Constraints(kDrivetrainMaxVelocity, kDrivetrainMaxAcceleration)
-    )
+        kDrivetrainPidD)
 
-    val rightPIDController = ProfiledPIDController(
-        kDrivetrainPidP,
+    val rightPIDController = PIDController(
+        -kDrivetrainPidP,
         kDrivetrainPidI,
-        kDrivetrainPidD,
-        TrapezoidProfile.Constraints(kDrivetrainMaxVelocity, kDrivetrainMaxAcceleration)
-    )
+        kDrivetrainPidD)
 
     fun execute() {
-        println(kDrivetrainPidP)
         // get vals
         val currentRightSpeed = drivetrain.wheelSpeeds.rightMetersPerSecond
         val currentLeftSpeed = drivetrain.wheelSpeeds.leftMetersPerSecond
@@ -43,7 +40,9 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem, val speeds: (
         val speedsFrame = speeds()
         val leftSpeedToSet = leftPIDController.calculate(currentLeftSpeed, speedsFrame.leftMetersPerSecond)
         val rightSpeedToSet = rightPIDController.calculate(currentRightSpeed, speedsFrame.rightMetersPerSecond)
-
+        SmartDashboard.putNumber("PV", currentLeftSpeed)
+        SmartDashboard.putNumber("SP", speedsFrame.leftMetersPerSecond)
+        SmartDashboard.putNumber("Left Volts", leftSpeedToSet)
         // drive
         drivetrain.tankDriveVolts(leftSpeedToSet, rightSpeedToSet)
     }
@@ -65,13 +64,6 @@ class DrivetrainPIDCommand(val drivetrain: DrivetrainSubsystem, val periodic: ()
     }
 
     override fun isFinished() = false
-}
-
-
-fun DebugDriveCommand(drivetrain: DrivetrainSubsystem) : DrivetrainPIDCommand {
-    return DrivetrainPIDCommand(drivetrain) {
-        DifferentialDriveWheelSpeeds(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxVelocity)
-    }
 }
 
 fun ArcadeDriveCommand(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {

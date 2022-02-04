@@ -3,9 +3,11 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
+import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
+import com.revrobotics.CANSparkMax
+import com.revrobotics.CANSparkMaxLowLevel.MotorType
 import edu.wpi.first.wpilibj.ADXRS450_Gyro
 import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup
@@ -17,7 +19,6 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import frc.robot.commands.ArcadeDriveCommand
-import frc.robot.commands.DebugDriveCommand
 import frc.robot.subsystems.DrivetrainSubsystem
 
 import frc.robot.subsystems.*
@@ -34,25 +35,15 @@ class RobotContainer {
     val controller0 = XboxController(0)
     val controller1 = XboxController(1)
 
-    val solenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, 1, 2)
+    val motorFrontLeft = CANSparkMax(1, MotorType.kBrushless)
+    val motorBackLeft = CANSparkMax(2, MotorType.kBrushless)
+    val motorFrontRight = CANSparkMax(3, MotorType.kBrushless)
+    val motorBackRight = CANSparkMax(4, MotorType.kBrushless)
 
-    /** --- setup drivetrain --- **/
-    val motorFrontLeft = WPI_TalonSRX(Constants.kDrivetrainFrontLeftPort)
-    val motorBackLeft = WPI_TalonSRX(Constants.kDrivetrainBackLeftPort)
-    val motorFrontRight = WPI_TalonSRX(Constants.kDrivetrainFrontRightPort)
-    val motorBackRight = WPI_TalonSRX(Constants.kDrivetrainBackRightPort)
-
-    val leftDrivetrainEncoder = Encoder(Constants.kDrivetrainLeftEncoderPortA, Constants.kDrivetrainLeftEncoderPortB, Constants.kDrivetrainEncoderAReversed)
-    val rightDrivetrainEncoder = Encoder(Constants.kDrivetrainRightEncoderPortA, Constants.kDrivetrainRightEncoderPortB, Constants.kDrivetrainEncoderBReversed)
-
-    val gyro = ADXRS450_Gyro()
-
-    // MARK: Controllers and groups
-    val leftMotors = MotorControllerGroup(motorFrontLeft, motorFrontRight)
-    val rightMotors = MotorControllerGroup(motorBackLeft, motorBackRight)
+    val gyro = AHRS()
 
     // MARK: Subsystems
-    val drivetrain = DrivetrainSubsystem(leftMotors, rightMotors, leftDrivetrainEncoder, rightDrivetrainEncoder, gyro)
+    val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro)
 
     init {
         configureButtonBindings()
@@ -62,8 +53,16 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
+        /*JoystickButton(controller0, XboxController.Button.kA.value).whenPressed(
+            ArcadePIDDrive(drivetrain, controller0)
+        )
 
+        JoystickButton(controller0, XboxController.Button.kB.value).whenPressed(
+            ArcadeDriveCommand(drivetrain, controller0)
+        )*/
+        drivetrain.defaultCommand = ArcadePIDDrive(drivetrain, controller0)
     }
+
 
     /**
      * Use this to pass the autonomous command to the main [Robot] class.

@@ -3,11 +3,12 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.commands
 
-import frc.robot.subsystems.ExampleSubsystem
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import frc.robot.subsystems.ExamplePneumaticSubsystem
 import edu.wpi.first.wpilibj2.command.CommandBase
 
 /** An example command that uses an example subsystem.  */
-class ExamplePneumaticCommandForward(subsystem: ExamplePneumaticSubsystem) : CommandBase() {
+class ExamplePneumaticCommand(val subsystem: ExamplePneumaticSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
 
     /**
      * Creates a new ExampleCommand.
@@ -25,13 +26,12 @@ class ExamplePneumaticCommandForward(subsystem: ExamplePneumaticSubsystem) : Com
 
     // Called every time the scheduler runs while the command is scheduled.
     override fun execute() {
-        subsystem.setForward()
+        subsystem.set(state)
 
     }
 
     // Called once the command ends or is interrupted.
     override fun end(interrupted: Boolean) {
-        subsystem.setOff()
     }
 
     // Returns true when the command should end.
