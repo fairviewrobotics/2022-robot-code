@@ -49,13 +49,13 @@ class Constants {
         val kDrivetrainEncoderAReversed = true
         val kDrivetrainEncoderBReversed = true
 
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 6.2296)()
         val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
-        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 5.0)()
-        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 1.0)()
-        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 1.0)()
+        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 2.6)()
+        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 10.0)()
+        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 30.0)()
 
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
@@ -70,6 +70,9 @@ class Constants {
         val shooterP get() = generateConstantGetter<Double>("shooterP", 0.5)()
         val shooterI get() = generateConstantGetter<Double>("shooterI", 0.0)()
         val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
+
+
+        // constants for basic pneumatics
 
         // constants for flywheel LQR
         val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
