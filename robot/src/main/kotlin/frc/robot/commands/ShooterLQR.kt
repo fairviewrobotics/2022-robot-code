@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.subsystems.ShooterSubsystem
 
 /** An example command that uses an example subsystem.  */
-class ShooterLQR(val shooterSubsystem: ShooterSubsystem ) : CommandBase() {
+class ShooterLQR(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double ) : CommandBase() {
 
     /**
      * Creates a new ExampleCommand.
@@ -25,12 +25,13 @@ class ShooterLQR(val shooterSubsystem: ShooterSubsystem ) : CommandBase() {
 
     // Called every time the scheduler runs while the command is scheduled.
     override fun execute() {
-        shooterSubsystem.LQROn()
+        shooterSubsystem.LQROn(setPt())
     }
 
     // Called once the command ends or is interrupted.
     override fun end(interrupted: Boolean) {
         shooterSubsystem.LQROff()
+        shooterSubsystem.setSpeed(0.0)
     }
 
     // Returns true when the command should end.
