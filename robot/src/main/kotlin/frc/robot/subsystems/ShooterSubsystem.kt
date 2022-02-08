@@ -12,7 +12,8 @@ import frc.robot.Constants
 
 // subsystem for shooter (hypothetical for now)
 
-class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
+class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpper: CANSparkMax) : SubsystemBase() {
+    /*
     val refreshInterval = 0.02 // usually this on most normal robot loops, can be lowered using notifiers
     // the value passed into getNEO represents the number of motors in the gearbox.
     val flywheelPlant = LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), Constants.shooterInertia, Constants.shooterGearing)
@@ -21,15 +22,15 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             Nat.N1(),
             Nat.N1(),
             flywheelPlant,
-            VecBuilder.fill(Constants.shooterStateStdev), // state stdev
-            VecBuilder.fill(Constants.shooterEncStdev), // encoder stdev
+            VecBuilder.fill(Constants.shooterStateStdev), // state stdev:  how accurate we think model is
+            VecBuilder.fill(Constants.shooterEncStdev), // encoder stdev: how accurate we think encoder is
             refreshInterval // refresh rate
     )
 
     val controller = LinearQuadraticRegulator(
             flywheelPlant,
-            VecBuilder.fill(Constants.shooterQ),
-            VecBuilder.fill(Constants.shooterR),
+            VecBuilder.fill(Constants.shooterQ), // tune up to make more conservative (less weight on large errors)
+            VecBuilder.fill(Constants.shooterR), // tune down to penalize control effort (less aggressive)
             refreshInterval
     )
 
@@ -40,17 +41,24 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             Constants.shooterVolts,
             refreshInterval
     )
+    */
 
-
-
+//  todo: we want forward current only to save power
     val PID = PIDController(Constants.shooterP, Constants.shooterI, Constants.shooterD)
     override fun periodic() {
+        /* 
         val encoder = flywheelMotor.getEncoder()
         loop.correct(VecBuilder.fill(encoder.getVelocity())) // may not have right units
         loop.predict(refreshInterval)
         var nextVoltage = loop.getU(0)
         flywheelMotor.setVoltage(nextVoltage)
+        */
 
+    }
+
+    /* 
+    fun setLatencyCompensate(sensorDelay: Double){
+        controller.latencyCompensate(flywheelPlant, refreshInterval, sensorDelay)
     }
 
     fun LQROn(){
@@ -60,25 +68,40 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
     fun LQROff(){
         loop.setNextR(VecBuilder.fill(0.0));
     }
+    */
 
     /* set a motor speed */
     fun setSpeed(speed: Double) {
-        flywheelMotor.set(speed)
+        flywheelMotorLower.set(speed)
+        flywheelMotorUpper.set(speed * -1.0)
+
     }
 
-    fun getPidController(): SparkMaxPIDController {
-        return flywheelMotor.getPIDController()
+    fun getPidController(which: Boolean): SparkMaxPIDController {
+        if which == false{
+            // lower
+            return flywheelMotorLower.getPIDController()
+        }
+        return flywheelMotorUpper.getPIDController()
+        
     }
 
     
-    fun getEncoder() : RelativeEncoder{
-        return flywheelMotor.getEncoder()
+    fun getEncoder(which: Boolean) : RelativeEncoder{
+        if which == false{
+            // lower
+            return flywheelMotorLower.getEncoder()
+        }
+        return flywheelMotorUpper.getEncoder()
+        
     }
 
     fun setCoast(){
         // ALWAYS RUN THIS ONCE BEFORE DOING ANY SORT OF BANG-BANG CONTROL!
-        flywheelMotor.setIdleMode(CANSparkMax.IdleMode.kCoast)
-        flywheelMotor.set(0.0)
+        flywheelMotorLower.setIdleMode(CANSparkMax.IdleMode.kCoast)
+        flywheelMotorLower.set(0.0)
+        flywheelMotorUpper.setIdleMode(CANSparkMax.IdleMode.kCoast)
+        flywheelMotorUpper.set(0.0)
     }
 
     fun isCoast(): Boolean{
@@ -86,7 +109,7 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             until we can guarantee that the setCoast method works, this is meant as a further layer of validation.
             it's blocking so it's probably not the best to keep this
          */
-        return flywheelMotor.getIdleMode() == CANSparkMax.IdleMode.kCoast
+        return (flywheelMotorLower.getIdleMode() == CANSparkMax.IdleMode.kCoast) && (flywheelMotorUpper.getIdleMode() == CANSparkMax.IdleMode.kCoast)
     }
 
 }

@@ -20,6 +20,7 @@ class ShooterLQR(val shooterSubsystem: ShooterSubsystem ) : CommandBase() {
 
     // Called when the command is initially scheduled.
     override fun initialize() {
+        ShooterSubsystem.setLatencyCompensate(0.025)
     }
 
     // Called every time the scheduler runs while the command is scheduled.

@@ -18,14 +18,13 @@ import frc.robot.Constants
 class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double) : CommandBase() {
     val controller = BangBangController()
     val enc = shooterSubsystem.getEncoder()
-    val feedForward = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
+    val feedForwardLower = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
     init {
         addRequirements(shooterSubsystem)
-        shooterSubsystem.setCoast() // THIS MUST BE DONE, OTHERWISE MOTOR GO STOP [BREAKS]
+        shooterSubsystem.setCoast() // THIS MUST BE DONE, OTHERWISE MOTOR BREAKS
     }
 
     override fun execute() {
-        shooterSubsystem.setCoast()
         if (shooterSubsystem.isCoast()) {
             // this verification is probably unnecessary but
             shooterSubsystem.setSpeed(controller.calculate(enc.getVelocity(), setPt()) + 0.8 * feedForward.calculate(setPt()))
