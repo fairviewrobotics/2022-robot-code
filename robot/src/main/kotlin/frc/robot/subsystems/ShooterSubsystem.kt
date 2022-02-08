@@ -62,6 +62,26 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
         flywheelMotor.setVoltage(nextVoltage)
         */
 
+    init {
+        if(RobotBase.isSimulation()) {
+            REVPhysicsSim.getInstance().addSparkMax(flywheelMotorUpper, DCMotor.getNEO(1))
+            REVPhysicsSim.getInstance().addSparkMax(flywheelMotorLower, DCMotor.getNEO(1))
+
+            flywheelSim = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia) // todo: might not work for 2 motors
+            // Rev doesn't allow its encoders to be simulated, so we create a fake digital encoder and manipulate it
+            encoderSim = EncoderSim(Encoder(0, 1))
+        }
+    }
+
+    override fun periodic() {
+        /* 
+        loop.correct(VecBuilder.fill(Units.degreesToRadians(encoder.getVelocity()))) // may not have right units
+        loop.predict(Constants.refreshInterval)
+        val nextVoltage = loop.getU(0)
+        if(lqrEnabled) {
+            flywheelMotor.setVoltage(nextVoltage)
+        }
+        */
     }
 
     /* 
@@ -96,7 +116,7 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
     }
 
     fun getPidController(which: Boolean): SparkMaxPIDController {
-        if which == false{
+        if (!which){
             // lower
             return flywheelMotorLower.getPIDController()
         }
@@ -106,14 +126,32 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
 
     
     fun getEncoder(which: Boolean) : RelativeEncoder{
-        if which == false{
+        if (!which){
             // lower
             return flywheelMotorLower.getEncoder()
         }
         return flywheelMotorUpper.getEncoder()
         
+    /* get current encoder velocity (in rad / s) */
+    fun getVelocity(which: Boolean): Double {
+        if(!RobotBase.isSimulation()) {
+            val enc = getEncoder(which)
+            return Units.degreesToRadians(enc.getVelocity())
+        } else {
+            return encoderSim?.rate ?: 0.0
+        }
     }
 
+    fun setVoltage(volts: Double, which: Boolean) {
+        if (!which){
+            flywheelMotorLower.setVoltage(volts)
+        } else{
+            flywheelMotorUpper.setVoltage(volts)
+        }
+        
+    }
+
+    /* set spark to coast. Needed for bang bang */
     fun setCoast(){
         // ALWAYS RUN THIS ONCE BEFORE DOING ANY SORT OF BANG-BANG CONTROL!
         flywheelMotorLower.setIdleMode(CANSparkMax.IdleMode.kCoast)
@@ -134,10 +172,12 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
         REVPhysicsSim.getInstance().run()
 
         flywheelSim?.let { flywheelSim ->
-            flywheelSim.setInputVoltage(Math.min(flywheelMotor.appliedOutput, 12.0))
+            flywheelSim.setInputVoltage(Math.min(flywheelMotorLower.appliedOutput, 12.0))
+            flywheelSim.setInputVoltage(Math.min(flywheelMotorUpper.appliedOutput, 12.0))
             flywheelSim.update(Constants.refreshInterval)
             encoderSim?.rate = flywheelSim.angularVelocityRadPerSec
         }
     }
 
+}
 }

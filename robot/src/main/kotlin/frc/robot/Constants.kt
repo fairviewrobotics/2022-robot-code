@@ -74,6 +74,12 @@ class Constants {
 
         // constants for basic pneumatics
 
+        // SET THESE PROPERLY!
+        val compressorID get() = generateConstantGetter<Int>("compressorID", -1.0)()
+        val solenoidModuleID get() = generateConstantGetter<Int>("solenoidModuleID", -1.0)()
+        val solenoidFChan get() = generateConstantGetter<Int>("solenoidFChan", -1.0)()
+        val solenoidRChan get() = generateConstantGetter<Int>("solenoidRChan", -1.0)()
+
         // constants for flywheel LQR
         val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
         val shooterGearing get() = generateConstantGetter<Double>("shooterGearing", 1.0)() // output over input, unitless

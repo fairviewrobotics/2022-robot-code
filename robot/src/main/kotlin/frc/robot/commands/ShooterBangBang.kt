@@ -18,23 +18,23 @@ import frc.robot.Constants
  */
 class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double) : CommandBase() {
     val controller = BangBangController()
-    val enc = shooterSubsystem.getEncoder()
-    val feedForwardLower = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
+    val feedForward = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
     init {
         addRequirements(shooterSubsystem)
         shooterSubsystem.setCoast() // THIS MUST BE DONE, OTHERWISE MOTOR BREAKS
     }
 
     override fun execute() {
-        if (shooterSubsystem.isCoast()) {
-            // this verification is probably unnecessary but
-            shooterSubsystem.setSpeed(controller.calculate(enc.getVelocity(), setPt()) + 0.8 * feedForward.calculate(setPt()))
-            // the tutorial used 0.9 as the modifier for feed forward, but recommended not setting it too high so as to not break things
-        }
+        // use 0.9 * feed forward to not go over speed
+        val lowerSpeed = controller.calculate(shooterSubsystem.getVelocity(false), setPt()) + 0.9 * feedForward.calculate(setPt())
+        val upperSpeed = controller.calculate(shooterSubsystem.getVelocity(true), setPt()) + 0.9 * feedForward.calculate(setPt())
+        shooterSubsystem.setVoltage(lowerSpeed, false)
+        shooterSubsystem.setVoltage(upperSpeed, false)
     }
 
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.setVoltage(0.0)
+        shooterSubsystem.setVoltage(0.0, false)
+        shooterSubsystem.setVoltage(0.0, true)
     }
 
     override fun isFinished() = false
