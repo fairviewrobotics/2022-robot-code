@@ -3,7 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.commands
 
-import frc.robot.subsystems.ExampleSubsystem
+import frc.robot.subsystems.ExamplePneumaticSubsystem
 import edu.wpi.first.wpilibj2.command.CommandBase
 
 /** An example command that uses an example subsystem.  */
