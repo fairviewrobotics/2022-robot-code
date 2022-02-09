@@ -18,6 +18,13 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 
 // subsystem for shooter (hypothetical for now)
+// todo: multiple returns?
+// todo: we can also use cansparkmax.follow() to follow another controller but inverted.
+
+
+enum class WhichMotor {
+    LOWER, UPPER
+}
 
 class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpper: CANSparkMax) : SubsystemBase() {
     /*
@@ -99,41 +106,24 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
     }
     */
 
-    /* get current encoder velocity (in rad / s) */
-    fun getVelocity(): Double {
-        if(!RobotBase.isSimulation()) {
-            return Units.degreesToRadians(encoder.velocity)
-        } else {
-            return encoderSim?.rate ?: 0.0
-        }
-    }
-
-    /* set a motor speed */
+    /* set a motor speed, with one reversed */
     fun setSpeed(speed: Double) {
-        flywheelMotorLower.set(speed)
-        flywheelMotorUpper.set(speed * -1.0)
-
+        flywheelMotorLower.set(speed * 12.0)
+        flywheelMotorUpper.set(speed * -12.0)
     }
 
-    fun getPidController(which: Boolean): SparkMaxPIDController {
-        if (!which){
-            // lower
-            return flywheelMotorLower.getPIDController()
-        }
-        return flywheelMotorUpper.getPIDController()
-        
-    }
 
     
-    fun getEncoder(which: Boolean) : RelativeEncoder{
-        if (!which){
+    fun getEncoder(which: WhichMotor) : RelativeEncoder{
+        if (which == WhichMotor.LOWER){
             // lower
             return flywheelMotorLower.getEncoder()
         }
         return flywheelMotorUpper.getEncoder()
+    }
         
     /* get current encoder velocity (in rad / s) */
-    fun getVelocity(which: Boolean): Double {
+    fun getVelocity(which: WhichMotor): Double {
         if(!RobotBase.isSimulation()) {
             val enc = getEncoder(which)
             return Units.degreesToRadians(enc.getVelocity())
@@ -142,8 +132,8 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
         }
     }
 
-    fun setVoltage(volts: Double, which: Boolean) {
-        if (!which){
+    fun setVoltage(volts: Double, which: WhichMotor) {
+        if (which == WhichMotor.LOWER){
             flywheelMotorLower.setVoltage(volts)
         } else{
             flywheelMotorUpper.setVoltage(volts)
@@ -179,5 +169,4 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
         }
     }
 
-}
 }

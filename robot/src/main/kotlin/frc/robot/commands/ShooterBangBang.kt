@@ -9,6 +9,7 @@ package frc.robot.commands
 
 import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.subsystems.ShooterSubsystem
+import frc.robot.subsystems.WhichMotor
 import edu.wpi.first.math.controller.BangBangController
 import edu.wpi.first.math.controller.SimpleMotorFeedforward
 import frc.robot.Constants
@@ -26,15 +27,15 @@ class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> D
 
     override fun execute() {
         // use 0.9 * feed forward to not go over speed
-        val lowerSpeed = controller.calculate(shooterSubsystem.getVelocity(false), setPt()) + 0.9 * feedForward.calculate(setPt())
-        val upperSpeed = controller.calculate(shooterSubsystem.getVelocity(true), setPt()) + 0.9 * feedForward.calculate(setPt())
-        shooterSubsystem.setVoltage(lowerSpeed, false)
-        shooterSubsystem.setVoltage(upperSpeed, false)
+        val lowerSpeed = controller.calculate(-1.0 * shooterSubsystem.getVelocity(WhichMotor.LOWER), -1.0 * setPt()) - 0.9 * feedForward.calculate(setPt())
+        val upperSpeed = controller.calculate(shooterSubsystem.getVelocity(WhichMotor.UPPER), setPt()) + 0.9 * feedForward.calculate(setPt())
+        shooterSubsystem.setVoltage(lowerSpeed, WhichMotor.LOWER)
+        shooterSubsystem.setVoltage(upperSpeed, WhichMotor.UPPER)
     }
 
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.setVoltage(0.0, false)
-        shooterSubsystem.setVoltage(0.0, true)
+        shooterSubsystem.setVoltage(0.0, WhichMotor.LOWER)
+        shooterSubsystem.setVoltage(0.0, WhichMotor.UPPER)
     }
 
     override fun isFinished() = false
