@@ -8,11 +8,7 @@ import edu.wpi.first.wpilibj.Compressor
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value.*
 import edu.wpi.first.wpilibj.DoubleSolenoid
 
-class ExamplePneumaticSubsystem(val compressor : Compressor, val output: DoubleSolenoid) : SubsystemBase() {
-
-    fun compressorEnabled(): Boolean{
-        return compressor.enabled();
-    }
+class ExamplePneumaticSubsystem(val output: DoubleSolenoid) : SubsystemBase() {
 
     fun setForward(){
         output.set(kForward)
@@ -22,6 +18,10 @@ class ExamplePneumaticSubsystem(val compressor : Compressor, val output: DoubleS
     }
     fun setOff(){
         output.set(kOff)
+    }
+
+    fun set(state: DoubleSolenoid.Value) {
+        output.set(state)
     }
 
     override fun periodic() {
