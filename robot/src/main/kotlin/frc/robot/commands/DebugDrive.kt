@@ -10,8 +10,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.robot.subsystems.DrivetrainSubsystem
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * various debug commands used for testing and diagnostic
@@ -33,7 +31,7 @@ class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxContro
         val desiredLeft = speeds.leftMetersPerSecond
         val desiredRight = speeds.rightMetersPerSecond
 
-        val actual = drivetrain.wheelSpeeds.leftMetersPerSecond
+        val actual = drivetrain.getWheelSpeeds().leftMetersPerSecond
         val newSpeeds = kinematics.toChassisSpeeds(DifferentialDriveWheelSpeeds(desiredLeft, desiredRight))
         csv += "\n${t},${desiredLeft},${actual}"
 
@@ -48,7 +46,7 @@ class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxContro
     override fun isFinished() = false
 }
 
-class DebugDrive2Subsystem(val motor: TalonFX) : SubsystemBase() {
+class MotorTestSubsystem(val motor: TalonFX) : SubsystemBase() {
     fun volts(volts: Double) {
         motor.set(TalonFXControlMode.PercentOutput, volts)
     }
@@ -58,7 +56,7 @@ class DebugDrive2Subsystem(val motor: TalonFX) : SubsystemBase() {
     }
 
 }
-class DebugDrive2(val subsystem: DebugDrive2Subsystem, val controller: XboxController) : CommandBase() {
+class MotorTest(val subsystem: MotorTestSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(subsystem)
     }

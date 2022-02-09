@@ -33,13 +33,15 @@ class ArcadePIDDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxCo
     val kinematics = DifferentialDriveKinematics(21.5)
 
     override fun execute() {
-        val speeds = kinematics.toWheelSpeeds(ChassisSpeeds(-controller.leftY * abs(controller.leftY), 0.0, controller.leftX * abs(controller.leftX)))
+        val forward = -controller.leftY * abs(controller.leftY) * 0.25
+        val rotation = controller.leftX * abs(controller.leftX) * 0.25
+        val speeds = kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, rotation ))
 
         val desiredLeft = speeds.leftMetersPerSecond
         val desiredRight = speeds.rightMetersPerSecond
 
-        val currentLeft = drivetrain.wheelSpeeds.leftMetersPerSecond
-        val currentRight = drivetrain.wheelSpeeds.rightMetersPerSecond
+        val currentLeft = drivetrain.getWheelSpeeds().leftMetersPerSecond
+        val currentRight = drivetrain.getWheelSpeeds().rightMetersPerSecond
 
         val newLeft = leftPID.calculate(currentLeft, desiredLeft)
         val newRight = rightPID.calculate(currentRight, desiredRight)

@@ -114,10 +114,14 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
         return velocityRPM * (1 / 60) * (wheelDiameterMeters * 3.14159 / 1)
     }
 
-    val wheelSpeeds: DifferentialDriveWheelSpeeds get() =
-        DifferentialDriveWheelSpeeds(
+    fun getWheelSpeeds(): DifferentialDriveWheelSpeeds {
+        SmartDashboard.putNumber("PV", motorLF.encoder.velocity)
+
+        return DifferentialDriveWheelSpeeds(
             rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
-            rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0)))
+            rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
+        )
+    }
 
 
     // MARK: Diagnostic-type functions
