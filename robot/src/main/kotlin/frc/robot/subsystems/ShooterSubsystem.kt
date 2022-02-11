@@ -58,25 +58,21 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
     )
     */
 
-//  todo: we want forward current only to save power
-    val PID = PIDController(Constants.shooterP, Constants.shooterI, Constants.shooterD)
-    override fun periodic() {
-        /* 
-        val encoder = flywheelMotor.getEncoder()
-        loop.correct(VecBuilder.fill(encoder.getVelocity())) // may not have right units
-        loop.predict(refreshInterval)
-        var nextVoltage = loop.getU(0)
-        flywheelMotor.setVoltage(nextVoltage)
-        */
+    var flywheelSimUpper: FlywheelSim? = null
+    var flywheelSimLower: FlywheelSim? = null
+    var encoderSimLower: EncoderSim? = null
+    var encoderSimUpper: EncoderSim? = null
 
     init {
         if(RobotBase.isSimulation()) {
             REVPhysicsSim.getInstance().addSparkMax(flywheelMotorUpper, DCMotor.getNEO(1))
             REVPhysicsSim.getInstance().addSparkMax(flywheelMotorLower, DCMotor.getNEO(1))
 
-            flywheelSim = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia) // todo: might not work for 2 motors
+            flywheelSimUpper = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia)
+            flywheelSimLower = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia)
             // Rev doesn't allow its encoders to be simulated, so we create a fake digital encoder and manipulate it
-            encoderSim = EncoderSim(Encoder(0, 1))
+            encoderSimUpper = EncoderSim(Encoder(0, 1))
+            encoderSimLower = EncoderSim(Encoder(0, 1))
         }
     }
 
@@ -128,7 +124,10 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
             val enc = getEncoder(which)
             return Units.degreesToRadians(enc.getVelocity())
         } else {
-            return encoderSim?.rate ?: 0.0
+            if (which == WhichMotor.LOWER){
+                return encoderSimLower?.rate ?: 0.0
+            }
+            return encoderSimUpper?.rate ?: 0.0
         }
     }
 
@@ -161,12 +160,22 @@ class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpp
     override fun simulationPeriodic() {
         REVPhysicsSim.getInstance().run()
 
-        flywheelSim?.let { flywheelSim ->
-            flywheelSim.setInputVoltage(Math.min(flywheelMotorLower.appliedOutput, 12.0))
-            flywheelSim.setInputVoltage(Math.min(flywheelMotorUpper.appliedOutput, 12.0))
-            flywheelSim.update(Constants.refreshInterval)
-            encoderSim?.rate = flywheelSim.angularVelocityRadPerSec
+        flywheelSimUpper?.let { flywheelSimUpper ->
+            flywheelSimUpper.setInputVoltage(Math.min(flywheelMotorUpper.appliedOutput, 12.0))
+
+            flywheelSimUpper.update(Constants.refreshInterval)
+            
+            encoderSimUpper?.rate = flywheelSimUpper.angularVelocityRadPerSec
         }
+
+        flywheelSimLower?.let { flywheelSimLower ->
+            flywheelSimLower.setInputVoltage(Math.min(flywheelMotorLower.appliedOutput, 12.0))
+
+            flywheelSimLower.update(Constants.refreshInterval)
+            
+            encoderSimLower?.rate = flywheelSimLower.angularVelocityRadPerSec
+        }
+
     }
 
 }
