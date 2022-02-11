@@ -4,11 +4,10 @@
 package frc.robot.subsystems
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import edu.wpi.first.wpilibj.Compressor
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value.*
 import edu.wpi.first.wpilibj.DoubleSolenoid
 
-class ExamplePneumaticSubsystem(val output: DoubleSolenoid) : SubsystemBase() {
+class GenericSolenoidSubsystem(val output: DoubleSolenoid) : SubsystemBase() {
 
     fun setForward(){
         output.set(kForward)

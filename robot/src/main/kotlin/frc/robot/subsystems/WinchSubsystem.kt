@@ -4,16 +4,12 @@
 package frc.robot.subsystems
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import edu.wpi.first.wpilibj.Compressor
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value.*
-import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.motorcontrol.MotorController
 
-class ClimberSubsystem(val solenoid: DoubleSolenoid, 
-                       val winch: MotorController, 
-                       val lowerLimit: DigitalInput, 
-                       val upperLimit: DigitalInput) : SubsystemBase() {
+class WinchSubsystem(val winch: MotorController, 
+                     val lowerLimit: DigitalInput, 
+                     val upperLimit: DigitalInput) : SubsystemBase() {
 
     fun setInitial(speed: Double){
         if (speed > 0){
@@ -30,10 +26,6 @@ class ClimberSubsystem(val solenoid: DoubleSolenoid,
             }
         }
         
-    }
-
-    fun set(state: DoubleSolenoid.Value) {
-        solenoid.set(state)
     }
 
     override fun periodic() {
