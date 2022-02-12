@@ -27,8 +27,6 @@ import kotlin.math.min
  * Subsystem for interacting with the drivetrain. Controls drivetrain motors + encoders, and the gyroscope. Also handles simulation for those things.
  */
 class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, val motorRF: CANSparkMax, val motorRB: CANSparkMax, val gyro: AHRS) : SubsystemBase() {
-    val gyroReversed = false
-
     val leftMotors = MotorControllerGroup(motorLF, motorLB)
     val rightMotors = MotorControllerGroup(motorRF, motorRB)
 
@@ -46,7 +44,6 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
 
     init {
         rightMotors.inverted = true
-
         resetEncoders()
         odometry = DifferentialDriveOdometry(Rotation2d.fromDegrees(heading))
         
@@ -101,9 +98,9 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     }
 
     /** Angular velocity, radians per second. */
-    val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate) * (if (gyroReversed) { -1.0 } else { 1.0 })
+    val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate)
     /** Heading, in radians. */
-    val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0) * (if (gyroReversed) { -1.0 } else { 1.0 }))
+    val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
 
     // MARK: Diagnostic-type variables
     val averageEncoderDistance: Double get() = (leftEncoder.position + rightEncoder.position) / 2.0
@@ -111,15 +108,14 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     val pose: Pose2d get() = odometry.poseMeters
 
     fun rotationsPerMinuteToMetersPerSecond(velocityRPM: Double, wheelDiameterMeters: Double): Double {
-        return velocityRPM * (1 / 60) * (wheelDiameterMeters * 3.14159 / 1)
+        return velocityRPM * (1.0 / 60.0) * (wheelDiameterMeters * Math.PI / 1.0)
     }
 
     fun getWheelSpeeds(): DifferentialDriveWheelSpeeds {
-        SmartDashboard.putNumber("PV", motorLF.encoder.velocity)
 
         return DifferentialDriveWheelSpeeds(
             rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
-            rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
+            -rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
         )
     }
 
