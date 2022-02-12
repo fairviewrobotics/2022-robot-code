@@ -110,10 +110,19 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     val drawnCurrentAmps: Double? get() = driveSim?.let { return it.currentDrawAmps }
     val pose: Pose2d get() = odometry.poseMeters
 
-    val wheelSpeeds: DifferentialDriveWheelSpeeds get() =
-        DifferentialDriveWheelSpeeds(
-            Units.rotationsPerMinuteToRadiansPerSecond(leftEncoder.velocity / 10.71) * 0.0762,
-            -Units.rotationsPerMinuteToRadiansPerSecond(rightEncoder.velocity / 10.71) * 0.0762)
+    fun rotationsPerMinuteToMetersPerSecond(velocityRPM: Double, wheelDiameterMeters: Double): Double {
+        return velocityRPM * (1 / 60) * (wheelDiameterMeters * 3.14159 / 1)
+    }
+
+    fun getWheelSpeeds(): DifferentialDriveWheelSpeeds {
+        SmartDashboard.putNumber("PV", motorLF.encoder.velocity)
+
+        return DifferentialDriveWheelSpeeds(
+            rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
+            rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
+        )
+    }
+
 
     // MARK: Diagnostic-type functions
     fun resetEncoders() {
