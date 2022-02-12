@@ -9,13 +9,13 @@ import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.robot.subsystems.DrivetrainSubsystem
+import frc.robot.subsystems.DrivetrainOldSubsystem
 
 /**
  * various debug commands used for testing and diagnostic
  * very freeform and not very refined
  */
-class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
+class DebugDriveOld(val drivetrain: DrivetrainOldSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(drivetrain)
     }
@@ -46,7 +46,7 @@ class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxContro
     override fun isFinished() = false
 }
 
-class MotorTestSubsystemOld(val motor: TalonFX) : SubsystemBase() {
+class MotorTestSubsystem(val motor: TalonFX) : SubsystemBase() {
     fun volts(volts: Double) {
         motor.set(TalonFXControlMode.PercentOutput, volts)
     }
@@ -56,7 +56,7 @@ class MotorTestSubsystemOld(val motor: TalonFX) : SubsystemBase() {
     }
 
 }
-class MotorTestOld(val subsystem: MotorTestSubsystemOld, val controller: XboxController) : CommandBase() {
+class MotorTest(val subsystem: MotorTestSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(subsystem)
     }

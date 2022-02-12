@@ -26,14 +26,14 @@ import kotlin.math.min
 /**
  * Subsystem for interacting with the drivetrain. Controls drivetrain motors + encoders, and the gyroscope. Also handles simulation for those things.
  */
-class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, val motorRF: CANSparkMax, val motorRB: CANSparkMax, val gyro: AHRS) : SubsystemBase() {
+class DrivetrainOldSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, val motorRF: CANSparkMax, val motorRB: CANSparkMax, val gyro: AHRS, val lEncoder: Encoder, val rEncoder: Encoder) : SubsystemBase() {
     val gyroReversed = false
 
     val leftMotors = MotorControllerGroup(motorLF, motorLB)
     val rightMotors = MotorControllerGroup(motorRF, motorRB)
 
-    val leftEncoder = motorLF.encoder
-    val rightEncoder = motorRF.encoder
+    val leftEncoder = lEncoder
+    val rightEncoder = rEncoder
 
     val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
@@ -44,50 +44,26 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     var fieldSim: Field2d? = null
     var gyroSim: ADXRS450_GyroSim? = null
 
+    val ENCODER_EDGES_PER_REV = 360.0
+    val WHEEL_DIAMETER = 0.1524
+    val distancePerPulse = (1.0 / ENCODER_EDGES_PER_REV) * WHEEL_DIAMETER * Math.PI
+
     init {
+        leftEncoder.setDistancePerPulse(distancePerPulse)
+        rightEncoder.setDistancePerPulse(distancePerPulse)
+
+
         rightMotors.inverted = true
         zeroHeading()
         resetEncoders()
         odometry = DifferentialDriveOdometry(Rotation2d.fromDegrees(heading))
-        
-        if (RobotBase.isSimulation()) {
-            driveSim = DifferentialDrivetrainSim.createKitbotSim(
-                DifferentialDrivetrainSim.KitbotMotor.kDoubleNEOPerSide,
-                DifferentialDrivetrainSim.KitbotGearing.k10p71,
-                DifferentialDrivetrainSim.KitbotWheelSize.kSixInch,
-                null
-            )
-            leftEncoderSim = EncoderSim(Encoder(0, 1))
-            rightEncoderSim = EncoderSim(Encoder(0,1))
-            gyroSim = ADXRS450_GyroSim(ADXRS450_Gyro())
-
-            fieldSim = Field2d()
-            SmartDashboard.putData("Field", fieldSim)
-        }
     }
 
     override fun periodic() {
         odometry.update(
             Rotation2d.fromDegrees(heading),
-            leftEncoder.position,
-            rightEncoder.position)
-    }
-
-    override fun simulationPeriodic() {
-        driveSim?.let {
-            fieldSim?.robotPose = pose
-            it.setInputs(
-                leftMotors.get() * RobotController.getBatteryVoltage(),
-                rightMotors.get() * RobotController.getBatteryVoltage())
-            it.update(.020)
-
-            leftEncoderSim?.distance = it.leftPositionMeters
-            leftEncoderSim?.rate = it.leftVelocityMetersPerSecond
-            rightEncoderSim?.distance = it.rightPositionMeters
-            rightEncoderSim?.rate = it.rightVelocityMetersPerSecond
-
-            gyroSim?.setAngle(it.heading.degrees)
-        }
+            leftEncoder.getDistance(),
+            rightEncoder.getDistance())
     }
 
     fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {
@@ -106,7 +82,7 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0) * (if (gyroReversed) { -1.0 } else { 1.0 }))
 
     // MARK: Diagnostic-type variables
-    val averageEncoderDistance: Double get() = (leftEncoder.position + rightEncoder.position) / 2.0
+    val averageEncoderDistance: Double get() = (leftEncoder.distance + rightEncoder.distance) / 2.0
     val drawnCurrentAmps: Double? get() = driveSim?.let { return it.currentDrawAmps }
     val pose: Pose2d get() = odometry.poseMeters
 
@@ -115,11 +91,11 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     }
 
     fun getWheelSpeeds(): DifferentialDriveWheelSpeeds {
-        SmartDashboard.putNumber("PV", motorLF.encoder.velocity)
+        SmartDashboard.putNumber("PV", leftEncoder.getRate())
 
         return DifferentialDriveWheelSpeeds(
-            rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
-            rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
+            leftEncoder.getRate(),
+            rightEncoder.getRate()
         )
     }
 
