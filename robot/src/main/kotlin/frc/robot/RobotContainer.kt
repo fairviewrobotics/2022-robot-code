@@ -4,13 +4,14 @@
 package frc.robot
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX
+import com.ctre.phoenix.motorcontrol.can.TalonSRX
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
 import com.revrobotics.CANSparkMax
 import com.revrobotics.CANSparkMaxLowLevel.MotorType
 
-import frc.robot.subsystems.DrivetrainSubsystem
+import frc.robot.subsystems.DrivetrainSubsystemOld
 
 import frc.robot.commands.*
 
@@ -30,12 +31,12 @@ class RobotContainer {
     val motorFrontRight = CANSparkMax(1, MotorType.kBrushed)
     val motorBackRight = CANSparkMax(2, MotorType.kBrushed)
 
-    val debugMotor = TalonFX(0)
+    val debugMotor: TalonFX =
     val debugSubsystem = MotorTestSubsystem(debugMotor)
     val gyro = AHRS()
 
     // MARK: Subsystems
-    val drivetrain = DrivetrainSubsystem(
+    val drivetrain = DrivetrainSubsystemOld(
         motorFrontLeft,
         motorBackLeft,
         motorFrontRight,
