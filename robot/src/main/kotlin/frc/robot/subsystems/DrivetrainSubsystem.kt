@@ -26,12 +26,22 @@ import kotlin.math.min
 /**
  * Subsystem for interacting with the drivetrain. Controls drivetrain motors + encoders, and the gyroscope. Also handles simulation for those things.
  */
-class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, val motorRF: CANSparkMax, val motorRB: CANSparkMax, val gyro: AHRS) : SubsystemBase() {
+class DrivetrainSubsystem(
+    val motorLF: CANSparkMax,
+    val motorLB: CANSparkMax,
+    val motorRF: CANSparkMax,
+    val motorRB: CANSparkMax,
+    val gyro: AHRS,
+    val leftEncoderPortA: Int,
+    val leftEncoderPortB: Int,
+    val rightEncoderPortA: Int,
+    val rightEncoderPortB: Int,
+    val pulsesPerRevolution: Double) : SubsystemBase() {
     val leftMotors = MotorControllerGroup(motorLF, motorLB)
     val rightMotors = MotorControllerGroup(motorRF, motorRB)
 
-    val leftEncoder = motorLF.encoder
-    val rightEncoder = motorRF.encoder
+    val leftEncoder = Encoder(leftEncoderPortA, leftEncoderPortB)
+    val rightEncoder = Encoder(rightEncoderPortA, rightEncoderPortB)
 
     val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
@@ -46,7 +56,10 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
         rightMotors.inverted = true
         resetEncoders()
         odometry = DifferentialDriveOdometry(Rotation2d.fromDegrees(heading))
-        
+
+        leftEncoder.distancePerPulse = pulsesPerRevolution
+        rightEncoder.distancePerPulse = pulsesPerRevolution
+
         if (RobotBase.isSimulation()) {
             driveSim = DifferentialDrivetrainSim.createKitbotSim(
                 DifferentialDrivetrainSim.KitbotMotor.kDoubleNEOPerSide,
@@ -66,8 +79,8 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     override fun periodic() {
         odometry.update(
             Rotation2d.fromDegrees(heading),
-            leftEncoder.position,
-            rightEncoder.position)
+            leftEncoder.distance,
+            rightEncoder.distance)
     }
 
     override fun simulationPeriodic() {
@@ -103,7 +116,7 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
 
     // MARK: Diagnostic-type variables
-    val averageEncoderDistance: Double get() = (leftEncoder.position + rightEncoder.position) / 2.0
+    val averageEncoderDistance: Double get() = (leftEncoder.distance + rightEncoder.distance) / 2.0
     val drawnCurrentAmps: Double? get() = driveSim?.let { return it.currentDrawAmps }
     val pose: Pose2d get() = odometry.poseMeters
 
@@ -114,8 +127,8 @@ class DrivetrainSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, va
     fun getWheelSpeeds(): DifferentialDriveWheelSpeeds {
 
         return DifferentialDriveWheelSpeeds(
-            rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
-            -rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity / 10.75, Units.inchesToMeters(6.0))
+            rotationsPerMinuteToMetersPerSecond(leftEncoder.rate / 10.75, Units.inchesToMeters(6.0)),
+            -rotationsPerMinuteToMetersPerSecond(rightEncoder.rate /* TODO: Fix rate, this is in pulses */ / 10.75, Units.inchesToMeters(6.0))
         )
     }
 

@@ -25,17 +25,25 @@ class RobotContainer {
     val controller0 = XboxController(0)
     val controller1 = XboxController(1)
 
-    val motorFrontLeft = CANSparkMax(1, MotorType.kBrushless)
-    val motorBackLeft = CANSparkMax(2, MotorType.kBrushless)
-    val motorFrontRight = CANSparkMax(3, MotorType.kBrushless)
-    val motorBackRight = CANSparkMax(4, MotorType.kBrushless)
+    val motorFrontLeft = CANSparkMax(4, MotorType.kBrushed)
+    val motorBackLeft = CANSparkMax(3, MotorType.kBrushed)
+    val motorFrontRight = CANSparkMax(1, MotorType.kBrushed)
+    val motorBackRight = CANSparkMax(2, MotorType.kBrushed)
 
     val debugMotor = TalonFX(0)
     val debugSubsystem = MotorTestSubsystem(debugMotor)
     val gyro = AHRS()
 
     // MARK: Subsystems
-    val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro)
+    val drivetrain = DrivetrainSubsystem(
+        motorFrontLeft,
+        motorBackLeft,
+        motorFrontRight,
+        motorBackRight,
+        gyro,
+        0, 1,
+        2, 3,
+        400.0)
 
     init {
         configureButtonBindings()
@@ -53,8 +61,8 @@ class RobotContainer {
             ArcadeDriveCommand(drivetrain, controller0)
         )*/
 
-        //drivetrain.defaultCommand = DebugDrive(drivetrain, controller0)
-        drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
+        drivetrain.defaultCommand = DirectDebugDrive(drivetrain, controller0)
+        //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
         //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
     }
 

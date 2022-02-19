@@ -4,7 +4,6 @@ import com.ctre.phoenix.motorcontrol.TalonFXControlMode
 import com.ctre.phoenix.motorcontrol.can.TalonFX
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
-import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
@@ -15,16 +14,15 @@ import frc.robot.subsystems.DrivetrainSubsystem
  * various debug commands used for testing and diagnostic
  * very freeform and not very refined
  */
-class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
+class DirectDebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(drivetrain)
     }
 
     override fun execute() {
-        if (controller.aButtonPressed) {
-            drivetrain.gyro.reset()
-        }
-        SmartDashboard.putNumber("Angle (Degrees)", drivetrain.degrees)
+        val speeds = DifferentialDriveKinematics(21.5).toWheelSpeeds(ChassisSpeeds(-controller.leftY * 6.0, 0.0, controller.leftX))
+
+        drivetrain.tankDriveVolts(speeds.leftMetersPerSecond, speeds.rightMetersPerSecond)
     }
 
     override fun end(interrupted: Boolean) {
@@ -33,6 +31,26 @@ class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxContro
     override fun isFinished() = false
 }
 
+class VoltDebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
+    init {
+        addRequirements(drivetrain)
+    }
+
+    var volt = 0.0
+    override fun execute() {
+        if (controller.aButtonPressed) {
+            volt += 1.0
+        }
+
+        if (controller.bButtonPressed) {
+            volt -= 1.0
+        }
+
+        drivetrain.tankDriveVolts(volt, volt)
+        SmartDashboard.putNumber("Motor Volts", volt)
+        SmartDashboard.putNumber("Encoder Rate (rpm)", drivetrain.leftEncoder.rate / 10.75)
+    }
+}
 class MotorTestSubsystem(val motor: TalonFX) : SubsystemBase() {
     fun volts(volts: Double) {
         motor.set(TalonFXControlMode.PercentOutput, volts)
