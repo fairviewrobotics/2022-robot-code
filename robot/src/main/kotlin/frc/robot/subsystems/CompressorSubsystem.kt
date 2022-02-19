@@ -8,6 +8,10 @@ import edu.wpi.first.wpilibj.Compressor
 
 class CompressorSubsystem(val compressor: Compressor) : SubsystemBase() {
 
+    fun enable(){
+        compressor.enableDigital()
+    }
+
     fun disable(){
         compressor.disable()
     }

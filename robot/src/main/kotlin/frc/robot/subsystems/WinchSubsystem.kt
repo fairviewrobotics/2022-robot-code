@@ -11,7 +11,7 @@ class WinchSubsystem(val winch: MotorController,
                      val lowerLimit: DigitalInput, 
                      val upperLimit: DigitalInput) : SubsystemBase() {
 
-    fun setInitial(speed: Double){
+    fun setSpeed(speed: Double){
         if (speed > 0){
             if (!upperLimit.get()){
                 winch.set(speed)
@@ -26,6 +26,14 @@ class WinchSubsystem(val winch: MotorController,
             }
         }
         
+    }
+
+    fun atUpper() : Boolean{
+        return upperLimit.get()
+    }
+
+    fun atLower() : Boolean{
+        return lowerLimit.get()
     }
 
     override fun periodic() {
