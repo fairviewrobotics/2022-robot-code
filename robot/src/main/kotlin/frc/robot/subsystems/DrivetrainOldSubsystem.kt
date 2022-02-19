@@ -1,7 +1,7 @@
 package frc.robot.subsystems
 
 import com.kauailabs.navx.frc.AHRS
-import com.revrobotics.CANSparkMax
+import edu.wpi.first.wpilibj.motorcontrol.PWMVictorSPX
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry
@@ -26,7 +26,7 @@ import kotlin.math.min
 /**
  * Subsystem for interacting with the drivetrain. Controls drivetrain motors + encoders, and the gyroscope. Also handles simulation for those things.
  */
-class DrivetrainOldSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax, val motorRF: CANSparkMax, val motorRB: CANSparkMax, val gyro: AHRS, val lEncoder: Encoder, val rEncoder: Encoder) : SubsystemBase() {
+class DrivetrainOldSubsystem(val motorLF: PWMVictorSPX, val motorLB: PWMVictorSPX, val motorRF: PWMVictorSPX, val motorRB: PWMVictorSPX, val gyro: AHRS, val lEncoder: Encoder, val rEncoder: Encoder) : SubsystemBase() {
     val gyroReversed = false
 
     val leftMotors = MotorControllerGroup(motorLF, motorLB)
@@ -102,6 +102,8 @@ class DrivetrainOldSubsystem(val motorLF: CANSparkMax, val motorLB: CANSparkMax,
 
     // MARK: Diagnostic-type functions
     fun resetEncoders() {
+        leftEncoder.reset()
+        rightEncoder.reset()
         // todo: Reset encoder distance
     }
 

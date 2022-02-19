@@ -9,7 +9,7 @@ import frc.robot.subsystems.CompressorSubsystem
 import edu.wpi.first.wpilibj2.command.CommandBase
 
 /** An example command that uses an example subsystem.  */
-class ExamplePneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compressor: CompressorSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
+class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compressor: CompressorSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
 
     /**
      * Creates a new ExampleCommand.
