@@ -3,17 +3,8 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
-import com.ctre.phoenix.motorcontrol.can.TalonFX
-import com.ctre.phoenix.motorcontrol.can.TalonSRX
-import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
-import com.revrobotics.CANSparkMax
-import com.revrobotics.CANSparkMaxLowLevel.MotorType
-
-import frc.robot.subsystems.DrivetrainSubsystemOld
-
-import frc.robot.commands.*
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -23,28 +14,26 @@ import frc.robot.commands.*
  */
 class RobotContainer {
     // MARK: Hardware initialization -- anything that needs a port
-    val controller0 = XboxController(0)
-    val controller1 = XboxController(1)
+    //val controller0 = XboxController(0)
+    //val controller1 = XboxController(1)
 
-    val motorFrontLeft = CANSparkMax(4, MotorType.kBrushed)
-    val motorBackLeft = CANSparkMax(3, MotorType.kBrushed)
-    val motorFrontRight = CANSparkMax(1, MotorType.kBrushed)
-    val motorBackRight = CANSparkMax(2, MotorType.kBrushed)
+    //val motorFrontLeft = WPI_TalonSRX(4)
+    //val motorBackLeft = WPI_TalonSRX(3)
+    //val motorFrontRight = WPI_TalonSRX(1)
+    //val motorBackRight = WPI_TalonSRX(2)
 
-    val debugMotor: TalonFX =
-    val debugSubsystem = MotorTestSubsystem(debugMotor)
-    val gyro = AHRS()
+    //val gyro = AHRS()
 
     // MARK: Subsystems
-    val drivetrain = DrivetrainSubsystemOld(
-        motorFrontLeft,
-        motorBackLeft,
-        motorFrontRight,
-        motorBackRight,
-        gyro,
-        0, 1,
-        2, 3,
-        400.0)
+    //val drivetrain = TalonSRXDrivetrainSubsystem(
+    //    motorFrontLeft,
+    //    motorBackLeft,
+    //    motorFrontRight,
+    //    motorBackRight,
+    //    gyro,
+    //    0, 1,
+    //    2, 3,
+    //    400.0)
 
     init {
         configureButtonBindings()
@@ -62,7 +51,7 @@ class RobotContainer {
             ArcadeDriveCommand(drivetrain, controller0)
         )*/
 
-        drivetrain.defaultCommand = DirectDebugDrive(drivetrain, controller0)
+        //drivetrain.defaultCommand = DirectDebugDrive(drivetrain, controller0)
         //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
         //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
     }

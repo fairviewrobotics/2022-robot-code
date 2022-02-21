@@ -7,11 +7,11 @@ import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
-import frc.robot.subsystems.DrivetrainSubsystemOld
+import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
 
-class DrivetrainPIDController(val drivetrain: DrivetrainSubsystemOld) {
+class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
         3.0,
         0.0,
@@ -25,8 +25,8 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystemOld) {
 
     fun execute(speeds: DifferentialDriveWheelSpeeds) {
         // get vals
-        val currentRightSpeed = drivetrain.getWheelSpeeds().rightMetersPerSecond
-        val currentLeftSpeed = drivetrain.getWheelSpeeds().leftMetersPerSecond
+        val currentRightSpeed = drivetrain.wheelSpeeds.rightMetersPerSecond
+        val currentLeftSpeed = drivetrain.wheelSpeeds.leftMetersPerSecond
 
         /*if (abs(speeds.leftMetersPerSecond) < 0.1) { leftPID.p = 120.0; leftPID.i = 0.0; } else { leftPID.p = 6.2296; leftPID.i = 0.1; }
         if (abs(speeds.rightMetersPerSecond) < 0.1) { rightPID.p = 120.0; rightPID.i = 0.0; } else { rightPID.p = 6.2296; rightPID.i = 0.1; }*/
@@ -43,7 +43,7 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystemOld) {
     }
 }
 
-class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsystemOld) {
+class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsystem) {
     val driveController = DrivetrainPIDController(drivetrainSubsystem)
     val angleController = PIDController(
         0.05,
@@ -68,7 +68,7 @@ class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsyste
     }
 }
 
-class DrivetrainPIDCommand(val drivetrain: DrivetrainSubsystemOld, val periodic: () -> DifferentialDriveWheelSpeeds) : CommandBase() {
+class DrivetrainPIDCommand(val drivetrain: DrivetrainSubsystem, val periodic: () -> DifferentialDriveWheelSpeeds) : CommandBase() {
     val controller = DrivetrainPIDController(drivetrain)
 
     init {
@@ -86,7 +86,7 @@ class DrivetrainPIDCommand(val drivetrain: DrivetrainSubsystemOld, val periodic:
     override fun isFinished() = false
 }
 
-class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystemOld, val periodic: () -> Pair<Double, Double>): CommandBase() {
+class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystem, val periodic: () -> Pair<Double, Double>): CommandBase() {
     val controller = DrivetrainPIDAngularController(drivetrain)
 
     init {
@@ -105,7 +105,7 @@ class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystemOld, val pe
     override fun isFinished() = false
 }
 
-fun JoystickDrive(drivetrain: DrivetrainSubsystemOld, controller: XboxController) : DrivetrainPIDAngularCommand {
+fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDAngularCommand {
     return DrivetrainPIDAngularCommand(drivetrain) {
         var angle = atan2(controller.leftY, controller.leftX)
         if(angle < 0) {
@@ -119,7 +119,7 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystemOld, controller: XboxController
     }
 }
 
-fun ArcadeDrive(drivetrain: DrivetrainSubsystemOld, controller: XboxController) : DrivetrainPIDCommand {
+fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
     val kinematics = DifferentialDriveKinematics(21.5)
     return DrivetrainPIDCommand(drivetrain) {
         var forward = -controller.leftY * abs(controller.leftY) * 1.25

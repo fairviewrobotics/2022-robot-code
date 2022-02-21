@@ -8,13 +8,13 @@ import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.robot.subsystems.DrivetrainSubsystemOld
+import frc.robot.subsystems.DrivetrainSubsystem
 
 /**
  * various debug commands used for testing and diagnostic
  * very freeform and not very refined
  */
-class DirectDebugDrive(val drivetrain: DrivetrainSubsystemOld, val controller: XboxController) : CommandBase() {
+class DirectDebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(drivetrain)
     }
@@ -31,7 +31,7 @@ class DirectDebugDrive(val drivetrain: DrivetrainSubsystemOld, val controller: X
     override fun isFinished() = false
 }
 
-class VoltDebugDrive(val drivetrain: DrivetrainSubsystemOld, val controller: XboxController) : CommandBase() {
+class VoltDebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController) : CommandBase() {
     init {
         addRequirements(drivetrain)
     }
@@ -48,7 +48,6 @@ class VoltDebugDrive(val drivetrain: DrivetrainSubsystemOld, val controller: Xbo
 
         drivetrain.tankDriveVolts(volt, volt)
         SmartDashboard.putNumber("Motor Volts", volt)
-        SmartDashboard.putNumber("Encoder Rate (rpm)", drivetrain.leftEncoder.rate / 10.75)
     }
 }
 class MotorTestSubsystem(val motor: TalonFX) : SubsystemBase() {

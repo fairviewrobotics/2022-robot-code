@@ -1,6 +1,7 @@
 package frc.robot.subsystems
 
 import com.ctre.phoenix.motorcontrol.can.TalonSRX
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.math.geometry.Pose2d
@@ -13,6 +14,7 @@ import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.RobotController
 import edu.wpi.first.wpilibj.drive.DifferentialDrive
+import edu.wpi.first.wpilibj.motorcontrol.MotorController
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup
 import edu.wpi.first.wpilibj.simulation.ADXRS450_GyroSim
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim
@@ -23,14 +25,31 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.robot.commands.MotorTest
 import kotlin.math.IEEErem
 
+abstract class DrivetrainSubsystem : SubsystemBase() {
+    abstract val leftMotors: MotorControllerGroup
+    abstract val rightMotors: MotorControllerGroup
+    abstract val gyro: AHRS
+
+    abstract fun tankDriveVolts(leftVolts: Double, rightVolts: Double)
+    abstract fun setMaxOutput(maxOutput: Double)
+
+    abstract val angularVelocity: Double
+    abstract val heading: Double
+    abstract val wheelSpeeds: DifferentialDriveWheelSpeeds
+
+    abstract fun resetEncoders()
+    abstract fun zeroHeading()
+    abstract fun resetOdometry(pose: Pose2d)
+}
+
 class CANSparkMaxDrivetrainSubsystem(
-    val motorLF: CANSparkMax,
-    val motorLB: CANSparkMax,
-    val motorRF: CANSparkMax,
-    val motorRB: CANSparkMax,
-    val gyro: AHRS) : SubsystemBase() {
-    val leftMotors = MotorControllerGroup(motorLF, motorLB)
-    val rightMotors = MotorControllerGroup(motorRF, motorRB)
+    motorLF: CANSparkMax,
+    motorLB: CANSparkMax,
+    motorRF: CANSparkMax,
+    motorRB: CANSparkMax,
+    override val gyro: AHRS) : DrivetrainSubsystem() {
+    override val leftMotors = MotorControllerGroup(motorLF, motorLB)
+    override val rightMotors = MotorControllerGroup(motorRF, motorRB)
 
     val leftEncoder = motorLF.encoder
     val rightEncoder = motorRF.encoder
@@ -51,20 +70,20 @@ class CANSparkMaxDrivetrainSubsystem(
             rightEncoder.position)
     }
 
-    fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {
+    override fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {
         leftMotors.setVoltage(leftVolts)
         rightMotors.setVoltage(rightVolts)
         drive.feed()
     }
 
-    fun setMaxOutput(maxOutput: Double) {
+    override fun setMaxOutput(maxOutput: Double) {
         drive.setMaxOutput(maxOutput)
     }
 
     /** Angular velocity, radians per second. */
-    val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate)
+    override val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate)
     /** Heading, in radians. */
-    val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
+    override val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
 
     // MARK: Diagnostic-type variables
     val averageEncoderDistance: Double get() = (leftEncoder.position + rightEncoder.position) / 2.0
@@ -74,39 +93,39 @@ class CANSparkMaxDrivetrainSubsystem(
         return velocityRPM * (1.0 / 60.0) * (wheelDiameterMeters * Math.PI / 1.0)
     }
 
-    val wheelSpeeds get() = DifferentialDriveWheelSpeeds(
+    override val wheelSpeeds get() = DifferentialDriveWheelSpeeds(
         rotationsPerMinuteToMetersPerSecond(leftEncoder.velocity / 10.75, Units.inchesToMeters(6.0)),
         -rotationsPerMinuteToMetersPerSecond(rightEncoder.velocity /* TODO: Fix rate, this is in pulses */ / 10.75, Units.inchesToMeters(6.0))
     )
 
     // MARK: Diagnostic-type functions
-    fun resetEncoders() {
+    override fun resetEncoders() {
         // todo: Reset encoder distance
     }
 
-    fun zeroHeading() {
+    override fun zeroHeading() {
         gyro.reset()
     }
 
-    fun resetOdometry(pose: Pose2d) {
+    override fun resetOdometry(pose: Pose2d) {
         resetEncoders()
         odometry.resetPosition(pose, Rotation2d.fromDegrees(heading))
     }
 }
 
 class TalonSRXDrivetrainSubsystem(
-    val motorLF: TalonSRX,
-    val motorLB: TalonSRX,
-    val motorRF: TalonSRX,
-    val motorRB: TalonSRX,
-    val gyro: AHRS,
-    val leftEncoderPortA: Int,
-    val leftEncoderPortB: Int,
-    val rightEncoderPortA: Int,
-    val rightEncoderPortB: Int,
-    val pulsesPerRevolution: Double) : SubsystemBase() {
-    val leftMotors = MotorControllerGroup(motorLF, motorLB)
-    val rightMotors = MotorControllerGroup(motorRF, motorRB)
+    motorLF: WPI_TalonSRX,
+    motorLB: WPI_TalonSRX,
+    motorRF: WPI_TalonSRX,
+    motorRB: WPI_TalonSRX,
+    override val gyro: AHRS,
+    leftEncoderPortA: Int,
+    leftEncoderPortB: Int,
+    rightEncoderPortA: Int,
+    rightEncoderPortB: Int,
+    pulsesPerRevolution: Double) : DrivetrainSubsystem() {
+    override val leftMotors = MotorControllerGroup(motorLF, motorLB)
+    override val rightMotors = MotorControllerGroup(motorRF, motorRB)
 
     val leftEncoder = Encoder(leftEncoderPortA, leftEncoderPortB)
     val rightEncoder = Encoder(rightEncoderPortA, rightEncoderPortB)
@@ -130,20 +149,20 @@ class TalonSRXDrivetrainSubsystem(
             rightEncoder.distance)
     }
 
-    fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {
+   override fun tankDriveVolts(leftVolts: Double, rightVolts: Double) {
         leftMotors.setVoltage(leftVolts)
         rightMotors.setVoltage(rightVolts)
         drive.feed()
     }
 
-    fun setMaxOutput(maxOutput: Double) {
+    override fun setMaxOutput(maxOutput: Double) {
         drive.setMaxOutput(maxOutput)
     }
 
     /** Angular velocity, radians per second. */
-    val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate)
+    override val angularVelocity: Double get() = Units.degreesToRadians(gyro.rate)
     /** Heading, in radians. */
-    val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
+    override val heading: Double get() = Units.degreesToRadians(gyro.angle.IEEErem(360.0))
 
     // MARK: Diagnostic-type variables
     val averageEncoderDistance: Double get() = (leftEncoder.distance + rightEncoder.distance) / 2.0
@@ -153,21 +172,21 @@ class TalonSRXDrivetrainSubsystem(
         return velocityRPM * (1.0 / 60.0) * (wheelDiameterMeters * Math.PI / 1.0)
     }
 
-    val wheelSpeeds get() = DifferentialDriveWheelSpeeds(
+    override val wheelSpeeds get() = DifferentialDriveWheelSpeeds(
         rotationsPerMinuteToMetersPerSecond(leftEncoder.rate / 10.75, Units.inchesToMeters(6.0)),
         -rotationsPerMinuteToMetersPerSecond(rightEncoder.rate /* TODO: Fix rate, this is in pulses */ / 10.75, Units.inchesToMeters(6.0))
     )
 
     // MARK: Diagnostic-type functions
-    fun resetEncoders() {
+    override fun resetEncoders() {
         // todo: Reset encoder distance
     }
 
-    fun zeroHeading() {
+    override fun zeroHeading() {
         gyro.reset()
     }
 
-    fun resetOdometry(pose: Pose2d) {
+    override fun resetOdometry(pose: Pose2d) {
         resetEncoders()
         odometry.resetPosition(pose, Rotation2d.fromDegrees(heading))
     }
