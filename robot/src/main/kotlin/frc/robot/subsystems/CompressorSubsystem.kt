@@ -5,23 +5,19 @@ package frc.robot.subsystems
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.Compressor
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value.*
-import edu.wpi.first.wpilibj.DoubleSolenoid
 
-class ExamplePneumaticSubsystem(val output: DoubleSolenoid) : SubsystemBase() {
+class CompressorSubsystem(val compressor: Compressor) : SubsystemBase() {
 
-    fun setForward(){
-        output.set(kForward)
-    }
-    fun setReverse(){
-        output.set(kReverse)
-    }
-    fun setOff(){
-        output.set(kOff)
+    fun enable(){
+        compressor.enableDigital()
     }
 
-    fun set(state: DoubleSolenoid.Value) {
-        output.set(state)
+    fun disable(){
+        compressor.disable()
+    }
+    
+    fun switchValue() : Boolean {
+        return compressor.getPressureSwitchValue() // true if pressure low, false otherwise
     }
 
     override fun periodic() {

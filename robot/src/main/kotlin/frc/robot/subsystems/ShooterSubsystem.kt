@@ -18,10 +18,17 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 
 // subsystem for shooter (hypothetical for now)
+// todo: multiple returns?
+// todo: we can also use cansparkmax.follow() to follow another controller but inverted.
 
-class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
-    val encoder = flywheelMotor.getEncoder()
 
+enum class WhichMotor {
+    LOWER, UPPER
+}
+
+class ShooterSubsystem(val flywheelMotorLower: CANSparkMax, val flywheelMotorUpper: CANSparkMax) : SubsystemBase() {
+    /*
+    val refreshInterval = 0.02 // usually this on most normal robot loops, can be lowered using notifiers
     // the value passed into getNEO represents the number of motors in the gearbox.
     val flywheelPlant = LinearSystemId.createFlywheelSystem(DCMotor.getNEO(1), Constants.shooterInertia, Constants.shooterGearing)
     // kalman filter
@@ -29,17 +36,17 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             Nat.N1(),
             Nat.N1(),
             flywheelPlant,
-            VecBuilder.fill(Constants.shooterStateStdev), // state stdev
-            VecBuilder.fill(Constants.shooterEncStdev), // encoder stdev
-            Constants.refreshInterval // refresh rate
+            VecBuilder.fill(Constants.shooterStateStdev), // state stdev:  how accurate we think model is
+            VecBuilder.fill(Constants.shooterEncStdev), // encoder stdev: how accurate we think encoder is
+            refreshInterval // refresh rate
     )
 
     var lqrEnabled = false
     val controller = LinearQuadraticRegulator(
             flywheelPlant,
-            VecBuilder.fill(Constants.shooterQ),
-            VecBuilder.fill(Constants.shooterR),
-            Constants.refreshInterval
+            VecBuilder.fill(Constants.shooterQ), // tune up to make more conservative (less weight on large errors)
+            VecBuilder.fill(Constants.shooterR), // tune down to penalize control effort (less aggressive)
+            refreshInterval
     )
 
     val loop = LinearSystemLoop(
@@ -49,74 +56,126 @@ class ShooterSubsystem(val flywheelMotor: CANSparkMax) : SubsystemBase() {
             Constants.shooterVolts,
             Constants.refreshInterval
     )
+    */
 
-    var flywheelSim: FlywheelSim? = null
-    var encoderSim: EncoderSim? = null
+    var flywheelSimUpper: FlywheelSim? = null
+    var flywheelSimLower: FlywheelSim? = null
+    var encoderSimLower: EncoderSim? = null
+    var encoderSimUpper: EncoderSim? = null
 
     init {
         if(RobotBase.isSimulation()) {
-            REVPhysicsSim.getInstance().addSparkMax(flywheelMotor, DCMotor.getNEO(1))
+            REVPhysicsSim.getInstance().addSparkMax(flywheelMotorUpper, DCMotor.getNEO(1))
+            REVPhysicsSim.getInstance().addSparkMax(flywheelMotorLower, DCMotor.getNEO(1))
 
-            flywheelSim = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia)
+            flywheelSimUpper = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia)
+            flywheelSimLower = FlywheelSim(DCMotor.getNEO(1), 1.0, Constants.shooterInertia)
             // Rev doesn't allow its encoders to be simulated, so we create a fake digital encoder and manipulate it
-            encoderSim = EncoderSim(Encoder(0, 1))
+            encoderSimUpper = EncoderSim(Encoder(0, 1))
+            encoderSimLower = EncoderSim(Encoder(0, 1))
         }
     }
 
     override fun periodic() {
+        /* 
         loop.correct(VecBuilder.fill(Units.degreesToRadians(encoder.getVelocity()))) // may not have right units
         loop.predict(Constants.refreshInterval)
         val nextVoltage = loop.getU(0)
         if(lqrEnabled) {
             flywheelMotor.setVoltage(nextVoltage)
         }
+        */
     }
 
-    fun LQROn(velocity: Double){
-        lqrEnabled = true
-        loop.setNextR(VecBuilder.fill(velocity))
+    /* 
+    fun setLatencyCompensate(sensorDelay: Double){
+        controller.latencyCompensate(flywheelPlant, refreshInterval, sensorDelay)
+    }
+
+    fun LQROn(){
+        loop.setNextR(VecBuilder.fill(Constants.shooterSpinupRadS));
     }
 
     fun LQROff(){
         lqrEnabled = false
         loop.setNextR(VecBuilder.fill(0.0))
     }
+    */
 
+    /* set a motor speed, with one reversed */
+    fun setSpeed(speed: Double) {
+        flywheelMotorLower.set(speed * 12.0)
+        flywheelMotorUpper.set(speed * -12.0)
+    }
+
+
+    
+    fun getEncoder(which: WhichMotor) : RelativeEncoder{
+        if (which == WhichMotor.LOWER){
+            // lower
+            return flywheelMotorLower.getEncoder()
+        }
+        return flywheelMotorUpper.getEncoder()
+    }
+        
     /* get current encoder velocity (in rad / s) */
-    fun getVelocity(): Double {
+    fun getVelocity(which: WhichMotor): Double {
         if(!RobotBase.isSimulation()) {
-            return Units.degreesToRadians(encoder.velocity)
+            val enc = getEncoder(which)
+            return Units.degreesToRadians(enc.getVelocity())
         } else {
-            return encoderSim?.rate ?: 0.0
+            if (which == WhichMotor.LOWER){
+                return encoderSimLower?.rate ?: 0.0
+            }
+            return encoderSimUpper?.rate ?: 0.0
         }
     }
 
-    /* set a motor speed */
-    fun setSpeed(speed: Double) {
-        flywheelMotor.setVoltage(speed * 12)
-    }
-
-    fun setVoltage(volts: Double) {
-        flywheelMotor.setVoltage(volts)
+    fun setVoltage(volts: Double, which: WhichMotor) {
+        if (which == WhichMotor.LOWER){
+            flywheelMotorLower.setVoltage(volts)
+        } else{
+            flywheelMotorUpper.setVoltage(volts)
+        }
+        
     }
 
     /* set spark to coast. Needed for bang bang */
     fun setCoast(){
-        flywheelMotor.setIdleMode(CANSparkMax.IdleMode.kCoast)
+        // ALWAYS RUN THIS ONCE BEFORE DOING ANY SORT OF BANG-BANG CONTROL!
+        flywheelMotorLower.setIdleMode(CANSparkMax.IdleMode.kCoast)
+        flywheelMotorLower.set(0.0)
+        flywheelMotorUpper.setIdleMode(CANSparkMax.IdleMode.kCoast)
+        flywheelMotorUpper.set(0.0)
     }
 
     fun isCoast(): Boolean{
-        return flywheelMotor.getIdleMode() == CANSparkMax.IdleMode.kCoast
+        /*
+            until we can guarantee that the setCoast method works, this is meant as a further layer of validation.
+            it's blocking so it's probably not the best to keep this
+         */
+        return (flywheelMotorLower.getIdleMode() == CANSparkMax.IdleMode.kCoast) && (flywheelMotorUpper.getIdleMode() == CANSparkMax.IdleMode.kCoast)
     }
 
     override fun simulationPeriodic() {
         REVPhysicsSim.getInstance().run()
 
-        flywheelSim?.let { flywheelSim ->
-            flywheelSim.setInputVoltage(Math.min(flywheelMotor.appliedOutput, 12.0))
-            flywheelSim.update(Constants.refreshInterval)
-            encoderSim?.rate = flywheelSim.angularVelocityRadPerSec
+        flywheelSimUpper?.let { flywheelSimUpper ->
+            flywheelSimUpper.setInputVoltage(Math.min(flywheelMotorUpper.appliedOutput, 12.0))
+
+            flywheelSimUpper.update(Constants.refreshInterval)
+            
+            encoderSimUpper?.rate = flywheelSimUpper.angularVelocityRadPerSec
         }
+
+        flywheelSimLower?.let { flywheelSimLower ->
+            flywheelSimLower.setInputVoltage(Math.min(flywheelMotorLower.appliedOutput, 12.0))
+
+            flywheelSimLower.update(Constants.refreshInterval)
+            
+            encoderSimLower?.rate = flywheelSimLower.angularVelocityRadPerSec
+        }
+
     }
 
 }

@@ -3,11 +3,13 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.commands
 
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import frc.robot.subsystems.GenericSolenoidSubsystem
+import frc.robot.subsystems.CompressorSubsystem
 import edu.wpi.first.wpilibj2.command.CommandBase
-import frc.robot.subsystems.ShooterSubsystem
 
 /** An example command that uses an example subsystem.  */
-class ShooterLQR(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double ) : CommandBase() {
+class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compressor: CompressorSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
 
     /**
      * Creates a new ExampleCommand.
@@ -15,7 +17,9 @@ class ShooterLQR(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double
      * @param subsystem The subsystem used by this command.
      */
     init {
-        addRequirements(shooterSubsystem)
+        // Use addRequirements() here to declare subsystem dependencies.
+        addRequirements(solenoid)
+        addRequirements(compressor)
     }
 
     // Called when the command is initially scheduled.
@@ -24,15 +28,19 @@ class ShooterLQR(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double
 
     // Called every time the scheduler runs while the command is scheduled.
     override fun execute() {
-        shooterSubsystem.LQROn(setPt())
+        if (!compressor.switchValue()){
+            solenoid.set(state)
+        }
+        
+
     }
 
     // Called once the command ends or is interrupted.
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.LQROff()
-        shooterSubsystem.setSpeed(0.0)
     }
 
     // Returns true when the command should end.
-    override fun isFinished() = false
+    override fun isFinished(): Boolean {
+        return false
+    }
 }

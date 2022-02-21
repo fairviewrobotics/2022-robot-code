@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim
 import edu.wpi.first.wpilibj.smartdashboard.Field2d
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.robot.commands.MotorTest
 import kotlin.math.IEEErem
 
 abstract class DrivetrainSubsystem : SubsystemBase() {
