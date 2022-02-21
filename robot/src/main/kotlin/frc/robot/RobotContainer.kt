@@ -4,6 +4,7 @@
 package frc.robot
 
 import com.ctre.phoenix.motorcontrol.can.TalonFX
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
@@ -40,23 +41,16 @@ import frc.robot.commands.*
  */
 class RobotContainer {
     // MARK: Hardware initialization -- anything that needs a port
-    //val controller0 = XboxController(0)
-    //val controller1 = XboxController(1)
+    val controller0 = XboxController(0)
+    val controller1 = XboxController(1)
 
-    /* 
-    val motorFrontLeft = CANSparkMax(1, MotorType.kBrushless)
-    val motorBackLeft = CANSparkMax(2, MotorType.kBrushless)
-    val motorFrontRight = CANSparkMax(3, MotorType.kBrushless)
-    val motorBackRight = CANSparkMax(4, MotorType.kBrushless)
-    */
-    val motorFrontLeft = PWMVictorSPX(1)
-    val motorBackLeft = PWMVictorSPX(2)
-    val motorFrontRight = PWMVictorSPX(3)
-    val motorBackRight = PWMVictorSPX(4)
-    val leftEncoder = Encoder(0,1)
-    val rightEncoder = Encoder(2,3)
 
-    //val gyro = AHRS()
+    val motorFrontLeft = WPI_TalonSRX(1)
+    val motorBackLeft = WPI_TalonSRX(2)
+    val motorFrontRight = WPI_TalonSRX(3)
+    val motorBackRight = WPI_TalonSRX(4)
+
+    val gyro = AHRS()
 
 
     // climber hardware
@@ -75,11 +69,8 @@ class RobotContainer {
     // intake / indexer hardware
     val indexMotor = PWMTalonSRX(5)
 
-
-
     // MARK: Subsystems
-    //val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro)
-    val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro, leftEncoder, rightEncoder)
+    val drivetrain = TalonSRXDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro, 1, 2, 3, 4, 400.0)
 
     // climber
     val winch = WinchSubsystem(winchMotor, lowerLimit, upperLimit)
