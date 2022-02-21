@@ -79,7 +79,7 @@ class RobotContainer {
 
     // MARK: Subsystems
     //val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro)
-    val drivetrain = DrivetrainOldSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro, leftEncoder, rightEncoder)
+    val drivetrain = DrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, gyro, leftEncoder, rightEncoder)
 
     // climber
     val winch = WinchSubsystem(winchMotor, lowerLimit, upperLimit)
