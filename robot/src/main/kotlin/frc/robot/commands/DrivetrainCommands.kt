@@ -130,59 +130,5 @@ fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : D
     }
 }
 
-class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsystem) {
-    val driveController = DrivetrainPIDController(drivetrainSubsystem)
-    val angleController = PIDController(
-        0.05,
-        0.0,
-        0.0
-    )
 
-    init {
-        angleController.enableContinuousInput( -1.0 * Math.PI, 1.0* Math.PI)
-    }
-
-    val kinematics = DifferentialDriveKinematics(21.5)
-
-    fun execute(forward: Double, angle: Double) {
-        val currentAngle = drivetrainSubsystem.heading
-
-        val offset = angleController.calculate(currentAngle, angle)
-
-        val newSpeeds = kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, offset))
-
-        driveController.execute(newSpeeds)
-    }
-}
-
-class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystem, val periodic: () -> Pair<Double, Double>): CommandBase() {
-    val controller = DrivetrainPIDAngularController(drivetrain)
-
-    init {
-        addRequirements(drivetrain)
-    }
-
-    override fun execute() {
-        val step = periodic()
-        controller.execute(step.first, step.second)
-    }
-
-    override fun end(interrupted: Boolean) {
-        drivetrain.tankDriveVolts(0.0, 0.0)
-    }
-
-    override fun isFinished() = false
-}
-
-fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDAngularCommand {
-    return DrivetrainPIDAngularCommand(drivetrain) {
-        var angle = atan2(controller.leftY, controller.leftX)
-
-        SmartDashboard.putNumber("Setpoint (Degrees)", angle)
-        SmartDashboard.putNumber("Actual Gyro Heading", drivetrain.heading)
-
-
-        Pair<Double, Double>(0.0, angle)
-    }
-}
 
