@@ -15,3 +15,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(high_goal_vision high_goal.cpp)
 target_link_libraries(high_goal_vision ${OpenCV_LIBS} )
+
+add_executable(camera_calibration camera_calibration.cpp camera_distort.cpp)
+target_link_libraries(camera_calibration ${OpenCV_LIBS} )
