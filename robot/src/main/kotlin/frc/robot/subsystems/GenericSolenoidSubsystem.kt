@@ -8,17 +8,6 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value.*
 import edu.wpi.first.wpilibj.DoubleSolenoid
 
 class GenericSolenoidSubsystem(val output: DoubleSolenoid) : SubsystemBase() {
-
-    fun setForward(){
-        output.set(kForward)
-    }
-    fun setReverse(){
-        output.set(kReverse)
-    }
-    fun setOff(){
-        output.set(kOff)
-    }
-
     fun set(state: DoubleSolenoid.Value) {
         output.set(state)
     }

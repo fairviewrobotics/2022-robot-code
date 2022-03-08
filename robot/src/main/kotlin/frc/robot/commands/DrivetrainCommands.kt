@@ -11,7 +11,6 @@ import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
 
-
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
         3.0,
@@ -130,5 +129,13 @@ fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : D
     }
 }
 
+class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController): CommandBase() {
+    init {
+        addRequirements(drivetrain)
+    }
 
+    override fun execute() {
+        drivetrain.arcadeDrive(controller.leftY, controller.leftX)
+    }
+}
 
