@@ -54,9 +54,9 @@ class RobotContainer {
     val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
 
     // climber
-    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
+    //val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
     // TODO: attach limit switches directly to pins on Spark
-    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
+    //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
     val leftSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second)
     val rightSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidRightID.first,Constants.climbSolenoidRightID.second)
@@ -64,10 +64,10 @@ class RobotContainer {
     val climbRight = GenericSolenoidSubsystem(rightSolenoid)
 
     // shooter
-    val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
+    /*val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val shooterMotor2  = CANSparkMax(Constants.shooterHighID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val shooter1 = ShooterSubsystem(shooterMotor1)
-    val shooter2 = ShooterSubsystem(shooterMotor2)
+    val shooter2 = ShooterSubsystem(shooterMotor2)*/
 
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -88,21 +88,20 @@ class RobotContainer {
 
     // initial climb: drive up, lower climber fully, pull in pneumatics
     val initialClimb = SequentialCommandGroup(
-        LimitedWinchCommand(winch, { -1.0 }),
-        climberPull
+        //LimitedWinchCommand(winch, { -1.0 }),
+        //climberPull
     )
 
     // secondary climb: raise climber to half
     // ! all times are in seconds
     val secondaryClimb = SequentialCommandGroup(
-        FixedWinchSpeed(winch, { 1.0 }).withTimeout(0.5), // todo: tune
+        //FixedWinchSpeed(winch, { 1.0 }).withTimeout(0.5), // todo: tune
         climberPull,
-        LimitedWinchCommand(winch, { 1.0 }),
+        //LimitedWinchCommand(winch, { 1.0 }),
         climberPush,
-        FixedWinchSpeed(winch, { -1.0 }).withTimeout(0.5),
-        LimitedWinchCommand(winch, { -1.0 })
+        //FixedWinchSpeed(winch, { -1.0 }).withTimeout(0.5),
+        //LimitedWinchCommand(winch, { -1.0 })
     )
-
 
     init {
         configureButtonBindings()
@@ -113,7 +112,7 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
+        /*JoystickButton(controller0, kRightBumper.value).whenHeld(
             ShooterBangBang(shooter1, { Constants.shooterRPM })
         )
 
@@ -123,7 +122,7 @@ class RobotContainer {
 
         JoystickButton(controller0, kX.value).whenHeld(
             FixedShooterSpeed(shooter1, { 1.0 })
-        )
+        )*/
 
         // run intake on A
         JoystickButton(controller0, kA.value).whenHeld(

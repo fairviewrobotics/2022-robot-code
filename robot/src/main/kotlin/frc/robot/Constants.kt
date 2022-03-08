@@ -24,13 +24,13 @@ class Constants {
         val climbWinchID = 5
 
         // shooter (2 spark max to run wheels)
-        val shooterLowID = 6
-        val shooterHighID = 7
+        val shooterLowID = 16
+        val shooterHighID = 17
 
         // intake / indexer / gate (on talon each)
-        val intakeID = 10
-        val indexerID = 11
-        val gateID = 12
+        val intakeID = 9
+        val indexerID = 7
+        val gateID = 8
 
         val refreshInterval = 0.02
 
