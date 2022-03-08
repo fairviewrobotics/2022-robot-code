@@ -3,11 +3,12 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.subsystems
 
+import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.motorcontrol.MotorController
 
-class WinchSubsystem(val winch: MotorController, 
+class WinchSubsystem(val winch: CANSparkMax,
                      val lowerLimit: DigitalInput, 
                      val upperLimit: DigitalInput) : SubsystemBase() {
     // output speed to set motor at
@@ -16,6 +17,12 @@ class WinchSubsystem(val winch: MotorController,
     fun setSpeed(speed: Double){
         output = speed
     }
+`
+    fun resetEncoder() {
+        winch.encoder.position = 0.0;
+    }
+
+    fun position() = winch.encoder.position;
 
     fun atUpper() : Boolean{
         return upperLimit.get()
