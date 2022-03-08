@@ -11,6 +11,27 @@ private data class ConstantsListener(val func: (newValue: Double) -> Unit, val i
 
 class Constants {
     companion object {
+        /* Port IDs */
+        // drivetrain (4 motors, 2 on each side)
+        val driveFrontLeftID = 1
+        val driveBackLeftID = 2
+        val driveFrontRightID = 3
+        val driveBackRightID = 4
+
+        // climber (2 solenoids and one winch motor)
+        val climbSolenoidLeftID = Pair(1, 2)
+        val climbSolenoidRightID = Pair(3, 4)
+        val climbWinchID = 5
+
+        // shooter (2 spark max to run wheels)
+        val shooterLowID = 6
+        val shooterHighID = 7
+
+        // intake / indexer / gate (on talon each)
+        val intakeID = 10
+        val indexerID = 11
+        val gateID = 12
+
         val refreshInterval = 0.02
 
         private val constants = mutableMapOf<String, Double>()
@@ -36,26 +57,14 @@ class Constants {
             }
         }
 
-        val kDrivetrainFrontLeftPort get() = generateConstantGetter<Int>("kDrivetrainFrontLeftPort", 0.0)()
-        val kDrivetrainFrontRightPort get() = generateConstantGetter<Int>("kDrivetrainFrontRightPort", 1.0)()
-        val kDrivetrainBackLeftPort get() = generateConstantGetter<Int>("kDrivetrainBottomLeftPort", 2.0)()
-        val kDrivetrainBackRightPort get() = generateConstantGetter<Int>("kDrivetrainBottomRightPort", 3.0)()
-
-        val kDrivetrainLeftEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortA", 4.0)()
-        val kDrivetrainLeftEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainLeftEncoderPortB", 5.0)()
-        val kDrivetrainRightEncoderPortA get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortA", 6.0)()
-        val kDrivetrainRightEncoderPortB get() = generateConstantGetter<Int>("kDrivetrainRightEncoderPortB", 7.0)()
-
-        val kDrivetrainEncoderAReversed = true
-        val kDrivetrainEncoderBReversed = true
-
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        // drivetrain pid control coefficients
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 6.2296)()
         val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
-        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 5.0)()
-        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 1.0)()
-        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 1.0)()
+        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 2.6)()
+        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 10.0)()
+        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 30.0)()
 
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
@@ -71,14 +80,17 @@ class Constants {
         val shooterI get() = generateConstantGetter<Double>("shooterI", 0.0)()
         val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
 
+        // shooter target rpm
+        val shooterRPM get() = generateConstantGetter<Double>("shooterRPM", 5000.0)()
+
         // constants for flywheel LQR
-        val shooterInertia get() = generateConstantGetter<Double>("shooterInertia", 0.0020521)() //  units: kg / m^2
-        val shooterGearing get() = generateConstantGetter<Double>("shooterGearing", 1.0)() // output over input, unitless
-        val shooterStateStdev get() = generateConstantGetter<Double>("shooterStateStdev", 3.0)()
-        val shooterEncStdev get() = generateConstantGetter<Double>("shooterEncStdev", 0.01)()
-        val shooterQ get() = generateConstantGetter<Double>("shooterQ", 8.0)()
-        val shooterR get() = generateConstantGetter<Double>("shooterR", 12.0)()
-        val shooterVolts get() =generateConstantGetter<Double>("shooterVolts", 12.0)()
+        val shooterInertia get() = 0.0020521 //  units: kg / m^2
+
+        // base top speeds for intake, indexer, and gate
+        val intakeSpeed = 0.5
+        val indexerSpeed = 0.5
+        val gateSpeed = 0.5
+
 
         private fun onNetworkTablesChange(key: String, value: Double) {
             /** update map **/

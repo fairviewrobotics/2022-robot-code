@@ -21,12 +21,12 @@ class ShooterBangBang(val shooterSubsystem: ShooterSubsystem, val setPt: () -> D
     val feedForward = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
     init {
         addRequirements(shooterSubsystem)
-        shooterSubsystem.setCoast()
+        shooterSubsystem.setCoast() // required for bang bang to not harm motor
     }
 
     override fun execute() {
         // use 0.9 * feed forward to not go over speed
-        val speed = controller.calculate(shooterSubsystem.getVelocity(), setPt()) + 0.9 * feedForward.calculate(setPt())
+        val speed = controller.calculate(shooterSubsystem.getVelocity(), -1.0 * setPt()) - 0.9 * feedForward.calculate(setPt())
         shooterSubsystem.setVoltage(speed)
     }
 
