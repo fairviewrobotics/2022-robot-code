@@ -3,7 +3,6 @@ package frc.robot.commands
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.controller.SimpleMotorFeedforward
 import edu.wpi.first.wpilibj2.command.CommandBase
-import frc.robot.subsystems.WhichMotor
 import edu.wpi.first.wpilibj2.command.PIDCommand
 import frc.robot.subsystems.ShooterSubsystem
 import frc.robot.Constants
@@ -21,15 +20,12 @@ class ShooterPID(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double
     }
 
     override fun execute() {
-        val speedLower = pidLower.calculate(shooterSubsystem.getVelocity(WhichMotor.LOWER), setPt()) + ff.calculate(setPt())
-        shooterSubsystem.setVoltage(speedLower, WhichMotor.LOWER)
-        val speedUpper = pidLower.calculate(shooterSubsystem.getVelocity(WhichMotor.UPPER), setPt()) + ff.calculate(setPt())
-        shooterSubsystem.setVoltage(speedUpper, WhichMotor.UPPER)
+        val speed = pidLower.calculate(shooterSubsystem.getVelocity(), setPt()) + ff.calculate(setPt())
+        shooterSubsystem.setVoltage(speed)
     }
 
     override fun end(interrupted: Boolean) {
-        shooterSubsystem.setVoltage(0.0, WhichMotor.LOWER)
-        shooterSubsystem.setVoltage(0.0, WhichMotor.UPPER)
+        shooterSubsystem.setVoltage(0.0)
     }
 
     override fun isFinished() = false

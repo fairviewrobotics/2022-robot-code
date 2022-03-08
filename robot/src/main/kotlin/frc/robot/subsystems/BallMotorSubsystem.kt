@@ -3,7 +3,8 @@ package frc.robot.subsystems
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.motorcontrol.MotorController
 
-class IndexerSubsystem(val motor: MotorController) : SubsystemBase(){
+// A ball motor is one of the intake / indexer / gate that manipulates balls
+class BallMotorSubsystem(val motor: MotorController) : SubsystemBase(){
 
     fun setSpeed(speed: Double){
         motor.set(speed)

@@ -10,22 +10,11 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorController
 class WinchSubsystem(val winch: MotorController, 
                      val lowerLimit: DigitalInput, 
                      val upperLimit: DigitalInput) : SubsystemBase() {
+    // output speed to set motor at
+    var output = 0.0
 
     fun setSpeed(speed: Double){
-        if (speed > 0){
-            if (!upperLimit.get()){
-                winch.set(speed)
-            } else{
-                winch.set(0.0)
-            }
-        } else {
-            if (!lowerLimit.get()){
-                winch.set(speed)
-            } else{
-                winch.set(0.0)
-            }
-        }
-        
+        output = speed
     }
 
     fun atUpper() : Boolean{
@@ -37,7 +26,19 @@ class WinchSubsystem(val winch: MotorController,
     }
 
     override fun periodic() {
-        // This method will be called once per scheduler run
+        if (output > 0){
+            if (!upperLimit.get()){
+                winch.set(output)
+            } else{
+                winch.set(0.0)
+            }
+        } else {
+            if (!lowerLimit.get()){
+                winch.set(output)
+            } else{
+                winch.set(0.0)
+            }
+        }
     }
 
     override fun simulationPeriodic() {
