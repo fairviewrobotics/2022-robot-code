@@ -1,53 +1,70 @@
 package frc.robot.commands
 
 import edu.wpi.first.math.controller.PIDController
-import edu.wpi.first.math.controller.ProfiledPIDController
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
-import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
-import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
 
-
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
-        6.2296,
-        0.1,
+        3.0,
+        0.0,
         0.0)
 
     val rightPID = PIDController(
-        6.2296,
-        0.1,
+        3.0,
+        0.0,
         0.0)
 
 
     fun execute(speeds: DifferentialDriveWheelSpeeds) {
         // get vals
-        val currentRightSpeed = drivetrain.getWheelSpeeds().rightMetersPerSecond
-        val currentLeftSpeed = drivetrain.getWheelSpeeds().leftMetersPerSecond
+        val currentRightSpeed = drivetrain.wheelSpeeds.rightMetersPerSecond
+        val currentLeftSpeed = drivetrain.wheelSpeeds.leftMetersPerSecond
 
-        if (abs(speeds.leftMetersPerSecond) < 0.1) { leftPID.p = 120.0; leftPID.i = 0.0; } else { leftPID.p = 6.2296; leftPID.i = 0.1; }
-        if (abs(speeds.rightMetersPerSecond) < 0.1) { rightPID.p = 120.0; rightPID.i = 0.0; } else { rightPID.p = 6.2296; rightPID.i = 0.1; }
+        /*if (abs(speeds.leftMetersPerSecond) < 0.1) { leftPID.p = 120.0; leftPID.i = 0.0; } else { leftPID.p = 6.2296; leftPID.i = 0.1; }
+        if (abs(speeds.rightMetersPerSecond) < 0.1) { rightPID.p = 120.0; rightPID.i = 0.0; } else { rightPID.p = 6.2296; rightPID.i = 0.1; }*/
 
         // calculate
         val leftSpeedToSet = leftPID.calculate(currentLeftSpeed, speeds.leftMetersPerSecond)
         val rightSpeedToSet = rightPID.calculate(currentRightSpeed, speeds.rightMetersPerSecond)
 
-        if (currentLeftSpeed != 0.0) {
-            println("ping")
-        }
-
-        SmartDashboard.putNumber("Right speed", currentLeftSpeed)
+        SmartDashboard.putNumber("Right speed", currentRightSpeed)
         SmartDashboard.putNumber("Set point", speeds.rightMetersPerSecond)
         SmartDashboard.putNumber("Right Voltage", rightSpeedToSet)
         // drive
         drivetrain.tankDriveVolts(leftSpeedToSet, rightSpeedToSet)
+    }
+}
+
+class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsystem) {
+    val driveController = DrivetrainPIDController(drivetrainSubsystem)
+    val angleController = PIDController(
+        0.05,
+        0.0,
+        0.0
+    )
+
+    init {
+        angleController.enableContinuousInput(0.0, 2.0 * Math.PI)
+    }
+
+    val kinematics = DifferentialDriveKinematics(21.5)
+
+    fun execute(forward: Double, angle: Double) {
+        val currentAngle = drivetrainSubsystem.heading
+
+        val offset = angleController.calculate(currentAngle, angle)
+
+        val newSpeeds = kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, offset))
+
+        driveController.execute(newSpeeds)
     }
 }
 
@@ -67,45 +84,6 @@ class DrivetrainPIDCommand(val drivetrain: DrivetrainSubsystem, val periodic: ()
     }
 
     override fun isFinished() = false
-}
-
-fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
-    val kinematics = DifferentialDriveKinematics(21.5)
-    return DrivetrainPIDCommand(drivetrain) {
-        var forward = -controller.leftY * abs(controller.leftY) / 0.25
-        var rotation = controller.leftX * abs(controller.leftX) / 0.25
-
-        SmartDashboard.putNumber("Controller", controller.getLeftX())
-        SmartDashboard.putNumber("Rotation", rotation)
-        SmartDashboard.putNumber("Actual Gyro Heading", drivetrain.heading)
-
-        kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, rotation))
-    }
-}
-
-class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsystem) {
-    val driveController = DrivetrainPIDController(drivetrainSubsystem)
-    val angleController = PIDController(
-        0.05,
-        0.0,
-        0.0
-    )
-
-    init {
-        angleController.enableContinuousInput( -1.0 * Math.PI, 1.0* Math.PI)
-    }
-
-    val kinematics = DifferentialDriveKinematics(21.5)
-
-    fun execute(forward: Double, angle: Double) {
-        val currentAngle = drivetrainSubsystem.heading
-
-        val offset = angleController.calculate(currentAngle, angle)
-
-        val newSpeeds = kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, offset))
-
-        driveController.execute(newSpeeds)
-    }
 }
 
 class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystem, val periodic: () -> Pair<Double, Double>): CommandBase() {
@@ -130,12 +108,34 @@ class DrivetrainPIDAngularCommand(val drivetrain: DrivetrainSubsystem, val perio
 fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDAngularCommand {
     return DrivetrainPIDAngularCommand(drivetrain) {
         var angle = atan2(controller.leftY, controller.leftX)
+        if(angle < 0) {
+           angle = 2.0 * Math.PI + angle
+        }
 
         SmartDashboard.putNumber("Setpoint (Degrees)", angle)
-        SmartDashboard.putNumber("Actual Gyro Heading", drivetrain.heading)
-
+        SmartDashboard.putNumber("Measure (Degrees)", drivetrain.gyro.angle)
 
         Pair<Double, Double>(0.0, angle)
+    }
+}
+
+fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
+    val kinematics = DifferentialDriveKinematics(21.5)
+    return DrivetrainPIDCommand(drivetrain) {
+        var forward = -controller.leftY * abs(controller.leftY) * 1.25
+        var rotation = controller.leftX * abs(controller.leftX) * 0.25
+
+        kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, rotation))
+    }
+}
+
+class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController): CommandBase() {
+    init {
+        addRequirements(drivetrain)
+    }
+
+    override fun execute() {
+        drivetrain.arcadeDrive(controller.leftY, controller.leftX)
     }
 }
 

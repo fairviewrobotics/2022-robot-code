@@ -1,0 +1,3 @@
+namespace frc::robot::vision {
+  
+}

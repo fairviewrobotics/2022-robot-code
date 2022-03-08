@@ -5,11 +5,10 @@ package frc.robot.commands
 
 import edu.wpi.first.wpilibj.DoubleSolenoid
 import frc.robot.subsystems.GenericSolenoidSubsystem
-import frc.robot.subsystems.CompressorSubsystem
 import edu.wpi.first.wpilibj2.command.CommandBase
 
 /** An example command that uses an example subsystem.  */
-class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compressor: CompressorSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
+class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val state: DoubleSolenoid.Value) : CommandBase() {
 
     /**
      * Creates a new ExampleCommand.
@@ -19,7 +18,6 @@ class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compre
     init {
         // Use addRequirements() here to declare subsystem dependencies.
         addRequirements(solenoid)
-        addRequirements(compressor)
     }
 
     // Called when the command is initially scheduled.
@@ -28,11 +26,7 @@ class GenericPneumaticCommand(val solenoid: GenericSolenoidSubsystem, val compre
 
     // Called every time the scheduler runs while the command is scheduled.
     override fun execute() {
-        if (!compressor.switchValue()){
             solenoid.set(state)
-        }
-        
-
     }
 
     // Called once the command ends or is interrupted.

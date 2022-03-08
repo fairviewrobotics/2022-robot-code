@@ -31,7 +31,7 @@ class DebugDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxContro
         val desiredLeft = speeds.leftMetersPerSecond
         val desiredRight = speeds.rightMetersPerSecond
 
-        val actual = drivetrain.getWheelSpeeds().leftMetersPerSecond
+        val actual = drivetrain.wheelSpeeds.leftMetersPerSecond
         val newSpeeds = kinematics.toChassisSpeeds(DifferentialDriveWheelSpeeds(desiredLeft, desiredRight))
         csv += "\n${t},${desiredLeft},${actual}"
 
