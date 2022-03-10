@@ -6,9 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="5585f1ab-0bac-40ba-982d-871aecd02a90" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/ShooterPID.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/ShooterPID.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/ShooterSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/SparkShooterSubsystem.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,7 +47,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../chat-cs" />
   </component>
   <component name="RunManager" selected="Gradle.robot [build deploy]">
     <configuration name="robot [build deploy]" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
@@ -107,5 +108,16 @@
       <updated>1642540951434</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>
