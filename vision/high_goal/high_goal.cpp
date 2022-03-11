@@ -6,6 +6,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <ntcore/src/main/native/include/ntcore.h>
+#include <networktables/NetworkTable.h>
 
 // define to draw debugging information on images (bounding rects)
 #define DRAW_DEBUG
