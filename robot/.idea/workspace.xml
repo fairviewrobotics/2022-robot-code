@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5585f1ab-0bac-40ba-982d-871aecd02a90" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/DebugClimbingCommand.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/FixedWinchSpeed.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/WinchSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/WinchSubsystem.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/ClimbXMeters.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/LimitedWinchCommand.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/LimitedWinchCommand.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
