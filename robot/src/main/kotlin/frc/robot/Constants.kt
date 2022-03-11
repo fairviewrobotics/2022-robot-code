@@ -28,7 +28,7 @@ class Constants {
         val shooterHighID = 17
 
         // intake / indexer / gate (on talon each)
-        val intakeID = 9
+        val intakeID = 6
         val indexerID = 7
         val gateID = 8
 
@@ -92,11 +92,12 @@ class Constants {
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
+        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRPM", 500.0)()
 
         // base top speeds for intake, indexer, and gate
-        val intakeSpeed = 0.5
-        val indexerSpeed = 0.5
-        val gateSpeed = 0.5
+        val intakeSpeed = 0.75
+        val indexerSpeed = 0.75
+        val gateSpeed = -0.75
 
 
         private fun onNetworkTablesChange(key: String, value: Double) {
