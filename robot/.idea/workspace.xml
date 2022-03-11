@@ -8,15 +8,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/DrivetrainCommands.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/DrivetrainCommands.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/FixedIndexerSpeed.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/GenericPneumaticCommand.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/GenericPneumaticCommand.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/CompressorSubsystem.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/DrivetrainSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/DrivetrainSubsystem.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/GenericSolenoidSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/GenericSolenoidSubsystem.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/IndexerSubsystem.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/ShooterSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/ShooterSubsystem.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/WinchSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/WinchSubsystem.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/ShooterPID.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/ShooterPID.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/ShooterSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/SparkShooterSubsystem.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +47,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../chat-cs" />
   </component>
   <component name="RunManager" selected="Gradle.robot [build deploy]">
     <configuration name="robot [build deploy]" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
@@ -115,5 +108,16 @@
       <updated>1642540951434</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

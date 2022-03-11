@@ -3,7 +3,6 @@ package frc.robot.commands
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.controller.SimpleMotorFeedforward
 import edu.wpi.first.wpilibj2.command.CommandBase
-import edu.wpi.first.wpilibj2.command.PIDCommand
 import frc.robot.subsystems.ShooterSubsystem
 import frc.robot.Constants
 
@@ -11,8 +10,7 @@ import frc.robot.Constants
  * Drive the shooter at some angular velocity setpoint (radians / s), using a PID controller
  */
 class ShooterPID(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double) : CommandBase() {
-    val pidLower = PIDController(Constants.shooterP, Constants.shooterI, Constants.shooterD)
-    val pidHigher = PIDController(Constants.shooterP, Constants.shooterI, Constants.shooterD)
+    val pid = PIDController(Constants.shooterP, Constants.shooterI, Constants.shooterD)
     val ff = SimpleMotorFeedforward(Constants.shooterFFS, Constants.shooterFFV, Constants.shooterFFA)
 
     init {
@@ -20,7 +18,7 @@ class ShooterPID(val shooterSubsystem: ShooterSubsystem, val setPt: () -> Double
     }
 
     override fun execute() {
-        val speed = pidLower.calculate(shooterSubsystem.getVelocity(), setPt()) + ff.calculate(setPt())
+        val speed = pid.calculate(shooterSubsystem.getVelocity(), setPt()) + ff.calculate(setPt())
         shooterSubsystem.setVoltage(speed)
     }
 
