@@ -58,10 +58,8 @@ class RobotContainer {
     // TODO: attach limit switches directly to pins on Spark
     //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
-    val leftSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second)
-    val rightSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidRightID.first,Constants.climbSolenoidRightID.second)
-    val climbLeft = GenericSolenoidSubsystem(leftSolenoid)
-    val climbRight = GenericSolenoidSubsystem(rightSolenoid)
+    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
+    val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
 
     // shooter
     /*val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -76,13 +74,11 @@ class RobotContainer {
     
     // simultaneous pneumatics push and pull
     val climberPull = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kReverse).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kReverse).withTimeout(1.0)
+        GenericPneumaticCommand(climbPneumatics, kReverse).withTimeout(1.0)
     )
 
     val climberPush = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kForward).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kForward).withTimeout(1.0)
+        GenericPneumaticCommand(climbPneumatics, kForward).withTimeout(1.0)
     )
 
 
