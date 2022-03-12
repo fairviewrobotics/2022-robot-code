@@ -100,22 +100,19 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
-            TurnToAngle(drivetrain, { 0.5 * Math.PI }, 0.0)
-        )
 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
+                ShooterPID(shooter1, { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
                 // run gate + magazine if shooters are running fast enough
                 FixedBallMotorSpeed(gate, {
-                    if (abs(shooter1.getSpeed() - Constants.shooterRadPerS) <= 10
+                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
                             && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
                     ) Constants.gateSpeed else 0.0
                 } ),
                 FixedBallMotorSpeed(indexer, {
-                    if (abs(shooter1.getSpeed() - Constants.shooterRadPerS) <= 10
+                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
                         && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
                     ) Constants.indexerSpeed else 0.0
                 } )

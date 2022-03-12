@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
@@ -141,6 +142,17 @@ class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
         * Right joystick y is inverted for shooting.
         * */
         drivetrain.arcadeDrive(controller.leftY - controller.rightY, controller.leftX + controller.rightX * 0.5)
+        /*val inverted = controller.rightBumper
+
+        val xPos = controller.rightX
+        val xAdjust = if(xPos < 0) { -sqrt(abs(xPos)) } else { sqrt(xPos) } / 2.4
+        val yAdjust = controller.leftY / 1.5
+
+        if(!inverted) {
+            drivetrain.curvatureDrive(yAdjust, xAdjust)
+        } else {
+            drivetrain.curvatureDrive(-yAdjust, xAdjust)
+        }*/
     }
 }
 
