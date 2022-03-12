@@ -20,6 +20,10 @@ class DebugClimbingCommand(val climber: WinchSubsystem, val controller: XboxCont
             speed -= 0.1
         }
 
+        if (controller.xButtonPressed) {
+            climber.resetEncoder()
+        }
+
         climber.set(speed + (-controller.leftY))
 
         SmartDashboard.putNumber("Speed", speed)
