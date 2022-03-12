@@ -7,8 +7,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
-// define to draw debugging information on images (bounding rects)
+// define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
+// define to apply distortion correction on images
+#define UNDISTORT
+
+#define WEBCAM
 
 namespace frc::robot::vision {
 
@@ -56,7 +60,7 @@ double aspectScore(const cv::RotatedRect &rect) {
   const double h = rect.size.height;
   auto aspect = cv::max(w, h) / cv::min(w, h);
 
-  return max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
+  return cv::max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
 }
 
 double rotatedRectAngle(const cv::RotatedRect &rect) {
@@ -151,7 +155,7 @@ void process(cv::Mat &image, cv::Mat &dst) {
 
 using namespace frc::robot::vision;
 
-#define WEBCAM
+//#define WEBCAM
 
 #ifndef WEBCAM
 int main(int argc, char *argv[])
@@ -161,19 +165,27 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::string image_path = samples::findFile(argv[1]);
-  Mat img = imread(image_path, IMREAD_COLOR);
+  std::string image_path = cv::samples::findFile(argv[1]);
+  cv::Mat img = imread(image_path, cv::IMREAD_COLOR);
   if(img.empty())
   {
     std::cout << "Could not read the image: " << image_path << std::endl;
     return 1;
   }
-  //cv::resize(img, img, cv::Size(640, 480));
-  Mat mask;
-  process(img, mask);
+
+  cv::resize(img, img, cv::Size(640, 480));
+  cv::Mat linear;
+#ifdef UNDISTORT
+  undistort(img, linear);
+#else
+  linear = img;
+#endif
+
+  cv::Mat mask;
+  process(linear, mask);
   imshow("Mask", mask);
-  cv::imshow("Image", img);
-  while(waitKey(0) != 'q'){}; // Wait for a keystroke in the window
+  cv::imshow("Image", linear);
+  while(cv::waitKey(0) != 'q'){}; // Wait for a keystroke in the window
   return 0;
 }
 #endif
@@ -182,22 +194,28 @@ int main(int argc, char *argv[])
 int main() {
   cv::VideoCapture cap;
 
-  cap.open(2);
+  cap.open(0);
   if(!cap.isOpened()) {
     std::cout << "Cannot open webcam" << std::endl;
   }
 
   cap.set(cv::CAP_PROP_EXPOSURE, 125);
 
-  Mat img;
+  cv::Mat img;
 
   while(true) {
     cap.read(img);
 
     cv::resize(img, img, cv::Size(640, 480));
-    Mat mask;
-    process(img, mask);
-    cv::imshow("Image", img);
+    cv::Mat linear;
+#ifdef UNDISTORT
+    undistort(img, linear);
+#else
+    linear = img;
+#endif
+    cv::Mat mask;
+    process(linear, mask);
+    cv::imshow("Image", linear);
     cv::waitKey(1);
   }
 
