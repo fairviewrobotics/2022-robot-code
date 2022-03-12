@@ -23,6 +23,7 @@ import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
+import kotlin.math.abs
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -100,17 +101,22 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
-            ParallelCommandGroup(
-                ShooterBangBang(shooter1, { Constants.shooterRadPerS }),
-                ShooterBangBang(shooter2, { Constants.shooterRadPerS })
-            )
-        )
 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
+                ShooterPID(shooter1, { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
+                // run gate + magazine if shooters are running fast enough
+                FixedBallMotorSpeed(gate, {
+                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
+                            && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
+                    ) Constants.gateSpeed else 0.0
+                } ),
+                FixedBallMotorSpeed(indexer, {
+                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
+                        && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
+                    ) Constants.indexerSpeed else 0.0
+                } )
             )
         )
 
@@ -142,6 +148,17 @@ class RobotContainer {
         drivetrain.defaultCommand = ArcadeDrive(drivetrain, controller0)
         //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
         //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
+
+
+        // run gate on secondary Y
+        JoystickButton(controller1, kY.value).whenHeld(
+            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+        )
+
+        // run magazine on secondary B
+        JoystickButton(controller1, kB.value).whenHeld(
+            FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
+        )
     }
 
 

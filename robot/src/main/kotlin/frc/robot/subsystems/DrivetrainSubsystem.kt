@@ -32,6 +32,7 @@ abstract class DrivetrainSubsystem : SubsystemBase() {
 
     abstract fun tankDriveVolts(leftVolts: Double, rightVolts: Double)
     abstract fun arcadeDrive(xSpeed: Double, zRot: Double)
+    abstract fun curvatureDrive(xSpeed: Double, zRot: Double)
     abstract fun setMaxOutput(maxOutput: Double)
 
     abstract val angularVelocity: Double
@@ -79,6 +80,10 @@ class CANSparkMaxDrivetrainSubsystem(
 
     override fun arcadeDrive(xSpeed: Double, zRot: Double) {
         drive.arcadeDrive(xSpeed, zRot)
+    }
+
+    override fun curvatureDrive(xSpeed: Double, zRot: Double) {
+        drive.curvatureDrive(xSpeed, zRot, true)
     }
 
     override fun setMaxOutput(maxOutput: Double) {
@@ -162,6 +167,10 @@ class TalonSRXDrivetrainSubsystem(
 
     override fun arcadeDrive(xSpeed: Double, zRot: Double) {
         drive.arcadeDrive(xSpeed, zRot)
+    }
+
+    override fun curvatureDrive(xSpeed: Double, zRot: Double) {
+        drive.curvatureDrive(xSpeed, zRot, true)
     }
 
     override fun setMaxOutput(maxOutput: Double) {

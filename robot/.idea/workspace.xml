@@ -5,11 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5585f1ab-0bac-40ba-982d-871aecd02a90" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/Constants.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/RobotContainer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/DrivetrainCommands.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/commands/DrivetrainCommands.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/DrivetrainSubsystem.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/frc/robot/subsystems/DrivetrainSubsystem.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vision/high_goal/high_goal.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../vision/high_goal/high_goal.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +21,16 @@
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
     </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view />
+      </state>
+    </system>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
