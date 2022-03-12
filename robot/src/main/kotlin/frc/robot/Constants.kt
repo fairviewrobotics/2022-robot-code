@@ -19,15 +19,20 @@ class Constants {
         val driveBackRightID = 4
 
         // climber (2 solenoids and one winch motor)
-        val climbSolenoidLeftID = Pair(1, 2)
-        val climbSolenoidRightID = Pair(3, 4)
+        val climbSolenoidID = Pair(1, 2)
         val climbWinchID = 5
 
         // shooter (2 spark max to run wheels)
         val shooterLowID = 16
         val shooterHighID = 17
 
+        val elevationEncoderMax = 1000.0
+        val shooterElevationEncoderIDA = 0
+        val shooterElevationEncoderIDB = 0
+        val shooterElevationMotorID = 0
+
         // intake / indexer / gate (on talon each)
+        val intakeSolenoidID = Pair(3, 4)
         val intakeID = 6
         val indexerID = 7
         val gateID = 8

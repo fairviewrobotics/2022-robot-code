@@ -13,7 +13,11 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value
+import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
+import edu.wpi.first.wpilibj2.command.WaitCommand
+import edu.wpi.first.wpilibj.DigitalInput
+import kotlin.math.*
 
 import com.revrobotics.*
 
@@ -43,12 +47,15 @@ class RobotContainer {
     val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
 
     // climber
-    //val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
+    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
     // TODO: attach limit switches directly to pins on Spark
-    //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
+    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
-    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
+    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
+    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
     val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
+    val intakePneumatics = GenericSolenoidSubsystem(intakeSolenoid)
+    
 
     // shooter
     val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -56,12 +63,17 @@ class RobotContainer {
     val shooter1 = SparkShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = SparkShooterSubsystem(shooterMotor2, 1.0)
 
+    // todo: set values!
+    val shooterElevationEncoder = Encoder(Constants.shooterElevationEncoderIDA, Constants.shooterElevationEncoderIDB) 
+    val shooterElevation = ShooterElevationSubsystem(WPI_TalonSRX(Constants.shooterElevationMotorID))
+
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
     val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
     
     // simultaneous pneumatics push and pull
+    // todo: remove below: unnecessary
     val climberPull = ParallelCommandGroup(
         GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
     )
@@ -98,20 +110,32 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        // run shooter when bumpers are held
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
-            ParallelCommandGroup(
-                ShooterBangBang(shooter1, { Constants.shooterRadPerS }),
-                ShooterBangBang(shooter2, { Constants.shooterRadPerS })
+        // run shooter when right bumper is held
+        shooter1.defaultCommand = ParallelCommandGroup(
+            ShooterBangBang(shooter1, {
+                if (controller0.getRightTriggerAxis() > 0.5) Constants.shooterRadPerS else(
+                    0.0
+                )
+            }),
+            SequentialCommandGroup(
+                WaitCommand(1.0),
+                FixedBallMotorSpeed(gate, { Constants.gateSpeed })
             )
         )
+        shooter2.defaultCommand = ShooterBangBang(shooter2, {
+            if (controller0.getRightTriggerAxis() > 0.5) -1.0 * Constants.shooterRadPerS else(
+                0.0
+            )
+        })
 
+        /* 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
                 ShooterPID(shooter1, { Constants.shooterRadPerS }),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
             )
         )
+        
 
         JoystickButton(controller0, kX.value).whenHeld(
             ParallelCommandGroup(
@@ -119,27 +143,63 @@ class RobotContainer {
                 FixedShooterSpeed(shooter2, { 1.0 })
             )
         )
+        */
 
-        // run intake on A
-        JoystickButton(controller0, kA.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
-        )
-
+        // raise/lower intake on X/A
         JoystickButton(controller0, kX.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
+            GenericPneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+            
         )
 
-        // run intake + indexer on B
+        JoystickButton(controller0, kA.value).whenHeld(
+            GenericPneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
+        )
+
+        // raise / lower climber
+        winch.defaultCommand = LimitedWinchCommand(winch, { controller0.rightY })
+        
+
+        // raise / lower climber pneumatic component
+        JoystickButton(controller0, kY.value).whenHeld(
+            GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
+            
+        )
+
         JoystickButton(controller0, kB.value).whenHeld(
+            GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
+        )
+
+
+        // run intake + indexer on RB
+        JoystickButton(controller0, kRightBumper.value).whenHeld(
             ParallelCommandGroup(
                 FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
                 FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
             )
         )
 
-        // run gate on Y
-        JoystickButton(controller0, kY.value).whenHeld(
-            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+        // raise / lower shooter: rudimentarily discrete for now
+
+        var shooterDist = 100.0
+
+        shooterElevation.defaultCommand = ElevationCommand(shooterElevation, fun() : Double{
+            if (controller0.getLeftBumper()){
+                shooterDist = shooterDist - 100
+                return max(shooterDist, 0.0)
+            } else if (controller0.getLeftTriggerAxis() > 0.5){
+                shooterDist = shooterDist + 100
+                return min(shooterDist, Constants.elevationEncoderMax)
+            } else{
+                return shooterDist
+            }
+        }, shooterElevationEncoder)
+
+        // run indexer rejection on Y of secondary controller
+        JoystickButton(controller1, kY.value).whenHeld(
+            ParallelCommandGroup(
+                FixedBallMotorSpeed(gate, { -1.0 * Constants.gateSpeed }),
+                FixedBallMotorSpeed(indexer, { -1.0 * Constants.indexerSpeed }),
+            )
         )
 
         drivetrain.defaultCommand = DirectJoystickDrive(drivetrain, controller0)

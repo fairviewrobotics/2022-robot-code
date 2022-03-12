@@ -6,14 +6,14 @@ import edu.wpi.first.wpilibj.Encoder;
 import frc.robot.Constants
 import frc.robot.subsystems.ShooterElevationSubsystem
 
-class ElevationCommand(val elevation: ShooterElevationSubsystem, targetDist: Double, enc: Encoder): PIDCommand(
+class ElevationCommand(val elevation: ShooterElevationSubsystem, targetDist: () -> Double, enc: Encoder): PIDCommand(
     PIDController(
         Constants.shooterElevationP,
         Constants.shooterElevationI,
         Constants.shooterElevationD
     ),
     enc::getDistance,
-    targetDist,
+    targetDist(),
     { output: Double -> elevation.setSpeed(output)},
     elevation){
     
