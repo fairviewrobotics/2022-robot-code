@@ -7,7 +7,12 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
+// define to send result to network tables
+#define NT
+
+#ifdef NT
 #include <networktables/NetworkTableInstance.h>
+#endif
 
 // define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
@@ -218,8 +223,11 @@ int main(int argc, char *argv[])
 
 #ifdef WEBCAM
 int main() {
+#ifdef NT
   auto ntinst = nt::NetworkTableInstance::GetDefault();
-  
+  ntinst.StartClientTeam(2036);
+  ntinst.StartDSClient();
+#endif
 
   cv::VideoCapture cap;
 

@@ -106,10 +106,6 @@ class TalonFXShooterSubsystem(val motor: WPI_TalonFX, val speedGain: Double): Sh
         motor.set(speed * speedGain)
     }
 
-    fun getSpeed(): Double {
-        return motor.get()
-    }
-
     override fun setVoltage(voltage: Double) {
         motor.setVoltage(voltage * speedGain)
     }
