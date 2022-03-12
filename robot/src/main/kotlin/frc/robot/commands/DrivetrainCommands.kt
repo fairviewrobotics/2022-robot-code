@@ -129,13 +129,18 @@ fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : D
     }
 }
 
-class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController): CommandBase() {
+class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
+                          val controller: XboxController): CommandBase() {
     init {
         addRequirements(drivetrain)
     }
 
     override fun execute() {
-        drivetrain.arcadeDrive(controller.leftY, controller.leftX)
+        /* 2 joystick arcade drive:
+        * Left joystick for faster motion, right joystick for aiming.
+        * Right joystick y is inverted for shooting.
+        * */
+        drivetrain.arcadeDrive(controller.leftY - controller.rightY, controller.leftX + controller.rightX * 0.5)
     }
 }
 
