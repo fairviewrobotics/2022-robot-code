@@ -80,11 +80,19 @@ class Constants {
         val shooterI get() = generateConstantGetter<Double>("shooterI", 0.0)()
         val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
 
-        // shooter target speed
-        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRPM", 500.0)()
+        val shooterElevationP get() = generateConstantGetter<Double>("shooterElevationP", 0.5)()
+        val shooterElevationI get() = generateConstantGetter<Double>("shooterElevationI", 0.0)()
+        val shooterElevationD get() = generateConstantGetter<Double>("shooterElevationD", 0.0)()
+
+        val shooterElevationPosTolerance get() = generateConstantGetter<Double>("shooterElevationPosTolerance", 0.0)()
+        val shooterElevationVelocityTolerance get() = generateConstantGetter<Double>("shooterElevationVelocityTolerance", 0.0)()
+
+        // shooter target rpm
+        val shooterRPM get() = generateConstantGetter<Double>("shooterRPM", 5000.0)()
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
+        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRPM", 500.0)()
 
         // base top speeds for intake, indexer, and gate
         val intakeSpeed = 0.75

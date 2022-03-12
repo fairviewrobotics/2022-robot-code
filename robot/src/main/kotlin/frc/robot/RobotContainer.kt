@@ -10,6 +10,10 @@ import edu.wpi.first.wpilibj.XboxController.Button.*
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import edu.wpi.first.wpilibj.PneumaticsModuleType
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
 
@@ -43,10 +47,8 @@ class RobotContainer {
     // TODO: attach limit switches directly to pins on Spark
     //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
-    //val leftSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first, Constants.climbSolenoidLeftID.second)
-    //val rightSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidRightID.first, Constants.climbSolenoidRightID.second)
-    //val climbLeft = GenericSolenoidSubsystem(leftSolenoid)
-    //val climbRight = GenericSolenoidSubsystem(rightSolenoid)*/
+    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
+    val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
 
     // shooter
     val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -60,14 +62,12 @@ class RobotContainer {
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
     
     // simultaneous pneumatics push and pull
-    /*val climberPull = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kReverse).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kReverse).withTimeout(1.0)
+    val climberPull = ParallelCommandGroup(
+        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
     )
 
     val climberPush = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kForward).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kForward).withTimeout(1.0)
+        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward).withTimeout(1.0)
     )
 
 
@@ -78,6 +78,7 @@ class RobotContainer {
     )
 
     // secondary climb: raise climber to half
+    /*
     // ! all times are in seconds
     val secondaryClimb = SequentialCommandGroup(
         //FixedWinchSpeed(winch, { 1.0 }).withTimeout(0.5), // todo: tune
@@ -86,7 +87,8 @@ class RobotContainer {
         climberPush,
         //FixedWinchSpeed(winch, { -1.0 }).withTimeout(0.5),
         //LimitedWinchCommand(winch, { -1.0 })
-    )*/
+    )
+    */
 
     init {
         configureButtonBindings()
