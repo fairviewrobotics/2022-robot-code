@@ -28,6 +28,7 @@ abstract class DrivetrainSubsystem : SubsystemBase() {
     abstract val leftMotors: MotorControllerGroup
     abstract val rightMotors: MotorControllerGroup
     abstract val gyro: AHRS
+    abstract val drive: DifferentialDrive
 
     abstract fun tankDriveVolts(leftVolts: Double, rightVolts: Double)
     abstract fun arcadeDrive(xSpeed: Double, zRot: Double)
@@ -54,7 +55,7 @@ class CANSparkMaxDrivetrainSubsystem(
     val leftEncoder = motorLF.encoder
     val rightEncoder = motorRF.encoder
 
-    val drive = DifferentialDrive(leftMotors, rightMotors)
+    override val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
 
     init {
@@ -134,7 +135,7 @@ class TalonSRXDrivetrainSubsystem(
     val leftEncoder = Encoder(leftEncoderPortA, leftEncoderPortB)
     val rightEncoder = Encoder(rightEncoderPortA, rightEncoderPortB)
 
-    val drive = DifferentialDrive(leftMotors, rightMotors)
+    override val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
 
     init {
