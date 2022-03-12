@@ -6,6 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+
 #include <networktables/NetworkTableInstance.h>
 
 // define to draw debugging information on images (bounding rectangles on targets)
