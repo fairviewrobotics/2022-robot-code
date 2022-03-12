@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
@@ -51,10 +52,10 @@ class RobotContainer {
     val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
 
     // shooter
-    val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val shooterMotor2  = CANSparkMax(Constants.shooterHighID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val shooter1 = SparkShooterSubsystem(shooterMotor1, 1.0)
-    val shooter2 = SparkShooterSubsystem(shooterMotor2, 1.0)
+    val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
+    val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
+    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
+    val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
 
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -108,7 +109,7 @@ class RobotContainer {
 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS }),
+                ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
             )
         )
@@ -122,10 +123,6 @@ class RobotContainer {
 
         // run intake on A
         JoystickButton(controller0, kA.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
-        )
-
-        JoystickButton(controller0, kX.value).whenHeld(
             FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
         )
 
