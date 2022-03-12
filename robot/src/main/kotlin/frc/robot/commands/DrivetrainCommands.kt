@@ -13,12 +13,12 @@ import kotlin.math.atan2
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
-        3.0,
+        1.0,
         0.0,
         0.0)
 
     val rightPID = PIDController(
-        3.0,
+        1.0,
         0.0,
         0.0)
 
@@ -35,9 +35,6 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
         val leftSpeedToSet = leftPID.calculate(currentLeftSpeed, speeds.leftMetersPerSecond)
         val rightSpeedToSet = rightPID.calculate(currentRightSpeed, speeds.rightMetersPerSecond)
 
-        SmartDashboard.putNumber("Right speed", currentRightSpeed)
-        SmartDashboard.putNumber("Set point", speeds.rightMetersPerSecond)
-        SmartDashboard.putNumber("Right Voltage", rightSpeedToSet)
         // drive
         drivetrain.tankDriveVolts(leftSpeedToSet, rightSpeedToSet)
     }
