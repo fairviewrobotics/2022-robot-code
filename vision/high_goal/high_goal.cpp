@@ -10,11 +10,16 @@
 // define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
 // define to apply distortion correction on images
-#define UNDISTORT
+//#define UNDISTORT
 
-#define WEBCAM
+//#define WEBCAM
 
 namespace frc::robot::vision {
+
+// calculate angle from linear position on screen ( in radians)
+double calcAngle(long value, long centerVal, double focalLen) {
+  return atan((double) (value - centerVal) / focalLen);
+}
 
 const cv::Scalar hsvLow{57.0, 160.0, 60.0};
 const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
@@ -86,7 +91,16 @@ bool checkTarget(const cv::RotatedRect &rect,
          scoreThresh;
 }
 
-void process(cv::Mat &image, cv::Mat &dst) {
+void process(cv::Mat &image, cv::Mat &dst, double diagFieldView, double aspectH, double aspectV) {
+  // calculate camera information
+  double aspectDiag = hypot(aspectH, aspectV);
+
+  double fieldViewH = atan(tan(diagFieldView / 2) * (aspectH / aspectDiag)) * 2.0;
+  double fieldViewV = atan(tan(diagFieldView / 2) * (aspectV / aspectDiag)) * 2.0;
+
+  double hFocalLen = image.size().width / (2.0 * tan(fieldViewH / 2.0));
+  double vFocalLen = image.size().height / (2.0 * tan(fieldViewV / 2.0));
+
   // convert to hsv
   cv::cvtColor(image, dst, cv::COLOR_BGR2HSV);
 
@@ -149,6 +163,12 @@ void process(cv::Mat &image, cv::Mat &dst) {
     cv::circle(image, cv::Point(center_x, center_y), 5,
                cv::Scalar(0.0, 125.0, 255.0));
 #endif
+
+    // calculate pitch and yaw angles
+    double yaw = calcAngle(center_x, image.size().width / 2.0, hFocalLen);
+    double pitch = calcAngle(center_y, image.size().height / 2.0, vFocalLen);
+
+    printf("yaw: %f, pitch: %f\n", yaw, pitch);
   }
 }
 }

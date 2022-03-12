@@ -58,9 +58,13 @@ class Constants {
         }
 
         // drivetrain pid control coefficients
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 0.02)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.01)()
+        // these are used for angular control
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 2.005)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.5729)()
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+
+        val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
+        val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.01745329252)()
 
         val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 2.6)()
         val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 10.0)()
