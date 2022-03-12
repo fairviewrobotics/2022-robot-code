@@ -139,6 +139,17 @@ class RobotContainer {
         drivetrain.defaultCommand = DirectJoystickDrive(drivetrain, controller0)
         //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
         //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
+
+
+        // run gate on secondary Y
+        JoystickButton(controller1, kY.value).whenHeld(
+            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+        )
+
+        // run magazine on secondary B
+        JoystickButton(controller1, kB.value).whenHeld(
+            FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
+        )
     }
 
 
