@@ -6,13 +6,16 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <networktables/NetworkTableInstance.h>
 
 // define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
 // define to apply distortion correction on images
 //#define UNDISTORT
 
-//#define WEBCAM
+#define WEBCAM
+
+#define PI 3.14159
 
 namespace frc::robot::vision {
 
@@ -91,7 +94,7 @@ bool checkTarget(const cv::RotatedRect &rect,
          scoreThresh;
 }
 
-void process(cv::Mat &image, cv::Mat &dst, double diagFieldView, double aspectH, double aspectV) {
+bool process(cv::Mat &image, cv::Mat &dst, double diagFieldView, double aspectH, double aspectV, double *pitch, double *yaw) {
   // calculate camera information
   double aspectDiag = hypot(aspectH, aspectV);
 
@@ -165,10 +168,11 @@ void process(cv::Mat &image, cv::Mat &dst, double diagFieldView, double aspectH,
 #endif
 
     // calculate pitch and yaw angles
-    double yaw = calcAngle(center_x, image.size().width / 2.0, hFocalLen);
-    double pitch = calcAngle(center_y, image.size().height / 2.0, vFocalLen);
-
-    printf("yaw: %f, pitch: %f\n", yaw, pitch);
+    *yaw = calcAngle(center_x, image.size().width / 2.0, hFocalLen);
+    *pitch = calcAngle(center_y, image.size().height / 2.0, vFocalLen);
+    return true;
+  } else {
+    return false;
   }
 }
 }
@@ -202,7 +206,8 @@ int main(int argc, char *argv[])
 #endif
 
   cv::Mat mask;
-  process(linear, mask);
+  double yaw, pitch;
+  process(linear, mask, 68.5 * PI / 180.0, 16.0, 9.0, &yaw, &pitch);
   imshow("Mask", mask);
   cv::imshow("Image", linear);
   while(cv::waitKey(0) != 'q'){}; // Wait for a keystroke in the window
@@ -212,6 +217,9 @@ int main(int argc, char *argv[])
 
 #ifdef WEBCAM
 int main() {
+  auto ntinst = nt::NetworkTableInstance::GetDefault();
+  
+
   cv::VideoCapture cap;
 
   cap.open(0);
@@ -234,9 +242,10 @@ int main() {
     linear = img;
 #endif
     cv::Mat mask;
-    process(linear, mask);
-    cv::imshow("Image", linear);
-    cv::waitKey(1);
+    double yaw, pitch;
+    if(process(linear, mask, 68.5 * PI / 180.0, 16.0, 9.0, &yaw, &pitch)) {
+      // we have a target location
+    }
   }
 
 }
