@@ -28,7 +28,7 @@ class Constants {
         val shooterHighID = 21
 
         // intake / indexer / gate (on talon each)
-        val intakeID = 6
+        val intakeID = 9
         val indexerID = 7
         val gateID = 8
 
@@ -86,6 +86,8 @@ class Constants {
 
         // shooter target rpm
         val shooterRadPerS get() = generateConstantGetter<Double>("shooterRadPerS", 500.0)()
+        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS", 0.0)();
+
 
         val shooterElevationP get() = generateConstantGetter<Double>("shooterElevationP", 0.5)()
         val shooterElevationI get() = generateConstantGetter<Double>("shooterElevationI", 0.0)()
