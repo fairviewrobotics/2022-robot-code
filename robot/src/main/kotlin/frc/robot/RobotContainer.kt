@@ -100,13 +100,10 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
-            TurnToAngle(drivetrain, { 0.5 * Math.PI }, 0.0)
-        )
 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
+                ShooterPID(shooter1, { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
             )
         )
