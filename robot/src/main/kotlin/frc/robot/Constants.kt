@@ -101,7 +101,7 @@ class Constants {
 
         // base top speeds for intake, indexer, and gate
         val intakeSpeed = 0.75
-        val indexerSpeed = 0.75
+        val indexerSpeed = 0.5
         val gateSpeed = -0.75
 
 

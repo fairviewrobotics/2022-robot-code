@@ -17,13 +17,15 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import edu.wpi.first.wpilibj2.command.InstantCommand
 
 
 import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
-import kotlin.math.abs
+import java.lang.Math.abs
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -101,22 +103,14 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
-
+        val shoot1Speed = { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }
+        val shoot2Speed = { Constants.shooterRadPerS }
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }, true),
-                ShooterPID(shooter2, { Constants.shooterRadPerS }),
+                ShooterPID(shooter1, shoot1Speed, true),
+                ShooterPID(shooter2, shoot2Speed),
                 // run gate + magazine if shooters are running fast enough
-                FixedBallMotorSpeed(gate, {
-                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
-                            && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
-                    ) Constants.gateSpeed else 0.0
-                } ),
-                FixedBallMotorSpeed(indexer, {
-                    if (abs(shooter1.getSpeed() - (Constants.shooterRadPerS + Constants.shooterAdjustRadPerS)) <= 10
-                        && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
-                    ) Constants.indexerSpeed else 0.0
-                } )
+                ShootBallMotor(shooter1, shooter2, shoot1Speed, shoot2Speed, gate, indexer)
             )
         )
 
