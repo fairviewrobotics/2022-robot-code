@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.GenericHID
@@ -10,6 +11,10 @@ import edu.wpi.first.wpilibj.XboxController.Button.*
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import edu.wpi.first.wpilibj.PneumaticsModuleType
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
 
@@ -43,16 +48,14 @@ class RobotContainer {
     // TODO: attach limit switches directly to pins on Spark
     //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
-    //val leftSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first, Constants.climbSolenoidLeftID.second)
-    //val rightSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidRightID.first, Constants.climbSolenoidRightID.second)
-    //val climbLeft = GenericSolenoidSubsystem(leftSolenoid)
-    //val climbRight = GenericSolenoidSubsystem(rightSolenoid)*/
+    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
+    val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
 
     // shooter
-    val shooterMotor1 = CANSparkMax(Constants.shooterLowID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val shooterMotor2  = CANSparkMax(Constants.shooterHighID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val shooter1 = SparkShooterSubsystem(shooterMotor1, 1.0)
-    val shooter2 = SparkShooterSubsystem(shooterMotor2, 1.0)
+    val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
+    val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
+    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
+    val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
 
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -60,14 +63,12 @@ class RobotContainer {
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
     
     // simultaneous pneumatics push and pull
-    /*val climberPull = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kReverse).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kReverse).withTimeout(1.0)
+    val climberPull = ParallelCommandGroup(
+        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
     )
 
     val climberPush = ParallelCommandGroup(
-        GenericPneumaticCommand(climbLeft, kForward).withTimeout(1.0),
-        GenericPneumaticCommand(climbRight, kForward).withTimeout(1.0)
+        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward).withTimeout(1.0)
     )
 
 
@@ -78,6 +79,7 @@ class RobotContainer {
     )
 
     // secondary climb: raise climber to half
+    /*
     // ! all times are in seconds
     val secondaryClimb = SequentialCommandGroup(
         //FixedWinchSpeed(winch, { 1.0 }).withTimeout(0.5), // todo: tune
@@ -86,7 +88,8 @@ class RobotContainer {
         climberPush,
         //FixedWinchSpeed(winch, { -1.0 }).withTimeout(0.5),
         //LimitedWinchCommand(winch, { -1.0 })
-    )*/
+    )
+    */
 
     init {
         configureButtonBindings()
@@ -98,15 +101,12 @@ class RobotContainer {
     private fun configureButtonBindings() {
         // run shooter when bumpers are held
         JoystickButton(controller0, kRightBumper.value).whenHeld(
-            ParallelCommandGroup(
-                ShooterBangBang(shooter1, { Constants.shooterRadPerS }),
-                ShooterBangBang(shooter2, { Constants.shooterRadPerS })
-            )
+            TurnToAngle(drivetrain, { 0.5 * Math.PI }, 0.0)
         )
 
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ParallelCommandGroup(
-                ShooterPID(shooter1, { Constants.shooterRadPerS }),
+                ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
             )
         )
@@ -120,10 +120,6 @@ class RobotContainer {
 
         // run intake on A
         JoystickButton(controller0, kA.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
-        )
-
-        JoystickButton(controller0, kX.value).whenHeld(
             FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
         )
 

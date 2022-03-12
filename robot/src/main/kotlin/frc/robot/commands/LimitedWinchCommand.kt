@@ -13,19 +13,19 @@ class LimitedWinchCommand(val climber: WinchSubsystem, val speed: () -> Double) 
 
     // Called every time the scheduler runs while the command is scheduled.
     override fun execute() {
-        climber.setSpeed(speed())
+        climber.set(speed())
     }
 
     override fun end(interrupted: Boolean) {
-        climber.setSpeed(0.0)
+        climber.set(0.0)
     }
 
     // Returns true when the command should end.
     override fun isFinished() : Boolean {
         if (speed() < 0){
-            return climber.atLower()
+            return climber.hitLower
         } else{
-            return climber.atUpper()
+            return climber.hitUpper
         }
         
     }

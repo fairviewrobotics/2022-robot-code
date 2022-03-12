@@ -9,10 +9,19 @@
 #include <ntcore/src/main/native/include/ntcore.h>
 #include <networktables/NetworkTable.h>
 
-// define to draw debugging information on images (bounding rects)
+// define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
+// define to apply distortion correction on images
+//#define UNDISTORT
+
+//#define WEBCAM
 
 namespace frc::robot::vision {
+
+// calculate angle from linear position on screen ( in radians)
+double calcAngle(long value, long centerVal, double focalLen) {
+  return atan((double) (value - centerVal) / focalLen);
+}
 
 const cv::Scalar hsvLow{57.0, 160.0, 60.0};
 const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
@@ -58,7 +67,7 @@ double aspectScore(const cv::RotatedRect &rect) {
   const double h = rect.size.height;
   auto aspect = cv::max(w, h) / cv::min(w, h);
 
-  return max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
+  return cv::max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
 }
 
 double rotatedRectAngle(const cv::RotatedRect &rect) {
@@ -84,7 +93,16 @@ bool checkTarget(const cv::RotatedRect &rect,
          scoreThresh;
 }
 
-void process(cv::Mat &image, cv::Mat &dst) {
+void process(cv::Mat &image, cv::Mat &dst, double diagFieldView, double aspectH, double aspectV) {
+  // calculate camera information
+  double aspectDiag = hypot(aspectH, aspectV);
+
+  double fieldViewH = atan(tan(diagFieldView / 2) * (aspectH / aspectDiag)) * 2.0;
+  double fieldViewV = atan(tan(diagFieldView / 2) * (aspectV / aspectDiag)) * 2.0;
+
+  double hFocalLen = image.size().width / (2.0 * tan(fieldViewH / 2.0));
+  double vFocalLen = image.size().height / (2.0 * tan(fieldViewV / 2.0));
+
   // convert to hsv
   cv::cvtColor(image, dst, cv::COLOR_BGR2HSV);
 
@@ -147,13 +165,19 @@ void process(cv::Mat &image, cv::Mat &dst) {
     cv::circle(image, cv::Point(center_x, center_y), 5,
                cv::Scalar(0.0, 125.0, 255.0));
 #endif
+
+    // calculate pitch and yaw angles
+    double yaw = calcAngle(center_x, image.size().width / 2.0, hFocalLen);
+    double pitch = calcAngle(center_y, image.size().height / 2.0, vFocalLen);
+
+    printf("yaw: %f, pitch: %f\n", yaw, pitch);
   }
 }
 }
 
 using namespace frc::robot::vision;
 
-#define WEBCAM
+//#define WEBCAM
 
 #ifndef WEBCAM
 int main(int argc, char *argv[])
@@ -163,19 +187,27 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  std::string image_path = samples::findFile(argv[1]);
-  Mat img = imread(image_path, IMREAD_COLOR);
+  std::string image_path = cv::samples::findFile(argv[1]);
+  cv::Mat img = imread(image_path, cv::IMREAD_COLOR);
   if(img.empty())
   {
     std::cout << "Could not read the image: " << image_path << std::endl;
     return 1;
   }
-  //cv::resize(img, img, cv::Size(640, 480));
-  Mat mask;
-  process(img, mask);
+
+  cv::resize(img, img, cv::Size(640, 480));
+  cv::Mat linear;
+#ifdef UNDISTORT
+  undistort(img, linear);
+#else
+  linear = img;
+#endif
+
+  cv::Mat mask;
+  process(linear, mask);
   imshow("Mask", mask);
-  cv::imshow("Image", img);
-  while(waitKey(0) != 'q'){}; // Wait for a keystroke in the window
+  cv::imshow("Image", linear);
+  while(cv::waitKey(0) != 'q'){}; // Wait for a keystroke in the window
   return 0;
 }
 #endif
@@ -184,22 +216,28 @@ int main(int argc, char *argv[])
 int main() {
   cv::VideoCapture cap;
 
-  cap.open(2);
+  cap.open(0);
   if(!cap.isOpened()) {
     std::cout << "Cannot open webcam" << std::endl;
   }
 
   cap.set(cv::CAP_PROP_EXPOSURE, 125);
 
-  Mat img;
+  cv::Mat img;
 
   while(true) {
     cap.read(img);
 
     cv::resize(img, img, cv::Size(640, 480));
-    Mat mask;
-    process(img, mask);
-    cv::imshow("Image", img);
+    cv::Mat linear;
+#ifdef UNDISTORT
+    undistort(img, linear);
+#else
+    linear = img;
+#endif
+    cv::Mat mask;
+    process(linear, mask);
+    cv::imshow("Image", linear);
     cv::waitKey(1);
   }
 
