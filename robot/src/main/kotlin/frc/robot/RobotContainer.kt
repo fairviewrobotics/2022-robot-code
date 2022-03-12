@@ -108,6 +108,17 @@ class RobotContainer {
             ParallelCommandGroup(
                 ShooterPID(shooter1, { Constants.shooterRadPerS }, true),
                 ShooterPID(shooter2, { Constants.shooterRadPerS }),
+                // run gate + magazine if shooters are running fast enough
+                FixedBallMotorSpeed(gate, {
+                    if (abs(shooter1.getSpeed() - Constants.shooterRadPerS) <= 10
+                            && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
+                    ) Constants.gateSpeed else 0.0
+                } ),
+                FixedBallMotorSpeed(indexer, {
+                    if (abs(shooter1.getSpeed() - Constants.shooterRadPerS) <= 10
+                        && abs(shooter2.getSpeed() - Constants.shooterRadPerS) <= 10
+                    ) Constants.indexerSpeed else 0.0
+                } )
             )
         )
 
