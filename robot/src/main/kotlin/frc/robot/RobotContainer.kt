@@ -18,14 +18,12 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
-import edu.wpi.first.wpilibj2.command.InstantCommand
 
 
 import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
-import java.lang.Math.abs
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -106,12 +104,7 @@ class RobotContainer {
         val shoot1Speed = { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }
         val shoot2Speed = { Constants.shooterRadPerS }
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
-            ParallelCommandGroup(
-                ShooterPID(shooter1, shoot1Speed, true),
-                ShooterPID(shooter2, shoot2Speed),
-                // run gate + magazine if shooters are running fast enough
-                ShootBallMotor(shooter1, shooter2, shoot1Speed, shoot2Speed, gate, indexer)
-            )
+            ShootCommand(shooter1, shooter2, gate, indexer, shoot1Speed, shoot2Speed)
         )
 
         JoystickButton(controller0, kX.value).whenHeld(
