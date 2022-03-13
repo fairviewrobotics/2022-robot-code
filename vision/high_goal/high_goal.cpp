@@ -12,6 +12,7 @@
 
 #ifdef NT
 #include <networktables/NetworkTableInstance.h>
+#include <networktables/NetworkTable.h>
 #endif
 
 // define to draw debugging information on images (bounding rectangles on targets)
@@ -227,6 +228,8 @@ int main() {
   auto ntinst = nt::NetworkTableInstance::GetDefault();
   ntinst.StartClientTeam(2036);
   ntinst.StartDSClient();
+
+  auto table = ntinst.GetTable("high_vision");
 #endif
 
   cv::VideoCapture cap;
@@ -253,7 +256,13 @@ int main() {
     cv::Mat mask;
     double yaw, pitch;
     if(process(linear, mask, 68.5 * PI / 180.0, 16.0, 9.0, &yaw, &pitch)) {
+#ifdef NT
       // we have a target location
+      auto yawEntry = table->GetEntry("yaw");
+      auto pitchEntry = table->GetEntry("pitch");
+      yawEntry.SetDouble(yaw);
+      pitchEntry.SetDouble(pitch);
+#endif
     }
   }
 
