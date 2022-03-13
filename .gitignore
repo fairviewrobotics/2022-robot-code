@@ -1,3 +1,9 @@
-.idea
-.vscode
+.idea/
+.gradle/
+networktables.ini
+networktables.ini.bak
+simgui-ds.json
+simgui.json
+.DS_STORE
+.vscode/
 lib
