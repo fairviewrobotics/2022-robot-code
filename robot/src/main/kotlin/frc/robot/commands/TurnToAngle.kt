@@ -1,4 +1,3 @@
-
 package frc.robot.commands
 
 import edu.wpi.first.math.MathUtil
@@ -7,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.PIDCommand
 import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 
+// Turn the robot to the given angle (absolute).
 class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, targetAngle: () -> Double, forwardSpeed: Double) : PIDCommand(
     PIDController(
         Constants.kDrivetrainPidP,
@@ -18,10 +18,7 @@ class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, targetAngle: () -> Do
     { output: Double -> driveSubsystem.arcadeDrive(forwardSpeed, MathUtil.clamp(output, -0.3, 0.3)) },
     driveSubsystem) {
 
-    val initialAngle: Double
-
     init {
-        initialAngle = driveSubsystem.heading
         controller.enableContinuousInput(-Math.PI, Math.PI)
         /** reload pid parameters from network tables */
         setPIDParams()
@@ -33,7 +30,6 @@ class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, targetAngle: () -> Do
             Constants.kDrivetrainVelTolerance
         )
     }
-
 
     override fun isFinished(): Boolean {
         /* check if we hit setpoint yet */

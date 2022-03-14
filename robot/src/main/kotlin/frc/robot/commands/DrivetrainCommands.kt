@@ -36,9 +36,6 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
         val leftSpeedToSet = leftPID.calculate(currentLeftSpeed, speeds.leftMetersPerSecond)
         val rightSpeedToSet = rightPID.calculate(currentRightSpeed, speeds.rightMetersPerSecond)
 
-        SmartDashboard.putNumber("Right speed", currentRightSpeed)
-        SmartDashboard.putNumber("Set point", speeds.rightMetersPerSecond)
-        SmartDashboard.putNumber("Right Voltage", rightSpeedToSet)
         // drive
         drivetrain.tankDriveVolts(leftSpeedToSet, rightSpeedToSet)
     }
@@ -112,9 +109,6 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
         if(angle < 0) {
            angle = 2.0 * Math.PI + angle
         }
-
-        SmartDashboard.putNumber("Setpoint (Degrees)", angle)
-        SmartDashboard.putNumber("Measure (Degrees)", drivetrain.gyro.angle)
 
         Pair<Double, Double>(0.0, angle)
     }

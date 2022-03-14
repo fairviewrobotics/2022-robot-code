@@ -16,12 +16,26 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim
 import edu.wpi.first.wpilibj.simulation.FlywheelSim
 
 abstract class ShooterSubsystem: SubsystemBase() {
+    private var targetSpeed: Double = 0.0
+
     // set speed in [0,1]
     abstract fun setSpeed(speed: Double)
     // set motor voltage in [0,12]
     abstract fun setVoltage(voltage: Double)
     // get velocity in rad / s
     abstract fun getVelocity() : Double
+
+    // set target speed in rad / s.
+    // note: this target is only used for getTargetDiff,
+    // and should not actually affect the system output.
+    // A command may use the target to drive the shooter.
+    fun setTarget(target: Double) {
+        targetSpeed = target
+    }
+    // get the difference between the target and current velocity (in rad/s)
+    fun getTargetDiff(): Double {
+        return targetSpeed - getVelocity()
+    }
 
     abstract fun setCoast(coast: Boolean)
 }
@@ -39,9 +53,6 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
             // Rev doesn't allow its encoders to be simulated, so we create a fake digital encoder and manipulate it
             encoderSim = EncoderSim(Encoder(0, 1))
         }
-    }
-
-    override fun periodic() {
     }
 
 
