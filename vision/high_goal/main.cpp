@@ -221,7 +221,7 @@ cs::UsbCamera StartCamera(const CameraConfig& config) {
               << '\n';
   auto inst = frc::CameraServer::GetInstance();
   cs::UsbCamera camera{config.name, config.path};
-  camera.SetVideoMode(cs::VideoMode::PixelFormat::kYUYV, 640, 480, 60);
+  camera.SetVideoMode(cs::VideoMode::PixelFormat::kYUYV, 640, 480, 30);
   auto server = inst->StartAutomaticCapture(camera);
 
   camera.SetConfigJson(config.config);

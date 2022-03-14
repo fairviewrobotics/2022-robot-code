@@ -4,6 +4,6 @@ networktables.ini
 networktables.ini.bak
 simgui-ds.json
 simgui.json
-.DS_STORE
+.DS_Store
 .vscode/
 lib
