@@ -24,7 +24,7 @@ class DebugClimbingCommand(val climber: WinchSubsystem, val controller: XboxCont
             climber.resetEncoder()
         }
 
-        climber.set(speed + (-controller.leftY))
+        climber.setVoltage(speed + (-controller.leftY))
 
         SmartDashboard.putNumber("Speed", speed)
         SmartDashboard.putNumber("Controller Y", -controller.leftY)
