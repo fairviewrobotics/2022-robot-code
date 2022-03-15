@@ -121,7 +121,7 @@ class RobotContainer {
             FixedBallMotorSpeed(gate, { Constants.gateSpeed })
         )
 
-        drivetrain.defaultCommand = DirectJoystickDrive(drivetrain, controller0)
+        drivetrain.defaultCommand = ArcadeDrive(drivetrain, controller0)
         //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
         //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
 
