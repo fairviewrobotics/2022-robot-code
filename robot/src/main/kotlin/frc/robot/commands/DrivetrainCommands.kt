@@ -121,9 +121,6 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
            angle = 2.0 * Math.PI + angle
         }
 
-        SmartDashboard.putNumber("Setpoint (Degrees)", angle)
-        SmartDashboard.putNumber("Measure (Degrees)", drivetrain.gyro.angle)
-
         Pair<Double, Double>(0.0, angle)
     }
 }

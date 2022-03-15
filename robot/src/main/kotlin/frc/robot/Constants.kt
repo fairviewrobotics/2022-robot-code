@@ -87,7 +87,10 @@ class Constants {
 
         // shooter target rpm
         val shooterRadPerS get() = generateConstantGetter<Double>("shooterRadPerS", 500.0)()
-        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS", 0.0)();
+        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS", 0.0)()
+
+        // distance to assume we are from the center of the target if we don't have a measurement (m)
+        val shooterDefaultDist = 3.0
 
 
         val shooterElevationP get() = generateConstantGetter<Double>("shooterElevationP", 0.5)()

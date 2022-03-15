@@ -13,19 +13,15 @@ import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.PneumaticsModuleType
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
-import edu.wpi.first.wpilibj2.command.InstantCommand
 
 
 import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
-import java.lang.Math.abs
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -52,7 +48,7 @@ class RobotContainer {
     //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
     val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
-    val climbPneumatics = GenericSolenoidSubsystem(climbSolenoid)
+    val climbPneumatics = SolenoidSubsystem(climbSolenoid)
 
     // shooter
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
@@ -67,11 +63,11 @@ class RobotContainer {
     
     // simultaneous pneumatics push and pull
     val climberPull = ParallelCommandGroup(
-        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
+        PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
     )
 
     val climberPush = ParallelCommandGroup(
-        GenericPneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward).withTimeout(1.0)
+        PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward).withTimeout(1.0)
     )
 
 
@@ -102,23 +98,9 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        // run shooter when bumpers are held
-        val shoot1Speed = { Constants.shooterRadPerS + Constants.shooterAdjustRadPerS }
-        val shoot2Speed = { Constants.shooterRadPerS }
+        // run shooter + vision on controller0 left bumper
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
-            ParallelCommandGroup(
-                ShooterPID(shooter1, shoot1Speed, true),
-                ShooterPID(shooter2, shoot2Speed),
-                // run gate + magazine if shooters are running fast enough
-                ShootBallMotor(shooter1, shooter2, shoot1Speed, shoot2Speed, gate, indexer)
-            )
-        )
-
-        JoystickButton(controller0, kX.value).whenHeld(
-            ParallelCommandGroup(
-                FixedShooterSpeed(shooter1, { 1.0 }),
-                FixedShooterSpeed(shooter2, { 1.0 })
-            )
+            ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
         )
 
         // run intake on A
