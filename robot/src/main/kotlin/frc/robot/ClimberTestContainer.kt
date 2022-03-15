@@ -3,8 +3,13 @@ package frc.robot
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.XboxController.Button.*
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import edu.wpi.first.wpilibj.PneumaticsModuleType
 
 import com.revrobotics.*
+import edu.wpi.first.wpilibj.DigitalInput
+import frc.robot.subsystems.SolenoidSubsystem
+import frc.robot.subsystems.WinchSubsystem
 
 
 class ClimberTestContainer {
