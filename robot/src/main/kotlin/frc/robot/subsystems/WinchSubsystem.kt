@@ -30,17 +30,22 @@ class WinchSubsystem(val winch: CANSparkMax,
 
         if (lowerLimit.get()) {
             resetEncoder()
-            winch.set(min(0.0, actualSpeed))
+            winch.setVoltage(min(0.0, actualSpeed))
         }
 
         if (upperLimit.get()) {
-            winch.set(max(0.0, actualSpeed))
+            winch.setVoltage(max(0.0, actualSpeed))
         }
     }
 
-    // Have fun clamping this!!!!
-    fun set(percent: Double) {
-        targetSpeed = percent
+    // set target voltage for the motor
+    // the voltage will be lowered to this voltage at the acceleration limit
+    fun setVoltage(voltage: Double) {
+        targetSpeed = voltage
+    }
+
+    fun getPosition(): Double {
+        return winch.getEncoder().position
     }
 
     fun resetEncoder() {
