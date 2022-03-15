@@ -2,6 +2,7 @@ package frc.robot.commands
 
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.controller.ProfiledPIDController
+import edu.wpi.first.math.filter.SlewRateLimiter
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
@@ -16,17 +17,15 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
-    val leftPID = ProfiledPIDController(
+    val leftPID = PIDController(
         Constants.kDrivetrainPidP,
         Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
-        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
+        Constants.kDrivetrainPidD)
 
-    val rightPID = ProfiledPIDController(
+    val rightPID = PIDController(
         Constants.kDrivetrainPidP,
         Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
-        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
+        Constants.kDrivetrainPidD)
 
     init {
         leftPID.setIntegratorRange(-0.5, 0.5)
@@ -57,8 +56,7 @@ class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsyste
     val angleController = PIDController(
         0.05,
         0.0,
-        0.0
-    )
+        0.0)
 
     init {
         angleController.enableContinuousInput(0.0, 2.0 * Math.PI)
@@ -127,11 +125,14 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
 
 fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
     val kinematics = DifferentialDriveKinematics(21.5)
-    return DrivetrainPIDCommand(drivetrain) {
-        var forward = -controller.leftY * abs(controller.leftY) * 5
-        var rotation = controller.leftX * abs(controller.leftX) * 1
+    val forwardFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateForwardLimit)
+    val rotationFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateRotationLimit)
 
-        kinematics.toWheelSpeeds(ChassisSpeeds(-forward, 0.0, -rotation))
+    return DrivetrainPIDCommand(drivetrain) {
+        var forward = controller.leftY * abs(controller.leftY) * 5
+        var rotation = -controller.leftX * abs(controller.leftX) * 1
+
+        kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
     }
 }
 

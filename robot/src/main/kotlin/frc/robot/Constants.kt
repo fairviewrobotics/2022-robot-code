@@ -59,17 +59,15 @@ class Constants {
 
         // drivetrain pid control coefficients
         // these are used for angular control
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 13.5)()
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+
+        val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 0.25)()
+        val kDrivetrainSlewRateRotationLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateRotationLimit", 0.25)()
 
         val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
         val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.01745329252)()
-
-        val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 2.6)()
-        val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 10.0)()
-        val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 30.0)()
-
 
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
