@@ -18,3 +18,7 @@ target_link_libraries(vision_test ${OpenCV_LIBS} )
 
 add_executable(camera_calibration camera_calibration.cpp camera_distort.cpp)
 target_link_libraries(camera_calibration ${OpenCV_LIBS} )
+
+include_directories(./include/)
+add_executable(rpi main.cpp high_goal.cpp high_goal_pipeline.cpp)
+add_executable(rpi_cs cs_main.cpp high_goal.cpp high_goal_pipeline.cpp)
