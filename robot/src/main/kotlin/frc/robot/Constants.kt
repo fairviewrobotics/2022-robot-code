@@ -21,7 +21,7 @@ class Constants {
         // climber (2 solenoids and one winch motor)
         val climbSolenoidLeftID = Pair(1, 2)
         val climbSolenoidRightID = Pair(3, 4)
-        val climbWinchID = 5
+        val climbWinchID = 33
 
         // shooter (2 spark max to run wheels)
         val shooterLowID = 20
