@@ -1,16 +1,22 @@
 #include "high_goal.hpp"
+
+#ifdef UNDISTORT
 #include "camera_distort.hpp"
+#endif
 
 #include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
-// define to draw debugging information on images (bounding rects)
+// define to draw debugging information on images (bounding rectangles on targets)
 #define DRAW_DEBUG
 
 namespace frc::robot::vision {
+
+// calculate angle from linear position on screen ( in radians)
+double calcAngle(long value, long centerVal, double focalLen) {
+  return atan((double) (value - centerVal) / focalLen);
+}
 
 const cv::Scalar hsvLow{57.0, 160.0, 60.0};
 const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
@@ -37,7 +43,7 @@ void drawRotatedRect(cv::Mat &image, const cv::RotatedRect &rect,
 
   // draw lines between points
   for (int i = 0; i < 4; i++) {
-    cv::line(image, points[i], points[(i + 1) % 4], color);
+    cv::line(image, points[i], points[(i + 1) % 4], color, 2);
   }
 }
 
@@ -56,7 +62,7 @@ double aspectScore(const cv::RotatedRect &rect) {
   const double h = rect.size.height;
   auto aspect = cv::max(w, h) / cv::min(w, h);
 
-  return max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
+  return cv::max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
 }
 
 double rotatedRectAngle(const cv::RotatedRect &rect) {
@@ -82,23 +88,33 @@ bool checkTarget(const cv::RotatedRect &rect,
          scoreThresh;
 }
 
-void process(cv::Mat &image, cv::Mat &dst) {
+std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldView, double aspectH, double aspectV) {
+  // calculate camera information
+  double aspectDiag = hypot(aspectH, aspectV);
+
+  double fieldViewH = atan(tan(diagFieldView / 2.0) * (aspectH / aspectDiag)) * 2.0;
+  double fieldViewV = atan(tan(diagFieldView / 2.0) * (aspectV / aspectDiag)) * 2.0;
+
+  double hFocalLen = image.size().width / (2.0 * tan(fieldViewH / 2.0));
+  double vFocalLen = image.size().height / (2.0 * tan(fieldViewV / 2.0));
+
   // convert to hsv
-  cv::cvtColor(image, dst, cv::COLOR_BGR2HSV);
+  cv::Mat mask;
+  cv::cvtColor(image, mask, cv::COLOR_BGR2HSV);
 
   // generate hsv threshold mask
-  cv::inRange(dst, hsvLow, hsvHigh, dst);
+  cv::inRange(mask, hsvLow, hsvHigh, mask);
 
   // close + open mask to patch up small holes
-  cv::morphologyEx(dst, dst, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1),
+  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1),
                    closeIters);
-  cv::morphologyEx(dst, dst, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1),
+  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1),
                    openIters);
 
   // find all contours in image
   std::vector<std::vector<cv::Point>> contours;
   std::vector<cv::Vec4i> hierarchy;
-  cv::findContours(dst, contours, hierarchy, cv::RETR_EXTERNAL,
+  cv::findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL,
                    cv::CHAIN_APPROX_SIMPLE);
 
   // order contours by size
@@ -142,64 +158,25 @@ void process(cv::Mat &image, cv::Mat &dst) {
 
   if (high_target != nullptr) {
 #ifdef DRAW_DEBUG
+    // draw center on image
+    cv::rectangle(image, cv::Point(image.size().width / 2, 0), cv::Point(image.size().width / 2, image.size().height), cv::Scalar(255.0, 255.0, 255.0));
+    cv::rectangle(image, cv::Point(0, image.size().height / 2), cv::Point(image.size().width, image.size().height / 2), cv::Scalar(255.0, 255.0, 255.0));
+    // draw target
     cv::circle(image, cv::Point(center_x, center_y), 5,
-               cv::Scalar(0.0, 125.0, 255.0));
-#endif
-  }
-}
-}
-
-using namespace frc::robot::vision;
-
-#define WEBCAM
-
-#ifndef WEBCAM
-int main(int argc, char *argv[])
-{
-  if(argc != 2) {
-    std::cout << "Usage: " << argv[0] << " image" << std::endl;
-    return 1;
-  }
-
-  std::string image_path = samples::findFile(argv[1]);
-  Mat img = imread(image_path, IMREAD_COLOR);
-  if(img.empty())
-  {
-    std::cout << "Could not read the image: " << image_path << std::endl;
-    return 1;
-  }
-  //cv::resize(img, img, cv::Size(640, 480));
-  Mat mask;
-  process(img, mask);
-  imshow("Mask", mask);
-  cv::imshow("Image", img);
-  while(waitKey(0) != 'q'){}; // Wait for a keystroke in the window
-  return 0;
-}
+               cv::Scalar(0.0, 125.0, 255.0), 2);
 #endif
 
-#ifdef WEBCAM
-int main() {
-  cv::VideoCapture cap;
-
-  cap.open(2);
-  if(!cap.isOpened()) {
-    std::cout << "Cannot open webcam" << std::endl;
+    // calculate pitch and yaw angles
+    double yaw = calcAngle(center_x, image.size().width / 2, hFocalLen);
+    double pitch = -calcAngle(center_y, image.size().height / 2, vFocalLen);
+    return TargetAngle { yaw, pitch };
+  } else {
+    return {};
   }
+}
 
-  cap.set(cv::CAP_PROP_EXPOSURE, 125);
-
-  Mat img;
-
-  while(true) {
-    cap.read(img);
-
-    cv::resize(img, img, cv::Size(640, 480));
-    Mat mask;
-    process(img, mask);
-    cv::imshow("Image", img);
-    cv::waitKey(1);
-  }
+double get_distance_to_target(const TargetAngle& target, double target_height, double camera_angle) {
+  return target_height / tan(target.pitch + camera_angle);
+}
 
 }
-#endif

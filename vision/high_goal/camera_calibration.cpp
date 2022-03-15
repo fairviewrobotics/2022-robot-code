@@ -669,6 +669,7 @@ static void saveCameraParams( Settings& s, Size& imageSize, Mat& cameraMatrix, M
 
   fs << "flags" << s.flag;
 
+
   fs << "fisheye_model" << s.useFisheye;
 
   fs << "camera_matrix" << cameraMatrix;

@@ -28,9 +28,11 @@ abstract class DrivetrainSubsystem : SubsystemBase() {
     abstract val leftMotors: MotorControllerGroup
     abstract val rightMotors: MotorControllerGroup
     abstract val gyro: AHRS
+    abstract val drive: DifferentialDrive
 
     abstract fun tankDriveVolts(leftVolts: Double, rightVolts: Double)
     abstract fun arcadeDrive(xSpeed: Double, zRot: Double)
+    abstract fun curvatureDrive(xSpeed: Double, zRot: Double)
     abstract fun setMaxOutput(maxOutput: Double)
 
     abstract val angularVelocity: Double
@@ -54,7 +56,7 @@ class CANSparkMaxDrivetrainSubsystem(
     val leftEncoder = motorLF.encoder
     val rightEncoder = motorRF.encoder
 
-    val drive = DifferentialDrive(leftMotors, rightMotors)
+    override val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
 
     init {
@@ -78,6 +80,10 @@ class CANSparkMaxDrivetrainSubsystem(
 
     override fun arcadeDrive(xSpeed: Double, zRot: Double) {
         drive.arcadeDrive(xSpeed, zRot)
+    }
+
+    override fun curvatureDrive(xSpeed: Double, zRot: Double) {
+        drive.curvatureDrive(xSpeed, zRot, true)
     }
 
     override fun setMaxOutput(maxOutput: Double) {
@@ -134,7 +140,7 @@ class TalonSRXDrivetrainSubsystem(
     val leftEncoder = Encoder(leftEncoderPortA, leftEncoderPortB)
     val rightEncoder = Encoder(rightEncoderPortA, rightEncoderPortB)
 
-    val drive = DifferentialDrive(leftMotors, rightMotors)
+    override val drive = DifferentialDrive(leftMotors, rightMotors)
     val odometry: DifferentialDriveOdometry
 
     init {
@@ -161,6 +167,10 @@ class TalonSRXDrivetrainSubsystem(
 
     override fun arcadeDrive(xSpeed: Double, zRot: Double) {
         drive.arcadeDrive(xSpeed, zRot)
+    }
+
+    override fun curvatureDrive(xSpeed: Double, zRot: Double) {
+        drive.curvatureDrive(xSpeed, zRot, true)
     }
 
     override fun setMaxOutput(maxOutput: Double) {
