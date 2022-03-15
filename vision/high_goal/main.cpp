@@ -221,7 +221,11 @@ cs::UsbCamera StartCamera(const CameraConfig& config) {
               << '\n';
   auto inst = frc::CameraServer::GetInstance();
   cs::UsbCamera camera{config.name, config.path};
-  camera.SetVideoMode(cs::VideoMode::PixelFormat::kYUYV, 640, 480, 30);
+  /*if(camera.SetVideoMode(cs::VideoMode::PixelFormat::kYUYV, 640, 480, 30)){
+    wpi::outs() << "Set camera mode to YUYV 640x480 30fps successfully\n";
+  } else {
+    wpi::outs() << "Could not set camera mode\n";
+  }*/
   auto server = inst->StartAutomaticCapture(camera);
 
   camera.SetConfigJson(config.config);
@@ -265,6 +269,7 @@ cs::MjpegServer StartSwitchedCamera(const SwitchedCameraConfig& config) {
 int main(int argc, char* argv[]) {
   if (argc >= 2) configFile = argv[1];
 
+  wpi::outs() << "Loading config\n";
   // read configuration
   if (!ReadConfig()) return EXIT_FAILURE;
 
@@ -283,14 +288,19 @@ int main(int argc, char* argv[]) {
   for (const auto& config : cameraConfigs)
     cameras.emplace_back(StartCamera(config));
 
+  wpi::outs() << "Starting cameras\n";
   // start switched cameras
   for (const auto& config : switchedCameraConfigs) StartSwitchedCamera(config);
 
   // start image processing on camera 0 if present
+  wpi::outs() << "Cameras Started\n";
   if (cameras.size() >= 1) {
+    wpi::outs() << "Starting Vision Thread\n";
     std::thread([&] {
+      wpi::outs() << "Started Vision Thread\n";
       frc::VisionRunner<HighGoalPipeline> runner(cameras[0], new HighGoalPipeline(),
                                            [&](HighGoalPipeline &pipeline) {
+         wpi::outs() << "Publishing Vision Results\n";
         // write pipeline results to networktable
         auto table = ntinst.GetTable("high_goal");
         table->GetEntry("found_target").SetBoolean(pipeline.found_target);

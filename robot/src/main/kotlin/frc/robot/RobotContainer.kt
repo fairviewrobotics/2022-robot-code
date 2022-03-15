@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
+import edu.wpi.first.wpilibj2.command.button.Trigger
 
 
 import frc.robot.subsystems.*
@@ -101,6 +102,11 @@ class RobotContainer {
         // run shooter + vision on controller0 left bumper
         JoystickButton(controller0, kLeftBumper.value).whenHeld(
             ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
+        )
+
+        // run shooter without vision on controller0 left trigger
+        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+            ShootDefaultDistance(shooter1, shooter2, gate, indexer)
         )
 
         // run intake on A
