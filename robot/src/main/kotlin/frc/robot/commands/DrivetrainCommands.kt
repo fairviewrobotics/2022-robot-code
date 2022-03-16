@@ -136,6 +136,36 @@ fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : D
     }
 }
 
+fun DualStickArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
+    val kinematics = DifferentialDriveKinematics(21.5)
+    val forwardFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateForwardLimit)
+    val rotationFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateRotationLimit)
+
+    val regularForwardSpeed = Constants.kDrivetrainRegularForwardSpeed
+    val regularRotationSpeed= Constants.kDrivetrainRegularRotationSpeed
+
+    val fineForwardSpeed = Constants.kDrivetrainFineForwardSpeed
+    val fineRotationSpeed = Constants.kDrivetrainFineRotationSpeed
+
+    return DrivetrainPIDCommand(drivetrain) {
+        var fWeight = 1.0
+        var rWeight = 1.0
+
+        if (controller.leftBumper) {
+            fWeight = fineForwardSpeed
+            rWeight = fineRotationSpeed
+        } else {
+            fWeight = regularForwardSpeed
+            rWeight = regularRotationSpeed
+        }
+
+        var forward = (controller.leftY * abs(controller.leftY) * fWeight) - (controller.rightY * abs(controller.leftY) * fWeight)
+        var rotation = (-controller.leftX * abs(controller.leftX) * rWeight) - (-controller.rightX * abs(controller.leftX) * rWeight)
+
+        kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
+    }
+}
+
 class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
                           val controller: XboxController): CommandBase() {
     init {
@@ -147,7 +177,7 @@ class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
         * Left joystick for faster motion, right joystick for aiming.
         * Right joystick y is inverted for shooting.
         * */
-        drivetrain.arcadeDrive(controller.leftY - controller.rightY, controller.leftX + controller.rightX * 0.5)
+        drivetrain.arcadeDrive(controller.leftY  * Constants.kDrivetrainRegularForwardSpeed, controller.leftX * Constants.kDrivetrainRegularRotationSpeed)
         /*val inverted = controller.rightBumper
 
         val xPos = controller.rightX
