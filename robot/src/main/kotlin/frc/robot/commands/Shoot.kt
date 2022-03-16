@@ -115,7 +115,7 @@ class ShootBallMotor(
 object HighGoalVisionNT {
     val ntInst = NetworkTableInstance.getDefault()
     val table = ntInst.getTable("high_goal")
-    val found_target = table.getEntry("found_target")
+    val found_target = table.getEntry("target_found")
     val yaw = table.getEntry("yaw")
     val pitch = table.getEntry("pitch")
     val center_distance = table.getEntry("center_distance")
@@ -133,7 +133,7 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
         // target location is current position + vision offset
         drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0)
     },
-    { output -> drivetrain.arcadeDrive(0.0, output) },
+    { output -> drivetrain.arcadeDrive(0.0, output / 2.0) },
     drivetrain
 ) {
     init {
@@ -153,7 +153,7 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
  */
 fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSpeed {
     // Clamp distance to range that we collected data for
-    val dist = clamp(distance_to_target_center, 2.5, 4.0)
+    val dist = clamp(distance_to_target_center, 2.5, 3.0)
     // These are just curves fit to the empirical data from 3/12
     val speed = 557.0 + -202.0 * dist + 50.6 * dist.pow(2.0)
     val adjust = -480.0 + 317.0 * dist + -76.5 * dist.pow(2.0)
@@ -233,15 +233,11 @@ fun ShootVision(
         // rumble controller if no vision
         CheckVisionOrRumble(alertController),
         // spin up shooter while turning to target
-        ParallelCommandGroup(
-            TurnToHighGoal(drivetrain),
+        TurnToHighGoal(drivetrain).raceWith(
             ShooterSpinUpVision(shooter1, shooter2)
         ),
         // maintain shooter speed and shoot
-        ParallelCommandGroup(
-            ShooterFixedVision(shooter1, shooter2),
-            ShootBallMotor(shooter1, shooter2, gate, indexer)
-        )
+        ShootDefaultDistance(shooter1, shooter2, gate, indexer)
     )
 }
 

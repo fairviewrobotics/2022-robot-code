@@ -99,13 +99,13 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        // run shooter + vision on controller0 left bumper
-        JoystickButton(controller0, kLeftBumper.value).whenHeld(
+        // run shooter + vision on controller0 right bumper
+        JoystickButton(controller0, kRightBumper.value).whenHeld(
             ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
         )
 
-        // run shooter without vision on controller0 left trigger
-        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+        // run shooter without vision on controller0 right trigger
+        Trigger { controller0.rightTriggerAxis > 0.2 }.whileActiveOnce(
             ShootDefaultDistance(shooter1, shooter2, gate, indexer)
         )
 

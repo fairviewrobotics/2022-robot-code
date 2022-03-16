@@ -10,7 +10,7 @@ build: ${EXE}
 clean:
 	rm ${EXE} *.o
 
-OBJS=cs_main.o high_goal.o high_goal_pipeline.o
+OBJS=cs_main.o high_goal.o
 
 ${EXE}: ${OBJS}
 	${CXX} -pthread -g -o $@ $^ ${DEPS_LIBS} -Wl,--unresolved-symbols=ignore-in-shared-libs
