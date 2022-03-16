@@ -12,6 +12,18 @@
 
 using namespace frc::robot::vision;
 
+VisionConfig config{
+    57.0, 160.0, 85.0,
+    100.0, 255.0, 255.0,
+    1, 1,
+    0.5
+};
+
+CameraFOV camera_fov{
+    68.5 * PI / 180.0,
+    16.0, 9.0
+};
+
 //#define WEBCAM
 
 #ifndef WEBCAM
@@ -31,21 +43,15 @@ int main(int argc, char *argv[])
   }
 
   cv::resize(img, img, cv::Size(640, 480));
-  cv::Mat linear;
-#ifdef UNDISTORT
-  undistort(img, linear);
-#else
-  linear = img;
-#endif
 
-  auto target = find_target_angles(linear, 68.5 * PI / 180.0, 16.0, 9.0);
+  auto target = find_target_angles(config, camera_fov, img);
   if(target) {
     printf("yaw: %lf, pitch: %lf\n", target->yaw, target->pitch);
     printf("distance (m): %lf\n", get_distance_to_target(*target, 1.74625, 0.518134));
   } else {
     printf("no target found\n");
   }
-  cv::imshow("Image", linear);
+  cv::imshow("Image", img);
   while(cv::waitKey(0) != 'q'){}; // Wait for a keystroke in the window
   return 0;
 }
@@ -69,15 +75,13 @@ int main() {
     cap.read(img);
 
     cv::resize(img, img, cv::Size(640, 480));
-    cv::Mat linear;
-#ifdef UNDISTORT
-    undistort(img, linear);
-#else
-    linear = img;
-#endif
-    cv::Mat mask;
-    double yaw, pitch;
-    if(process(linear, mask, 68.5 * PI / 180.0, 16.0, 9.0, &yaw, &pitch)) {
+
+    auto target = find_target_angles(config, camera_fov, img);
+    if(target) {
+      printf("yaw: %lf, pitch: %lf\n", target->yaw, target->pitch);
+      printf("distance (m): %lf\n", get_distance_to_target(*target, 1.74625, 0.518134));
+    } else {
+      printf("no target found\n");
     }
   }
 
