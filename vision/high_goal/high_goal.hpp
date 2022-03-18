@@ -2,6 +2,25 @@
 #include <optional>
 
 namespace frc::robot::vision {
+// Vision pipeline configuration
+struct VisionConfig {
+  // hsv thresholds
+  double hsvLowH, hsvLowS, hsvLowV;
+  double hsvHighH, hsvHighS, hsvHighV;
+  // number of open / close iterations
+  int open_iters, close_iters;
+  // contour score threshold
+  double score_thresh;
+};
+
+// Camera field of view and aspect information
+struct CameraFOV {
+  // diagonal field of view of camera (radians)
+  double diag_field_view;
+  // aspect ratio of camera
+  double aspect_h, aspect_v;
+};
+
 // The angle of a target in camera space.
 struct TargetAngle {
   // The horizontal angle of the target from the center in radians.
@@ -20,7 +39,7 @@ struct TargetAngle {
  * @param aspectV The vertical aspect of the camera. aspectV is relative to aspectH.
  * @return The location of the target if found.
  */
-  std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldView, double aspectH, double aspectV);
+  std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const CameraFOV &camera_fov, cv::Mat &image);
 
 /**
  * Calculate the distance to the target.

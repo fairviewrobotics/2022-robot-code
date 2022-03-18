@@ -1,14 +1,11 @@
 #include "high_goal.hpp"
 
-#ifdef UNDISTORT
-#include "camera_distort.hpp"
-#endif
-
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
-// define to draw debugging information on images (bounding rectangles on targets)
+// define to draw debugging information on images (bounding rectangles on
+// targets)
 #define DRAW_DEBUG
 
 namespace frc::robot::vision {
@@ -18,14 +15,14 @@ double calcAngle(long value, long centerVal, double focalLen) {
   return atan((double) (value - centerVal) / focalLen);
 }
 
-const cv::Scalar hsvLow{57.0, 160.0, 60.0};
+const cv::Scalar hsvLow{57.0, 160.0, 85.0};
 const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
 
 const cv::Mat openKernel =
-    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3}, cv::Point{1, 1});
+    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3});
 
-const int closeIters = 2;
-const int openIters = 2;
+const int closeIters = 1;
+const int openIters = 1;
 
 // number of contours to consider (by size)
 const size_t numContours = 8;
@@ -81,19 +78,19 @@ double targetAngleScore(const cv::RotatedRect &rect) {
 // check if a contour with the given bounding rectangle is a valid target
 const double scoreThresh = 0.5;
 bool checkTarget(const cv::RotatedRect &rect,
-                 const std::vector<cv::Point> &contour) {
+                 const std::vector<cv::Point> &contour, double score_thresh) {
   return (aspectScore(rect) + areaCoverScore(rect, contour) +
           targetAngleScore(rect)) /
              3.0 >
-         scoreThresh;
+         score_thresh;
 }
 
-std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldView, double aspectH, double aspectV) {
+std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const CameraFOV &fov, cv::Mat &image) {
   // calculate camera information
-  double aspectDiag = hypot(aspectH, aspectV);
+  double aspectDiag = hypot(fov.aspect_h, fov.aspect_v);
 
-  double fieldViewH = atan(tan(diagFieldView / 2.0) * (aspectH / aspectDiag)) * 2.0;
-  double fieldViewV = atan(tan(diagFieldView / 2.0) * (aspectV / aspectDiag)) * 2.0;
+  double fieldViewH = atan(tan(fov.diag_field_view / 2.0) * (fov.aspect_h / aspectDiag)) * 2.0;
+  double fieldViewV = atan(tan(fov.diag_field_view / 2.0) * (fov.aspect_v / aspectDiag)) * 2.0;
 
   double hFocalLen = image.size().width / (2.0 * tan(fieldViewH / 2.0));
   double vFocalLen = image.size().height / (2.0 * tan(fieldViewV / 2.0));
@@ -103,13 +100,15 @@ std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldVi
   cv::cvtColor(image, mask, cv::COLOR_BGR2HSV);
 
   // generate hsv threshold mask
-  cv::inRange(mask, hsvLow, hsvHigh, mask);
+  cv::Scalar hsv_low(config.hsvLowH, config.hsvLowS, config.hsvLowV);
+  cv::Scalar hsv_high(config.hsvHighH, config.hsvHighS, config.hsvHighV);
 
+  cv::inRange(mask, hsv_low, hsv_high, mask);
+
+  cv::morphologyEx(mask, mask, cv::MORPH_DILATE, openKernel);
   // close + open mask to patch up small holes
-  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1),
-                   closeIters);
-  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1),
-                   openIters);
+  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1), config.close_iters);
+  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1), config.open_iters);
 
   // find all contours in image
   std::vector<std::vector<cv::Point>> contours;
@@ -128,7 +127,7 @@ std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldVi
   for (size_t i = 0; i < cv::min(numContours, contours.size()); i++) {
     auto &contour = contours[i];
     auto rect = cv::minAreaRect(contour);
-    auto hit = checkTarget(rect, contour);
+    auto hit = checkTarget(rect, contour, config.score_thresh);
 
     if (hit) {
 #ifdef DRAW_DEBUG
