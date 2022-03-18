@@ -2,7 +2,7 @@
   "team": 2036,
 
   "camera": {
-    "path": "/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._USB_2.0_Camera_SN0001-video-index0",
+    "path": "/dev/videoXXX",
     "pixel format": "YUYV",
     "width": 640,
     "height": 320,
@@ -26,6 +26,9 @@
 
     "open_iters": 1,
     "close_iters": 1,
+
+    "do_dilate": false,
+    "size_rel_thresh": 0.018,
 
     "score_thresh": 0.5
   },
