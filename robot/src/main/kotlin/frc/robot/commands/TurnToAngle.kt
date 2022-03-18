@@ -9,9 +9,9 @@ import frc.robot.subsystems.DrivetrainSubsystem
 // Turn the robot to the given angle (absolute).
 class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, targetAngle: () -> Double, forwardSpeed: Double) : PIDCommand(
     PIDController(
-        Constants.kDrivetrainPidP,
-        Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
+        Constants.kTTAPidP,
+        Constants.kTTAPidI,
+        Constants.kTTAPidD,
     ),
     driveSubsystem::heading,
     targetAngle,
