@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
+import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
@@ -59,7 +60,7 @@ class RobotContainer {
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
     val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
-    
+
     // simultaneous pneumatics push and pull
     val climberPull = ParallelCommandGroup(
         PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
@@ -97,6 +98,21 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
+        // use d-pad for turn to angle
+        POVButton(controller0, 0).whenHeld(
+            TurnToAngle(drivetrain, { 0.0 }, 0.0)
+        )
+        POVButton(controller0, 90).whenHeld(
+            TurnToAngle(drivetrain, { 1.5708 }, 0.0)
+        )
+        POVButton(controller0, 180).whenHeld(
+            TurnToAngle(drivetrain, { 3.14159 }, 0.0)
+        )
+        POVButton(controller0, 270).whenHeld(
+            TurnToAngle(drivetrain, { 4.71239 }, 0.0)
+        )
+
+        // run shooter + vision on controller0 right bumper
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
 
         // PRIMARY DRIVER
