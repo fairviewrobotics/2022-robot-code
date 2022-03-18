@@ -59,9 +59,15 @@ class Constants {
 
         // drivetrain pid control coefficients
         // these are used for angular control
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
+        // TODO - What were these
+        val kTTAPidP get() = generateConstantGetter<Double>("kTTAPidP", 4.5)()
+        val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 13.5)()
+        val kTTAPidD get() = generateConstantGetter<Double>("kTTAPidD", 0.0)()
+
+        // these are used for drivetrain control
+        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
         val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
-        val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+        val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
         // values used for drivetrain commands
         val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 10000.0)()

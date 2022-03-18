@@ -1,12 +1,10 @@
 package frc.robot.commands
 
 import edu.wpi.first.math.controller.PIDController
-import edu.wpi.first.math.controller.ProfiledPIDController
 import edu.wpi.first.math.filter.SlewRateLimiter
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
-import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
@@ -14,7 +12,6 @@ import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.sqrt
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
     val leftPID = PIDController(
