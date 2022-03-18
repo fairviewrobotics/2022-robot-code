@@ -19,7 +19,7 @@ const cv::Scalar hsvLow{57.0, 160.0, 85.0};
 const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
 
 const cv::Mat openKernel =
-    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3});
+    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3}, cv::Point{-1, -1});
 
 const int closeIters = 1;
 const int openIters = 1;

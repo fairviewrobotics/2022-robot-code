@@ -131,9 +131,9 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
     drivetrain::heading,
     {
         // target location is current position + vision offset
-        drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0)
+        drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0) / 1.2
     },
-    { output -> drivetrain.arcadeDrive(0.0, output / 2.0) },
+    { output -> drivetrain.arcadeDrive(0.0, output) },
     drivetrain
 ) {
     init {
@@ -153,7 +153,7 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
  */
 fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSpeed {
     // Clamp distance to range that we collected data for
-    val dist = clamp(distance_to_target_center, 2.5, 3.0)
+    val dist = clamp(distance_to_target_center, 2.5, 4.0)
     // These are just curves fit to the empirical data from 3/12
     val speed = 557.0 + -202.0 * dist + 50.6 * dist.pow(2.0)
     val adjust = -480.0 + 317.0 * dist + -76.5 * dist.pow(2.0)
@@ -176,7 +176,7 @@ fun ShooterSpinUpVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem):
  * Run the shooter at the speed reported by the vision system at the beginning of the command.
  * This means the distance is fixed, so shooter speed should quickly stabilize and allow for putting a ball through.
  */
-class ShooterFixedVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem) : CommandBase() {
+class ShooterFixedVision(val shooter1: ShooterSubsystem, val shooter2: ShooterSubsystem) : CommandBase() {
     val control = DualShooterPIDController(shooter1, shooter2)
 
     var speeds = DualShootSpeed(0.0, 0.0)
@@ -192,6 +192,13 @@ class ShooterFixedVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem)
 
     override fun execute() {
         control.execute(speeds)
+    }
+
+    override fun end(interrupted: Boolean) {
+        shooter1.setVoltage(0.0)
+        shooter1.setTarget(0.0)
+        shooter2.setVoltage(0.0)
+        shooter2.setTarget(0.0)
     }
 }
 
@@ -237,7 +244,10 @@ fun ShootVision(
             ShooterSpinUpVision(shooter1, shooter2)
         ),
         // maintain shooter speed and shoot
-        ShootDefaultDistance(shooter1, shooter2, gate, indexer)
+        ParallelCommandGroup(
+            ShooterFixedVision(shooter1, shooter2),
+            ShootBallMotor(shooter1, shooter2, gate, indexer)
+        )
     )
 }
 

@@ -133,11 +133,13 @@ std::optional<VisionConfig> read_config_vision_config(const wpi::json& config) {
     vs.open_iters = config.at("open_iters").get<int>();
     vs.close_iters = config.at("close_iters").get<int>();
 
-    vs.score_thresh = config.at("score_thresh").get<int>();
+    vs.score_thresh = config.at("score_thresh").get<double>();
   } catch (const wpi::json::exception &e) {
     config_error() << "could not parse camera fov: " << e.what() << "\n";
     return {};
   }
+
+
 
   return vs;
 }
@@ -191,21 +193,21 @@ class Vision {
     }
     
     // read fov, vision layout, and vision config
-    auto fov = read_config_camera_fov(j);
+    auto fov = read_config_camera_fov(j.at("camera_fov"));
     if(fov) {
       camera_fov = *fov;
     } else {
       return {};
     }
     
-    auto vl = read_config_vision_layout(j);
+    auto vl = read_config_vision_layout(j.at("vision_layout"));
     if(vl) {
       layout = *vl;
     } else {
       return {};
     }
     
-    auto vc = read_config_vision_config(j);
+    auto vc = read_config_vision_config(j.at("vision_config"));
     if(vc) {
       vision_config = *vc;
     } else {
@@ -213,7 +215,7 @@ class Vision {
     }
     
     CameraConfig cam_config;
-    auto cam_json = j.at("cam_json");
+    auto cam_json = j.at("camera");
     try {
       cam_config.path = cam_json.at("path").get<std::string>();
     } catch (const wpi::json::exception& e) {
