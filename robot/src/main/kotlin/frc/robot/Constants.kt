@@ -59,14 +59,18 @@ class Constants {
 
         // drivetrain pid control coefficients
         // these are used for angular control
-        // TODO - What were these
-        val kTTAPidP get() = generateConstantGetter<Double>("kTTAPidP", 4.5)()
-        val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 13.5)()
+        val kTTAPidP get() = generateConstantGetter<Double>("kTTAPidP", 2.005)()
+        val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 0.5729)()
         val kTTAPidD get() = generateConstantGetter<Double>("kTTAPidD", 0.0)()
+        // max control effort to exert on drivetrain
+        val kTTAClamp = 0.6
 
-        // these are used for drivetrain control
-        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 1.0)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
+        val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
+        val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.6)()
+
+        // these are used for linear drivetrain velocity control
+        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 13.5)()
         val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
         // values used for drivetrain commands
@@ -76,9 +80,6 @@ class Constants {
         val kDrivetrainRegularRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainRegularRotationSpeed", 0.5)()
         val kDrivetrainFineForwardSpeed get() = generateConstantGetter<Double>("kDrivetrainFineForwardSpeed", 1.25)()
         val kDrivetrainFineRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainFineRotationSpeed", 0.125)()
-
-        val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
-        val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.01745329252)()
 
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
@@ -102,9 +103,9 @@ class Constants {
         val shooterDefaultDist = 3.0
 
 
-        val shooterElevationP get() = generateConstantGetter<Double>("shooterElevationP", 0.5)()
-        val shooterElevationI get() = generateConstantGetter<Double>("shooterElevationI", 0.0)()
-        val shooterElevationD get() = generateConstantGetter<Double>("shooterElevationD", 0.0)()
+        val elevatorP get() = generateConstantGetter<Double>("elevatorP", 0.5)()
+        val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.0)()
+        val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
 
         val shooterElevationPosTolerance get() = generateConstantGetter<Double>("shooterElevationPosTolerance", 0.0)()
         val shooterElevationVelocityTolerance get() = generateConstantGetter<Double>("shooterElevationVelocityTolerance", 0.0)()

@@ -100,16 +100,16 @@ class RobotContainer {
     private fun configureButtonBindings() {
         // use d-pad for turn to angle
         POVButton(controller0, 0).whenHeld(
-            TurnToAngle(drivetrain, { 0.0 }, 0.0)
+            TurnToAngle(drivetrain, { 0.0 })
         )
         POVButton(controller0, 90).whenHeld(
-            TurnToAngle(drivetrain, { 1.5708 }, 0.0)
+            TurnToAngle(drivetrain, { 0.5 * Math.PI })
         )
         POVButton(controller0, 180).whenHeld(
-            TurnToAngle(drivetrain, { 3.14159 }, 0.0)
+            TurnToAngle(drivetrain, { Math.PI })
         )
         POVButton(controller0, 270).whenHeld(
-            TurnToAngle(drivetrain, { 4.71239 }, 0.0)
+            TurnToAngle(drivetrain, { 1.5 * Math.PI })
         )
 
         // run shooter + vision on controller0 right bumper
