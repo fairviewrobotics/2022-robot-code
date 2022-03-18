@@ -64,12 +64,12 @@ class Constants {
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
         // values used for drivetrain commands
-        val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 0.25)()
-        val kDrivetrainSlewRateRotationLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateRotationLimit", 0.25)()
+        val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 10000.0)()
+        val kDrivetrainSlewRateRotationLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateRotationLimit", 10000.0)()
         val kDrivetrainRegularForwardSpeed get() =  generateConstantGetter<Double>("kDrivetrainRegularForwardSpeed", 5.0)()
-        val kDrivetrainRegularRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainRegularRotationSpeed", 1.0)()
+        val kDrivetrainRegularRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainRegularRotationSpeed", 0.5)()
         val kDrivetrainFineForwardSpeed get() = generateConstantGetter<Double>("kDrivetrainFineForwardSpeed", 1.25)()
-        val kDrivetrainFineRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainFineRotationSpeed", 0.25)()
+        val kDrivetrainFineRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainFineRotationSpeed", 0.125)()
 
         val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
         val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.01745329252)()
