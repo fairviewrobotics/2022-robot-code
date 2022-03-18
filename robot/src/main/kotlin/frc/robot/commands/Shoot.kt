@@ -126,7 +126,7 @@ object HighGoalVisionNT {
  */
 class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
     PIDController(
-        Constants.kDrivetrainPidP, Constants.kDrivetrainPidI, Constants.kDrivetrainPidD
+        Constants.kTTAPidP, Constants.kTTAPidI, Constants.kTTAPidD
     ),
     drivetrain::heading,
     {

@@ -6,17 +6,15 @@ package frc.robot
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
-import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController.Button.*
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
-import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
-import edu.wpi.first.wpilibj.DoubleSolenoid
-import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 
 import com.revrobotics.*
 import edu.wpi.first.wpilibj2.command.button.POVButton
+import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
 
@@ -110,47 +108,85 @@ class RobotContainer {
         }
 
         // run shooter + vision on controller0 right bumper
+        // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
+
+        // PRIMARY DRIVER
+
+        // LT - Vision Lineup
+        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+            SequentialCommandGroup(
+                CheckVisionOrRumble(controller0),
+                TurnToHighGoal(drivetrain)
+            )
+        )
+
+        // LB - Fine Drive, Left Joystick - Normal Drive, Right Joystick - Inverted Drive
+        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, controller0)
+
+        // RT - Set Manual Shooting Power
+        Trigger { controller0.rightTriggerAxis > 0.2 }.whenActive(
+            ParallelCommandGroup(
+                FixedShooterSpeed(shooter1, { controller0.rightTriggerAxis }),
+                FixedShooterSpeed(shooter2, { controller0.rightTriggerAxis })
+            )
+        )
+
+        // RB - Visual Shooting
         JoystickButton(controller0, kRightBumper.value).whenHeld(
             ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
         )
 
-        // run shooter without vision on controller0 right trigger
-        Trigger { controller0.rightTriggerAxis > 0.2 }.whileActiveOnce(
-            ShootDefaultDistance(shooter1, shooter2, gate, indexer)
+        // X - Gate Forward
+        JoystickButton(controller0, kX.value).whenHeld(
+            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
         )
 
-        // run intake on A
-        JoystickButton(controller0, kA.value).whenHeld(
+        // B - Run Intake
+        JoystickButton(controller0, kB.value).whenHeld(
             FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
         )
 
-        // run intake + indexer on B
-        JoystickButton(controller0, kB.value).whenHeld(
+        // Y - Pneumatic Intake Up TODO
+        // A - Pneumatic Intake Down TODO
+
+
+        // SECONDARY DRIVER
+
+        // LT - Climber Down TODO
+        // RT - Climber Up TODO
+
+
+        // LB - Auto Climb TODO
+
+        // RB - Run Intake/Indexer/Gate
+        Trigger { controller1.rightTriggerAxis > 0.2 }.whileActiveOnce(
             ParallelCommandGroup(
                 FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
-                FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
+                FixedBallMotorSpeed(indexer, { Constants.indexerSpeed }),
+                FixedBallMotorSpeed(gate, { Constants.gateSpeed })
             )
         )
 
-        // run gate on Y
-        JoystickButton(controller0, kY.value).whenHeld(
-            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+        // Y - Direct shooter
+        JoystickButton(controller1, kY.value).whileHeld(
+            ShootDefaultDistance(shooter1, shooter2, gate, indexer)
         )
 
-        drivetrain.defaultCommand = ArcadeDrive(drivetrain, controller0)
-        //drivetrain.defaultCommand = JoystickDrive(drivetrain, controller0)
-        //debugSubsystem.defaultCommand = MotorTest(debugSubsystem, controller0)
-
-
-        // run gate on secondary Y
-        JoystickButton(controller1, kY.value).whenHeld(
-            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+        // B - Reverse Intake/Indexer/Gate
+        JoystickButton(controller1, kB.value).whileHeld(
+            ParallelCommandGroup(
+                FixedBallMotorSpeed(intake, { -Constants.intakeSpeed }),
+                FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed }),
+                FixedBallMotorSpeed(gate, { -Constants.gateSpeed })
+            )
         )
 
-        // run magazine on secondary B
-        JoystickButton(controller1, kB.value).whenHeld(
-            FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
-        )
+        // A - Pneumatic Climber Forward
+        // X - Pneumatic Climber Backward
+
+        // D-Pad Up - Intake Pneumatic Up TODO
+        // D-Pad Down - Intake Pneumatic Down TODO
+
     }
 
 
