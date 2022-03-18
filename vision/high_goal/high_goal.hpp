@@ -9,8 +9,13 @@ struct VisionConfig {
   double hsvHighH, hsvHighS, hsvHighV;
   // number of open / close iterations
   int open_iters, close_iters;
+  // relative size (in one dimension) at a target must meet
+  double size_rel_thresh;
   // contour score threshold
   double score_thresh;
+  // whether image should be dilated before being processed.
+  // This allows small targets to pass through, but also leaves more noise.
+  bool do_dilate;
 };
 
 // Camera field of view and aspect information

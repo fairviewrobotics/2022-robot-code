@@ -15,14 +15,8 @@ double calcAngle(long value, long centerVal, double focalLen) {
   return atan((double) (value - centerVal) / focalLen);
 }
 
-const cv::Scalar hsvLow{57.0, 160.0, 85.0};
-const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
-
 const cv::Mat openKernel =
     getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3}, cv::Point{-1, -1});
-
-const int closeIters = 1;
-const int openIters = 1;
 
 // number of contours to consider (by size)
 const size_t numContours = 8;
@@ -53,13 +47,13 @@ double areaCoverScore(const cv::RotatedRect &rect,
 }
 
 // score a target on it's aspect ratio (should be close to 5"/2" = 2.5)
-const double aspectExp = 4.0;
+const double aspectExp = 0.8;
 double aspectScore(const cv::RotatedRect &rect) {
   const double w = rect.size.width;
   const double h = rect.size.height;
   auto aspect = cv::max(w, h) / cv::min(w, h);
 
-  return cv::max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
+  return cv::max(1.0 - pow(abs(aspect - 2.6), aspectExp), 0.0);
 }
 
 double rotatedRectAngle(const cv::RotatedRect &rect) {
@@ -75,13 +69,22 @@ double targetAngleScore(const cv::RotatedRect &rect) {
   return hit ? 1.0 : 0.0;
 }
 
+// score a target based on it's relative size in the image
+double targetSizeScore(const cv::RotatedRect &rect, double image_size, double relative_thresh) {
+  double thresh = image_size * relative_thresh;
+  return cv::max(rect.size.width, rect.size.height) >= thresh ? 1.0 : 0.0;
+}
+
 // check if a contour with the given bounding rectangle is a valid target
-const double scoreThresh = 0.5;
 bool checkTarget(const cv::RotatedRect &rect,
-                 const std::vector<cv::Point> &contour, double score_thresh) {
-  return (aspectScore(rect) + areaCoverScore(rect, contour) +
-          targetAngleScore(rect)) /
-             3.0 >
+                 const std::vector<cv::Point> &contour, double score_thresh, double image_size, double size_rel_thresh) {
+  return (
+            aspectScore(rect) +
+            areaCoverScore(rect, contour) +
+            targetAngleScore(rect) +
+            2.0 * targetSizeScore(rect, image_size, size_rel_thresh)
+          ) /
+             5.0 >
          score_thresh;
 }
 
@@ -105,7 +108,9 @@ std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const 
 
   cv::inRange(mask, hsv_low, hsv_high, mask);
 
-  cv::morphologyEx(mask, mask, cv::MORPH_DILATE, openKernel);
+  if(config.do_dilate) {
+    cv::morphologyEx(mask, mask, cv::MORPH_DILATE, openKernel);
+  }
   // close + open mask to patch up small holes
   cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1), config.close_iters);
   cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1), config.open_iters);
@@ -127,7 +132,7 @@ std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const 
   for (size_t i = 0; i < cv::min(numContours, contours.size()); i++) {
     auto &contour = contours[i];
     auto rect = cv::minAreaRect(contour);
-    auto hit = checkTarget(rect, contour, config.score_thresh);
+    auto hit = checkTarget(rect, contour, config.score_thresh, cv::max(image.size().width, image.size().height), config.size_rel_thresh);
 
     if (hit) {
 #ifdef DRAW_DEBUG
@@ -147,9 +152,16 @@ std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const 
   cv::RotatedRect *high_target = nullptr;
   for (auto &target : targets) {
     if (target.boundingRect().y < center_y) {
-      center_x = rotatedRectAngle(target) < 90
-                     ? target.boundingRect().x
-                     : target.boundingRect().x + target.boundingRect().width;
+      // center x is taken to be the center of the rectangle + cos(angle) towards the higher side
+      center_x = target.boundingRect().x + target.boundingRect().width * 0.5;
+      auto angle = rotatedRectAngle(target);
+      auto adjust = 0.5 * sin(angle * 3.1415926 / 180.0) * target.boundingRect().width;
+      if(angle < 90.0) {
+        center_x -= adjust;
+      } else {
+        center_x += adjust;
+      }
+
       center_y = target.boundingRect().y;
       high_target = &target;
     }

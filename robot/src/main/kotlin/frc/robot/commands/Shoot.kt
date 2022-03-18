@@ -123,26 +123,51 @@ object HighGoalVisionNT {
 
 /**
  * Turn the drivetrain towards the target location reported in network tables.
+ * This uses the continuously updated target position to reorient the robot, and may not stabilize with noisy vision data.
  */
-class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
-    PIDController(
-        Constants.kTTAPidP, Constants.kTTAPidI, Constants.kTTAPidD
-    ),
-    drivetrain::heading,
-    {
-        // target location is current position + vision offset
-        drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0) / 1.2
-    },
-    { output -> drivetrain.arcadeDrive(0.0, output) },
-    drivetrain
-) {
-    init {
-        controller.enableContinuousInput(-Math.PI, Math.PI)
-        controller.setTolerance(Constants.kDrivetrainAngleTolerance, Constants.kDrivetrainVelTolerance)
+class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+
+    override fun execute() {
+        control.execute {
+            // target location is current position + vision offset.
+            // the 1.2 factor is used to dampen the amount that we turn at each step to remove oscillation caused by time delay on vision data.
+            // this is non ideal, but the robot's position should asymptotically approach the target
+            drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0) / 1.2
+        }
     }
 
     override fun isFinished(): Boolean {
-        return (!HighGoalVisionNT.found_target.getBoolean(false)) || controller.atSetpoint()
+        return (!HighGoalVisionNT.found_target.getBoolean(false)) || control.finished()
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
+}
+
+/**
+ * Turn the drivetrain towards the target location reported in networktables.
+ * This fixes the location at the start of the command, and does not adjust if the reported position changes.
+ */
+class TurnToFixedHighGoal(val drivetrain: DrivetrainSubsystem): CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+    var angle = 0.0
+
+    override fun initialize() {
+        angle = drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0)
+    }
+
+    override fun execute() {
+        control.execute { angle }
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
+
+    override fun isFinished(): Boolean {
+        return control.finished()
     }
 }
 
