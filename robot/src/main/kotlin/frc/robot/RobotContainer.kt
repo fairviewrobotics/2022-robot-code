@@ -22,6 +22,7 @@ import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
+import java.lang.Math.PI
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -102,18 +103,12 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // use d-pad for turn to angle
-        POVButton(controller0, 0).whenHeld(
-            TurnToAngle(drivetrain, { 0.0 })
-        )
-        POVButton(controller0, 90).whenHeld(
-            TurnToAngle(drivetrain, { 0.5 * Math.PI })
-        )
-        POVButton(controller0, 180).whenHeld(
-            TurnToAngle(drivetrain, { Math.PI })
-        )
-        POVButton(controller0, 270).whenHeld(
-            TurnToAngle(drivetrain, { 1.5 * Math.PI })
-        )
+        for (i in 0 until 8) {
+            val angleDeg = 45 * i
+            POVButton(controller0, angleDeg).whenHeld(
+                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 }, 0.0)
+            )
+        }
 
         // run shooter + vision on controller0 right bumper
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
