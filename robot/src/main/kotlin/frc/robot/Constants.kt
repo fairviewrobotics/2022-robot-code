@@ -63,7 +63,7 @@ class Constants {
         val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 0.5729)()
         val kTTAPidD get() = generateConstantGetter<Double>("kTTAPidD", 0.0)()
         // max control effort to exert on drivetrain
-        val kTTAClamp = 0.6
+        val kTTAClamp = 0.4
 
         val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
         val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.6)()

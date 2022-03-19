@@ -270,6 +270,7 @@ fun ShootVision(
         ),
         // maintain shooter speed and shoot
         ParallelCommandGroup(
+            MaintainAngle(drivetrain),
             ShooterFixedVision(shooter1, shooter2),
             ShootBallMotor(shooter1, shooter2, gate, indexer)
         )
