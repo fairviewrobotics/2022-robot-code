@@ -61,6 +61,9 @@ class RobotContainer {
     val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
 
+    // gate color sensor
+    val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
+
     // simultaneous pneumatics push and pull
     val climberPull = ParallelCommandGroup(
         PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
@@ -168,13 +171,17 @@ class RobotContainer {
             ParallelCommandGroup(
                 FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
                 FixedBallMotorSpeed(indexer, { Constants.indexerSpeed }),
-                FixedBallMotorSpeed(gate, { Constants.gateSpeed })
+                GateSensored(gate, { Constants.gateSpeed }, colorSensor)
             )
         )
 
         // Y - Direct shooter
         JoystickButton(controller1, kY.value).whileHeld(
-            ShootDefaultDistance(shooter1, shooter2, gate, indexer)
+            ParallelCommandGroup(
+                DualShooterPID(shooter1, shooter2) { DualShootSpeed(Constants.shooterRadPerS, Constants.shooterAdjustRadPerS) },
+                ShootBallMotor(shooter1, shooter2, gate, indexer),
+                MaintainAngle(drivetrain)
+            )
         )
 
         // B - Reverse Intake/Indexer/Gate

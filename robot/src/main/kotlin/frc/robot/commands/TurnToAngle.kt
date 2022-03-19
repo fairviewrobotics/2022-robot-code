@@ -43,3 +43,21 @@ class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, val targetAngle: () -
         driveSubsystem.tankDriveVolts(0.0, 0.0)
     }
 }
+
+// Maintain the robot's current angular position
+class MaintainAngle(val drivetrain: DrivetrainSubsystem): CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+    var angle = 0.0
+
+    override fun initialize() {
+        angle = drivetrain.heading
+    }
+
+    override fun execute() {
+        control.execute { angle }
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
+}
