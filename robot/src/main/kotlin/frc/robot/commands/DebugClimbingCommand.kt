@@ -12,11 +12,11 @@ class DebugClimbingCommand(val climber: WinchSubsystem, val controller: XboxCont
 
     var speed = 0.0;
     override fun execute() {
-        if (controller.aButtonPressed) {
+        if (controller.getAButton()) {
             speed += 0.1
         }
 
-        if (controller.bButtonPressed) {
+        if (controller.getBButton()) {
             speed -= 0.1
         }
 
@@ -32,7 +32,7 @@ class DebugClimbingCommand(val climber: WinchSubsystem, val controller: XboxCont
         SmartDashboard.putNumber("Actual Speed", climber.actualSpeed)
         //SmartDashboard.putNumber("Position", climber.distance)
         SmartDashboard.putNumber("Actual Encoder Reading", climber.getPosition())
-        SmartDashboard.putBoolean("Lower Limit Hit", climber.hitLower)
-        SmartDashboard.putBoolean("Upper Limit Hit", climber.hitUpper)
+        SmartDashboard.putBoolean("Lower Limit Hit", climber.atUpper())
+        SmartDashboard.putBoolean("Upper Limit Hit", climber.atLower())
     }
 }
