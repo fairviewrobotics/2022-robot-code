@@ -17,8 +17,12 @@
 
 
 - test breakpoints of appropriate heights
+- smartmotion
 - input values into the appropriate commands (write the code)
 
 
 - record configs of all motors (download a file of them)
 - ask edward about using bang-bangs
+
+
+0 to 230

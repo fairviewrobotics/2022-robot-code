@@ -12,21 +12,42 @@ class WinchPIDCommand(val climber: WinchSubsystem, val controller: XboxControlle
         addRequirements(climber)
     }
 
+    override fun initialize() {
+        climber.pid.setP(Constants.elevatorP)
+        climber.pid.setI(Constants.elevatorI)
+        climber.pid.setD(Constants.elevatorD)
+        climber.pid.setOutputRange(-1.0, 1.0)
+        climber.pid.setSmartMotionMaxVelocity(1.0, 0)
+        climber.pid.setSmartMotionMaxAccel(1.0, 0)
+
+        climber.encoder.setPositionConversionFactor(1.0)
+        climber.winch.setSmartCurrentLimit(40)
+        climber.winch.setSecondaryCurrentLimit(40.0)
+    }
+
     var targetDist = 1.0;
     val stepSize = 1
     override fun execute() {
-        if (controller.aButtonPressed) {
-            if (targetDist <= Constants.climbMaxVal-stepSize){
-                targetDist += stepSize
-            }
+
+        if (controller.getAButton()) {
+            targetDist += stepSize
+            climber.pid.setIAccum(0.0)
             
         }
 
-        if (controller.bButtonPressed) {
-            if (targetDist >= stepSize){
-                targetDist -= stepSize
-            }
-            
+        if (controller.getBButton()) {
+            targetDist -= stepSize
+            climber.pid.setIAccum(0.0)
+        }
+
+        if (controller.getXButton()){
+            targetDist = 5.0
+        }
+        if (controller.getYButton()){
+            targetDist = Constants.climbMaxVal
+        }
+        if (!climber.atLower()){
+            targetDist = 0.0
         }
 
         /*
@@ -35,11 +56,13 @@ class WinchPIDCommand(val climber: WinchSubsystem, val controller: XboxControlle
         }
         */
         
-        climber.pid.setReference(targetDist, kPosition)
+        //climber.setPosition(targetDist)
+        climber.setTarget(targetDist)
 
         SmartDashboard.putNumber("Target Position", targetDist)
+        SmartDashboard.putNumber("velocity", climber.encoder.getVelocity())
         SmartDashboard.putNumber("Actual Position", climber.getPosition())
-        SmartDashboard.putBoolean("Lower Limit Hit", climber.hitLower)
-        SmartDashboard.putBoolean("Upper Limit Hit", climber.hitUpper)
+        SmartDashboard.putBoolean("Lower Limit Hit", climber.atLower())
+        SmartDashboard.putBoolean("Upper Limit Hit", climber.atUpper())
     }
 }
