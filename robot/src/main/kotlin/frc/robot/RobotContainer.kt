@@ -11,17 +11,12 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.PneumaticsModuleType
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value
-import edu.wpi.first.wpilibj.Encoder
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
-import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj.DigitalInput
-import kotlin.math.*
 
 import com.revrobotics.*
 import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
-import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
 
@@ -29,6 +24,7 @@ import frc.robot.subsystems.*
 
 
 import frc.robot.commands.*
+import java.lang.Math.PI
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -70,10 +66,13 @@ class RobotContainer {
     val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
 
+<<<<<<< HEAD
     // todo: set values!
     val shooterElevationEncoder = Encoder(Constants.shooterElevationEncoderIDA, Constants.shooterElevationEncoderIDB) 
     val shooterElevation = ShooterElevationSubsystem(WPI_TalonSRX(Constants.shooterElevationMotorID))
     */
+=======
+>>>>>>> 59ab0e78a4259eb8064370939a3ffb34beb8add0
     // intake / indexer / gate
     /* 
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -125,20 +124,12 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // use d-pad for turn to angle
-        /*
-        POVButton(controller0, 0).whenHeld(
-            TurnToAngle(drivetrain, { 0.0 })
-        )
-        POVButton(controller0, 90).whenHeld(
-            TurnToAngle(drivetrain, { 0.5 * Math.PI })
-        )
-        POVButton(controller0, 180).whenHeld(
-            TurnToAngle(drivetrain, { Math.PI })
-        )
-        POVButton(controller0, 270).whenHeld(
-            TurnToAngle(drivetrain, { 1.5 * Math.PI })
-        )
-        */
+        for (i in 0 until 8) {
+            val angleDeg = 45 * i
+            POVButton(controller0, angleDeg).whenHeld(
+                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
+            )
+        }
 
         // run shooter + vision on controller0 right bumper
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
@@ -169,11 +160,6 @@ class RobotContainer {
         JoystickButton(controller0, kRightBumper.value).whenHeld(
             ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
         )
-        shooter2.defaultCommand = ShooterBangBang(shooter2, {
-            if (controller0.getRightTriggerAxis() > 0.5) -1.0 * Constants.shooterRadPerS else(
-                0.0
-            )
-        })
 
         // X - Gate Forward
         JoystickButton(controller0, kX.value).whenHeld(
@@ -217,15 +203,23 @@ class RobotContainer {
         )
         */
 
-        // Y - Pneumatic Intake Up TODO
-        // A - Pneumatic Intake Down TODO
+        // Y/A - Raise / Lower intake pneumatics
+        JoystickButton(controller0, kY.value).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+        )
 
+        JoystickButton(controller0, kA.value).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
+        )
 
         // SECONDARY DRIVER
 
         // LT - Climber Down TODO
         // RT - Climber Up TODO
-
+        // raise / lower climber pneumatic component
+        winch.defaultCommand = DebugClimbingCommand(winch, controller1)
+        //winch.defaultCommand = WinchPIDCommand(winch, controller1)
+        //winch.defaultCommand = LimitedWinchCommand(winch, { controller0.rightY })
 
         // LB - Auto Climb TODO
 
@@ -238,22 +232,6 @@ class RobotContainer {
                 GateSensored(gate, { Constants.gateSpeed }, colorSensor)
             )
         )
-
-        // raise / lower shooter: rudimentarily discrete for now
-
-        var shooterDist = 100.0
-
-        shooterElevation.defaultCommand = ElevationCommand(shooterElevation, fun() : Double{
-            if (controller0.getLeftBumper()){
-                shooterDist = shooterDist - 100
-                return max(shooterDist, 0.0)
-            } else if (controller0.getLeftTriggerAxis() > 0.5){
-                shooterDist = shooterDist + 100
-                return min(shooterDist, Constants.elevationEncoderMax)
-            } else{
-                return shooterDist
-            }
-        }, shooterElevationEncoder)
 
         // run indexer rejection on Y of secondary controller
         // Y - Direct shooter
@@ -275,7 +253,15 @@ class RobotContainer {
         )
         */
         // A - Pneumatic Climber Forward
+        JoystickButton(controller0, kA.value).whenHeld(
+            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
+
+        )
+
         // X - Pneumatic Climber Backward
+        JoystickButton(controller0, kX.value).whenHeld(
+            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
+        )
 
         // D-Pad Up - Intake Pneumatic Up TODO
         // D-Pad Down - Intake Pneumatic Down TODO
