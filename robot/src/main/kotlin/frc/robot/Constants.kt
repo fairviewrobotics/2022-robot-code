@@ -19,15 +19,24 @@ class Constants {
         val driveBackRightID = 4
 
         // climber (2 solenoids and one winch motor)
-        val climbSolenoidLeftID = Pair(1, 2)
-        val climbSolenoidRightID = Pair(3, 4)
+        val climbSolenoidID = Pair(1, 2)
         val climbWinchID = 33
+        val climbMaxVal = 100.0 // todo: set!
 
         // shooter (2 spark max to run wheels)
         val shooterLowID = 20
         val shooterHighID = 21
 
+        val elevationEncoderMax = 1000.0
+        val shooterElevationP = 0.1
+        val shooterElevationI = 0.0
+        val shooterElevationD = 0.0
+        val shooterElevationEncoderIDA = 0
+        val shooterElevationEncoderIDB = 0
+        val shooterElevationMotorID = 0
+
         // intake / indexer / gate (on talon each)
+        val intakeSolenoidID = Pair(3, 4)
         val intakeID = 9
         val indexerID = 7
         val gateID = 8
@@ -109,6 +118,7 @@ class Constants {
 
         val shooterElevationPosTolerance get() = generateConstantGetter<Double>("shooterElevationPosTolerance", 0.0)()
         val shooterElevationVelocityTolerance get() = generateConstantGetter<Double>("shooterElevationVelocityTolerance", 0.0)()
+        
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
