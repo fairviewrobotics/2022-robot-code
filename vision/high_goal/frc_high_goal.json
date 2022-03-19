@@ -1,0 +1,39 @@
+{
+  "team": 2036,
+
+  "camera": {
+    "path": "/dev/v4l/by-id/usb-Sonix_Technology_Co.__Ltd._USB_2.0_Camera_SN0001-video-index0",
+    "pixel format": "YUYV",
+    "width": 640,
+    "height": 320,
+    "fps": 30
+  },
+
+  "camera_fov": {
+    "diag_field_view": 1.500983,
+    "aspect_h": 16.0,
+    "aspect_v": 9.0
+  },
+
+  "vision_config": {
+    "hsv_low_h": 57.0,
+    "hsv_low_s": 160.0,
+    "hsv_low_v": 85.0,
+
+    "hsv_high_h": 100.0,
+    "hsv_high_s": 255.0,
+    "hsv_high_v": 255.0,
+
+    "open_iters": 1,
+    "close_iters": 1,
+
+    "score_thresh": 0.5
+  },
+
+  "vision_layout": {
+    "camera_height": 1.0,
+    "camera_angle": 0.0,
+    "target_height": 2.6416,
+    "target_radius": 0.677926
+  }
+}

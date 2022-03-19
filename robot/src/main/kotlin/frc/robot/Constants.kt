@@ -20,11 +20,12 @@ class Constants {
 
         // climber (2 solenoids and one winch motor)
         val climbSolenoidID = Pair(1, 2)
-        val climbWinchID = 5
+        val climbWinchID = 33
+        val climbMaxVal = 100.0 // todo: set!
 
         // shooter (2 spark max to run wheels)
-        val shooterLowID = 16
-        val shooterHighID = 17
+        val shooterLowID = 20
+        val shooterHighID = 21
 
         val elevationEncoderMax = 1000.0
         val shooterElevationEncoderIDA = 0
@@ -33,7 +34,7 @@ class Constants {
 
         // intake / indexer / gate (on talon each)
         val intakeSolenoidID = Pair(3, 4)
-        val intakeID = 6
+        val intakeID = 9
         val indexerID = 7
         val gateID = 8
 
@@ -63,27 +64,40 @@ class Constants {
         }
 
         // drivetrain pid control coefficients
-        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 6.2296)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.0)()
+        // these are used for angular control
+        val kDrivetrainPidP get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 13.5)()
         val kDrivetrainPidD get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+
+        val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
+        val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.01745329252)()
 
         val kDrivetrainMaxVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxVelocity", 2.6)()
         val kDrivetrainMaxAngularVelocity get() = generateConstantGetter<Double>("kDrivetrainMaxAngularVelocity", 10.0)()
         val kDrivetrainMaxAcceleration get() = generateConstantGetter<Double>("kDrivetrainMaxAcceleration", 30.0)()
 
+
         /* Shooter Feed-Forward gains. These gains control the open part (not feedback) of shooter control */
         // baseline (static) gain [V]
-        val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 0.0)()
+        val shooterFFS get() = generateConstantGetter<Double>("shooterFeedForwardS", 0.05)()
         // feedforward velocity gain [V / (rad/s)]
         // this should be approx: 12 V / (free speed in rad/s) = 1 / (kV in V/(rad/s))
-        val shooterFFV get() = generateConstantGetter<Double>("shooterFeedForwardV", 0.002114165)()
+        val shooterFFV get() = generateConstantGetter<Double>("shooterFeedForwardV", 0.017961114)()
         // feedforward acceleration gain [V / (rad/s^2)]
         // this should be approx: 12 V * (moment of inertia) /  (stall torque in Nm)
-        val shooterFFA get() = generateConstantGetter<Double>("shooterFeedForwardA", 0.009757685)()
+        val shooterFFA get() = generateConstantGetter<Double>("shooterFeedForwardA", 0.000757685)()
 
-        val shooterP get() = generateConstantGetter<Double>("shooterP", 0.5)()
-        val shooterI get() = generateConstantGetter<Double>("shooterI", 0.0)()
+        val shooterP get() = generateConstantGetter<Double>("shooterP", 0.02)()
+        val shooterI get() = generateConstantGetter<Double>("shooterI", 0.01)()
         val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
+
+        // shooter target rpm
+        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRadPerS", 500.0)()
+        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS", 0.0)()
+
+        // distance to assume we are from the center of the target if we don't have a measurement (m)
+        val shooterDefaultDist = 3.0
+
 
         val shooterElevationP get() = generateConstantGetter<Double>("shooterElevationP", 0.5)()
         val shooterElevationI get() = generateConstantGetter<Double>("shooterElevationI", 0.0)()
@@ -91,17 +105,14 @@ class Constants {
 
         val shooterElevationPosTolerance get() = generateConstantGetter<Double>("shooterElevationPosTolerance", 0.0)()
         val shooterElevationVelocityTolerance get() = generateConstantGetter<Double>("shooterElevationVelocityTolerance", 0.0)()
-
-        // shooter target rpm
-        val shooterRPM get() = generateConstantGetter<Double>("shooterRPM", 5000.0)()
+        
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
-        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRPM", 500.0)()
 
         // base top speeds for intake, indexer, and gate
         val intakeSpeed = 0.75
-        val indexerSpeed = 0.75
+        val indexerSpeed = 0.5
         val gateSpeed = -0.75
 
 

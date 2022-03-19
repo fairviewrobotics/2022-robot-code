@@ -1,27 +1,37 @@
 package frc.robot.commands
 
 import edu.wpi.first.math.controller.PIDController
+import edu.wpi.first.math.controller.ProfiledPIDController
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
+import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
+import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
-    val leftPID = PIDController(
-        3.0,
-        0.0,
-        0.0)
+    val leftPID = ProfiledPIDController(
+        Constants.kDrivetrainPidP,
+        Constants.kDrivetrainPidI,
+        Constants.kDrivetrainPidD,
+        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
 
-    val rightPID = PIDController(
-        3.0,
-        0.0,
-        0.0)
+    val rightPID = ProfiledPIDController(
+        Constants.kDrivetrainPidP,
+        Constants.kDrivetrainPidI,
+        Constants.kDrivetrainPidD,
+        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
 
+    init {
+        leftPID.setIntegratorRange(-0.5, 0.5)
+        rightPID.setIntegratorRange(-0.5, 0.5)
+    }
 
     fun execute(speeds: DifferentialDriveWheelSpeeds) {
         // get vals
@@ -35,11 +45,10 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
         val leftSpeedToSet = leftPID.calculate(currentLeftSpeed, speeds.leftMetersPerSecond)
         val rightSpeedToSet = rightPID.calculate(currentRightSpeed, speeds.rightMetersPerSecond)
 
-        SmartDashboard.putNumber("Right speed", currentRightSpeed)
-        SmartDashboard.putNumber("Set point", speeds.rightMetersPerSecond)
-        SmartDashboard.putNumber("Right Voltage", rightSpeedToSet)
         // drive
         drivetrain.tankDriveVolts(leftSpeedToSet, rightSpeedToSet)
+        SmartDashboard.putNumber("Setpoint", currentLeftSpeed)
+        SmartDashboard.putNumber("Speed", drivetrain.wheelSpeeds.leftMetersPerSecond)
     }
 }
 
@@ -112,9 +121,6 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
            angle = 2.0 * Math.PI + angle
         }
 
-        SmartDashboard.putNumber("Setpoint (Degrees)", angle)
-        SmartDashboard.putNumber("Measure (Degrees)", drivetrain.gyro.angle)
-
         Pair<Double, Double>(0.0, angle)
     }
 }
@@ -122,20 +128,36 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
 fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
     val kinematics = DifferentialDriveKinematics(21.5)
     return DrivetrainPIDCommand(drivetrain) {
-        var forward = -controller.leftY * abs(controller.leftY) * 1.25
-        var rotation = controller.leftX * abs(controller.leftX) * 0.25
+        var forward = -controller.leftY * abs(controller.leftY) * 5
+        var rotation = controller.leftX * abs(controller.leftX) * 1
 
-        kinematics.toWheelSpeeds(ChassisSpeeds(forward, 0.0, rotation))
+        kinematics.toWheelSpeeds(ChassisSpeeds(-forward, 0.0, -rotation))
     }
 }
 
-class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem, val controller: XboxController): CommandBase() {
+class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
+                          val controller: XboxController): CommandBase() {
     init {
         addRequirements(drivetrain)
     }
 
     override fun execute() {
-        drivetrain.arcadeDrive(controller.leftY, controller.leftX)
+        /* 2 joystick arcade drive:
+        * Left joystick for faster motion, right joystick for aiming.
+        * Right joystick y is inverted for shooting.
+        * */
+        drivetrain.arcadeDrive(controller.leftY - controller.rightY, controller.leftX + controller.rightX * 0.5)
+        /*val inverted = controller.rightBumper
+
+        val xPos = controller.rightX
+        val xAdjust = if(xPos < 0) { -sqrt(abs(xPos)) } else { sqrt(xPos) } / 2.4
+        val yAdjust = controller.leftY / 1.5
+
+        if(!inverted) {
+            drivetrain.curvatureDrive(yAdjust, xAdjust)
+        } else {
+            drivetrain.curvatureDrive(-yAdjust, xAdjust)
+        }*/
     }
 }
 
