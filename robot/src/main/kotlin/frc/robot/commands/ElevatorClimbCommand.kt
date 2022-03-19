@@ -9,9 +9,9 @@ import frc.robot.subsystems.WinchSubsystem
 class ElevatorClimbCommand(val climber: WinchSubsystem,
                            val targetPosition: () -> Double): PIDCommand(
     PIDController(
-        Constants.shooterElevationP,
-        Constants.shooterElevationI,
-        Constants.shooterElevationD
+        Constants.elevatorP,
+        Constants.elevatorI,
+        Constants.elevatorD
     ),
     climber::getPosition,
     targetPosition,

@@ -1,39 +1,63 @@
 package frc.robot.commands
 
-import edu.wpi.first.math.MathUtil
+import edu.wpi.first.math.MathUtil.clamp
 import edu.wpi.first.math.controller.PIDController
-import edu.wpi.first.wpilibj2.command.PIDCommand
+import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 
-// Turn the robot to the given angle (absolute).
-class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, targetAngle: () -> Double, forwardSpeed: Double) : PIDCommand(
-    PIDController(
-        Constants.kDrivetrainPidP,
-        Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
-    ),
-    driveSubsystem::heading,
-    targetAngle,
-    { output: Double -> driveSubsystem.arcadeDrive(forwardSpeed, MathUtil.clamp(output, -0.3, 0.3)) },
-    driveSubsystem) {
+class TurnToAngleController(val drivetrain: DrivetrainSubsystem) {
+    val pid = PIDController(Constants.kTTAPidP, Constants.kTTAPidI, Constants.kTTAPidD)
 
     init {
-        controller.enableContinuousInput(-Math.PI, Math.PI)
-        /** reload pid parameters from network tables */
-        setPIDParams()
+        pid.enableContinuousInput(-Math.PI, Math.PI)
+        pid.setTolerance(Constants.kDrivetrainAngleTolerance, Constants.kDrivetrainVelTolerance)
     }
 
-    fun setPIDParams() {
-        controller.setTolerance(
-            Constants.kDrivetrainAngleTolerance,
-            Constants.kDrivetrainVelTolerance
-        )
+    fun execute(setPt: () -> Double) {
+        val output = pid.calculate(drivetrain.heading, setPt())
+        val effort = clamp(output, -Constants.kTTAClamp, Constants.kTTAClamp)
+
+        drivetrain.tankDriveVolts(effort * 12.0, -effort * 12.0)
+    }
+
+    fun finished(): Boolean {
+        return pid.atSetpoint()
+    }
+}
+
+// Turn the robot to the given angle (absolute).
+class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, val targetAngle: () -> Double) :
+    CommandBase() {
+    val control = TurnToAngleController(driveSubsystem)
+
+    override fun execute() {
+        control.execute { targetAngle() }
     }
 
     override fun isFinished(): Boolean {
-        /* check if we hit setpoint yet */
-        return controller.atSetpoint()
+        return control.finished()
     }
 
+    override fun end(interrupted: Boolean) {
+        driveSubsystem.tankDriveVolts(0.0, 0.0)
+    }
+}
+
+// Maintain the robot's current angular position
+class MaintainAngle(val drivetrain: DrivetrainSubsystem): CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+    var angle = 0.0
+
+    override fun initialize() {
+        angle = drivetrain.heading
+    }
+
+    override fun execute() {
+        control.execute { angle }
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
 }

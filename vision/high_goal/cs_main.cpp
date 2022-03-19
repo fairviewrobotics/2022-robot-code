@@ -52,6 +52,8 @@
        "vision_config": {
           "hsv_[low/high]_[h/s/v]": <HSV threshold value>
           "[open/close]_iters": <morphological open close iterations>
+          "do_dilate": <if image should be dilated before processing. Good for small targets, noisy>
+          "size_rel_thresh": <relative (0-1) 1d size threshold (lower bound) for targets>
           "score_thresh": <contour score threshold to be counted as target>
        }
    }
@@ -132,8 +134,10 @@ std::optional<VisionConfig> read_config_vision_config(const wpi::json& config) {
 
     vs.open_iters = config.at("open_iters").get<int>();
     vs.close_iters = config.at("close_iters").get<int>();
+    vs.size_rel_thresh = config.at("size_rel_thresh").get<double>();
+    vs.do_dilate = config.at("do_dilate").get<bool>();
 
-    vs.score_thresh = config.at("score_thresh").get<int>();
+    vs.score_thresh = config.at("score_thresh").get<double>();
   } catch (const wpi::json::exception &e) {
     config_error() << "could not parse camera fov: " << e.what() << "\n";
     return {};
@@ -191,21 +195,21 @@ class Vision {
     }
     
     // read fov, vision layout, and vision config
-    auto fov = read_config_camera_fov(j);
+    auto fov = read_config_camera_fov(j.at("camera_fov"));
     if(fov) {
       camera_fov = *fov;
     } else {
       return {};
     }
     
-    auto vl = read_config_vision_layout(j);
+    auto vl = read_config_vision_layout(j.at("vision_layout"));
     if(vl) {
       layout = *vl;
     } else {
       return {};
     }
     
-    auto vc = read_config_vision_config(j);
+    auto vc = read_config_vision_config(j.at("vision_config"));
     if(vc) {
       vision_config = *vc;
     } else {
@@ -213,7 +217,7 @@ class Vision {
     }
     
     CameraConfig cam_config;
-    auto cam_json = j.at("cam_json");
+    auto cam_json = j.at("camera");
     try {
       cam_config.path = cam_json.at("path").get<std::string>();
     } catch (const wpi::json::exception& e) {
