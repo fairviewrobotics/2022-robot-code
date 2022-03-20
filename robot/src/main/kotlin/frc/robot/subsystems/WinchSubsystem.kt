@@ -8,8 +8,9 @@ import com.revrobotics.CANSparkMax.ControlType.*
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import kotlin.math.max
 
-class WinchSubsystem(winch: CANSparkMax,
+class WinchSubsystem(val winch: CANSparkMax,
                      val lowerLimit: DigitalInput, 
                      val upperLimit: DigitalInput,
                      val debug: Boolean = false) : SubsystemBase() {
@@ -18,12 +19,15 @@ class WinchSubsystem(winch: CANSparkMax,
     // Target distance to run the motor to with PID control. PID control is only enabled if targetVoltage is null.
     var targetDist = 0.0
 
+    // Maximum current draw hit during operation
+    var maxCurrent = 0.0
+
     val pid = winch.getPIDController()
     val encoder = winch.getEncoder()
 
     init {
-        winch.setSmartCurrentLimit(40)
-        winch.setSecondaryCurrentLimit(40.0)
+        winch.setSmartCurrentLimit(10)
+        winch.setSecondaryCurrentLimit(10.0)
     }
 
     // Return true if it is unsafe to run the motor due to upper limit switch
@@ -89,6 +93,9 @@ class WinchSubsystem(winch: CANSparkMax,
             SmartDashboard.putNumber("Winch Current Position", encoder.position)
             SmartDashboard.putBoolean("Winch lower limit hit", !lowerLimit.get())
             SmartDashboard.putBoolean("Winch upper limit hit", !upperLimit.get())
+
+            maxCurrent = max(winch.outputCurrent, maxCurrent)
+            SmartDashboard.putNumber("Current Max", maxCurrent)
         }
     }
 
