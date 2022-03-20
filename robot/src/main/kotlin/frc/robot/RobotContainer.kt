@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput
 import com.revrobotics.*
 import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
 
@@ -49,18 +50,20 @@ class RobotContainer {
     val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
+
     val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
     val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
     val climbPneumatics = SolenoidSubsystem(climbSolenoid)
     val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
+
     
 
     // shooter
+
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
     val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
     val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
-
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
     val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
@@ -68,36 +71,6 @@ class RobotContainer {
 
     // gate color sensor
     val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
-
-    // simultaneous pneumatics push and pull
-    // todo: remove below: unnecessary
-    val climberPull = ParallelCommandGroup(
-        PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
-    )
-
-    val climberPush = ParallelCommandGroup(
-        PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward).withTimeout(1.0)
-    )
-
-
-    // initial climb: drive up, lower climber fully, pull in pneumatics
-    val initialClimb = SequentialCommandGroup(
-        //LimitedWinchCommand(winch, { -1.0 }),
-        //climberPull
-    )
-
-    // secondary climb: raise climber to half
-    /*
-    // ! all times are in seconds
-    val secondaryClimb = SequentialCommandGroup(
-        //FixedWinchSpeed(winch, { 1.0 }).withTimeout(0.5), // todo: tune
-        climberPull,
-        //LimitedWinchCommand(winch, { 1.0 }),
-        climberPush,
-        //FixedWinchSpeed(winch, { -1.0 }).withTimeout(0.5),
-        //LimitedWinchCommand(winch, { -1.0 })
-    )
-    */
 
     init {
         configureButtonBindings()
@@ -107,15 +80,6 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        // use d-pad for turn to angle
-        for (i in 0 until 8) {
-            val angleDeg = 45 * i
-            POVButton(controller0, angleDeg).whenHeld(
-                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
-            )
-        }
-
-        // run shooter + vision on controller0 right bumper
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
 
         // PRIMARY DRIVER
@@ -155,6 +119,11 @@ class RobotContainer {
             FixedBallMotorSpeed(gate, { Constants.gateSpeed })
         )
 
+        // A - deploy intake pneumatic
+        JoystickButton(controller0, kA.value).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+        )
+
         // B - Run Intake, Indexer, and, until color sensor detects, Gate
         JoystickButton(controller0, kB.value).whenHeld(
             ParallelCommandGroup(
@@ -162,26 +131,41 @@ class RobotContainer {
                 FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
             )
         )
-
-        // Y/A - Raise / Lower intake pneumatics
+        
+        // Y - retract intake pneumatic
         JoystickButton(controller0, kY.value).whenHeld(
-            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
-        )
-
-        JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
         )
 
+        // B - Run Intake
+        JoystickButton(controller0, kB.value).whenHeld(
+            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
+        )
+
+        // D-Pad: Turn to fixed angle
+        for (i in 0 until 8) {
+            val angleDeg = 45 * i
+            POVButton(controller0, angleDeg).whenHeld(
+                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
+            )
+        }
+
         // SECONDARY DRIVER
 
-        // LT - Climber Down TODO
-        // RT - Climber Up TODO
-        // raise / lower climber pneumatic component
-        winch.defaultCommand = DebugClimbingCommand(winch, controller1)
-        //winch.defaultCommand = WinchPIDCommand(winch, controller1)
-        //winch.defaultCommand = LimitedWinchCommand(winch, { controller0.rightY })
+        // LT - Climber Down
+        Trigger({ controller1.leftTriggerAxis > 0.2 }).whenActive(
+            FixedWinchVoltage(winch, { 5.0 * controller1.leftTriggerAxis })
+        )
 
-        // LB - Auto Climb TODO
+        // RT - Climber Up
+        Trigger({ controller1.rightTriggerAxis > 0.2 }).whenActive(
+            FixedWinchVoltage(winch, { -5.0 * controller1.rightTriggerAxis })
+        )
+
+        // LB - Auto Climb
+        JoystickButton(controller1, kLeftBumper.value).whenHeld(
+            AutoClimb(winch, climbPneumatics)
+        )
 
         // RB - Run Intake/Indexer/Gate
         Trigger { controller1.rightTriggerAxis > 0.2 }.whileActiveOnce(
@@ -222,8 +206,15 @@ class RobotContainer {
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
         )
 
-        // D-Pad Up - Intake Pneumatic Up TODO
-        // D-Pad Down - Intake Pneumatic Down TODO
+        // D-Pad Up - Intake Pneumatic Up
+        POVButton(controller1, 0).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
+        )
+
+        // D-Pad Down - Intake Pneumatic Down
+        POVButton(controller1, 180).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+        )
 
     }
 
@@ -233,7 +224,6 @@ class RobotContainer {
      *
      * @return the command to run in autonomous
      */
-    //val autonomousCommand: Command
-    //    get() =// An ExampleCommand will run in autonomous
-    //        m_autoCommand
+    val autonomousCommand: Command
+        get() = ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
 }

@@ -21,7 +21,6 @@ class Constants {
         // climber (2 solenoids and one winch motor)
         val climbSolenoidID = Pair(1, 2)
         val climbWinchID = 33
-        val climbMaxVal = 100.0 // todo: set!
 
         // shooter (2 spark max to run wheels)
         val shooterLowID = 20
@@ -105,9 +104,26 @@ class Constants {
         val shooterDefaultDist = 3.0
 
 
-        val elevatorP get() = generateConstantGetter<Double>("elevatorP", 0.5)()
-        val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.0)()
+        // elevator PID controller gains
+        val elevatorP get() = generateConstantGetter<Double>("elevatorP", 1.0)()
+        val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.1)()
         val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
+
+        // top position of the elevator to run to
+        val elevatorTopPosition get() = generateConstantGetter<Double>("elevatorTopPosition", 225.0)()
+
+        // tolerance allowed between elevator target location and current location to consider at the target
+        val elevatorPosTolerance get() = generateConstantGetter<Double>("elevatorPosTolerance", 2.0)()
+
+
+        val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 0.0)()
+        val elevatorFF get() = generateConstantGetter<Double>("elevatorFF", 0.0)()
+        val elevatorMax get() = generateConstantGetter<Double>("elevatorMax", 0.0)()
+        val elevatorMin get() = generateConstantGetter<Double>("elevatorMin", 0.0)()
+        val elevatorMaxAccel get() = generateConstantGetter<Double>("elevatorMaxAccel", 0.0)()
+        val elevatorMaxVel get() = generateConstantGetter<Double>("elevatorMaxVel", 0.0)()
+        val elevatorMinVel get() = generateConstantGetter<Double>("elevatorMinVel", 0.0)()
+        val elevatorCLErr get() = generateConstantGetter<Double>("elevatorCLErr", 0.0)()
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
