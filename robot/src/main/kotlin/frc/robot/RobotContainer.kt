@@ -47,7 +47,7 @@ class RobotContainer {
 
     // climber
     val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
+    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
 
 
     val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
@@ -197,6 +197,7 @@ class RobotContainer {
         )
 
         // A - Pneumatic Climber Forward
+        
         JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
 
