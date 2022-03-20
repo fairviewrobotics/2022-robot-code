@@ -23,12 +23,15 @@ import kotlin.math.pow
 Control the indexer and gate while shooting is happening.
 This command does not control the ShooterSubsystem, but
 monitors its speed.
+
+If endAfterOneBall is true, the command stops after it thinks a ball has been shot
  */
 class ShootBallMotor(
     val shooter1: ShooterSubsystem,
     val shooter2: ShooterSubsystem,
     val gate: BallMotorSubsystem,
-    val indexer: BallMotorSubsystem
+    val indexer: BallMotorSubsystem,
+    val endAfterOneBall: Boolean = false
 ) : CommandBase() {
 
     companion object {
@@ -109,7 +112,15 @@ class ShootBallMotor(
         belowSpeedCycles = 0
     }
 
-    override fun isFinished() = false
+    override fun isFinished(): Boolean {
+        return if(!endAfterOneBall) {
+            false
+        } else {
+            // end after we were once at speed, then dropped, then are now at speed again.
+            // this means we speed up, shot, and have had time for the ball to fully clear
+            atSpeedOnce && belowSpeedOnce && atSpeed()
+        }
+    }
 }
 
 object HighGoalVisionNT {
@@ -268,7 +279,8 @@ fun ShootVision(
     shooter2: ShooterSubsystem,
     gate: BallMotorSubsystem,
     indexer: BallMotorSubsystem,
-    alertController: XboxController
+    alertController: XboxController,
+    endAfterOneBall: Boolean = false
 ): Command {
     return SequentialCommandGroup(
         // rumble controller if no vision
@@ -278,10 +290,11 @@ fun ShootVision(
             ShooterSpinUpVision(shooter1, shooter2)
         ),
         // maintain shooter speed and shoot
-        ParallelCommandGroup(
-            MaintainAngle(drivetrain),
-            ShooterFixedVision(shooter1, shooter2),
-            ShootBallMotor(shooter1, shooter2, gate, indexer)
+        ShootBallMotor(shooter1, shooter2, gate, indexer, endAfterOneBall).raceWith(
+            ParallelCommandGroup(
+                MaintainAngle(drivetrain),
+                ShooterFixedVision(shooter1, shooter2),
+            )
         )
     )
 }
@@ -292,12 +305,11 @@ fun ShootDefaultDistance(
     shooter2: ShooterSubsystem,
     gate: BallMotorSubsystem,
     indexer: BallMotorSubsystem,
+    endAfterOneBall: Boolean = false
 ): Command {
     val speeds = get_shoot_speed_for_distance(Constants.shooterDefaultDist)
-    return ParallelCommandGroup(
+    return ShootBallMotor(shooter1, shooter2, gate, indexer, endAfterOneBall).raceWith(
         DualShooterPID(shooter1, shooter2, { speeds }),
-        // run gate + magazine if shooters are running fast enough
-        ShootBallMotor(shooter1, shooter2, gate, indexer)
     )
 }
 

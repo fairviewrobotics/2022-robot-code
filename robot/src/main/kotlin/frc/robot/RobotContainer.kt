@@ -15,15 +15,14 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj.DigitalInput
 
 import com.revrobotics.*
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
-
 import frc.robot.subsystems.*
-
-
 import frc.robot.commands.*
 import java.lang.Math.PI
 
@@ -56,8 +55,6 @@ class RobotContainer {
     val climbPneumatics = SolenoidSubsystem(climbSolenoid)
     val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
 
-    
-
     // shooter
 
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
@@ -72,8 +69,12 @@ class RobotContainer {
     // gate color sensor
     val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
 
+    // auto command chooser
+    var autoCommandChooser: SendableChooser<Command> = SendableChooser()
+
     init {
         configureButtonBindings()
+        configureAutoOptions()
     }
 
     /**
@@ -218,6 +219,28 @@ class RobotContainer {
 
     }
 
+    private fun configureAutoOptions() {
+        // Drive forwards for 1.5s to clear tarmac [2pt]
+        autoCommandChooser.addOption("Drive forward [2pt]",
+            DrivetrainPIDCommand(drivetrain) {
+                DifferentialDriveWheelSpeeds(Constants.kDrivetrainFineForwardSpeed, Constants.kDrivetrainFineForwardSpeed)
+            }.withTimeout(1.5)
+        )
+        // Shoot based on vision [4pt] then drive backwards to clear tarmac [2pt]
+        autoCommandChooser.addOption("Shoot Vision + Drive forward [6pt]",
+            SequentialCommandGroup(
+                // shoot based on vision
+                ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0, true).withTimeout(8.0),
+                // shoot at default distance (just in case vision did not work)
+                ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(3.0),
+                // drive off tarmac
+                DrivetrainPIDCommand(drivetrain) {
+                    DifferentialDriveWheelSpeeds(Constants.kDrivetrainFineForwardSpeed, Constants.kDrivetrainFineForwardSpeed)
+                }.withTimeout(1.5)
+            )
+        )
+    }
+
 
     /**
      * Use this to pass the autonomous command to the main [Robot] class.
@@ -225,5 +248,5 @@ class RobotContainer {
      * @return the command to run in autonomous
      */
     val autonomousCommand: Command
-        get() = ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
+        get() = autoCommandChooser.selected
 }
