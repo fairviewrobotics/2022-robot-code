@@ -103,10 +103,18 @@ class Constants {
         val shooterDefaultDist = 3.0
 
 
-        val climbMaxVal get() = generateConstantGetter<Double>("climbMaxVal", 225.0)()
+        // elevator PID controller gains
         val elevatorP get() = generateConstantGetter<Double>("elevatorP", 1.0)()
         val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.1)()
         val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
+
+        // top position of the elevator to run to
+        val elevatorTopPosition get() = generateConstantGetter<Double>("elevatorTopPosition", 225.0)()
+
+        // tolerance allowed between elevator target location and current location to consider at the target
+        val elevatorPosTolerance get() = generateConstantGetter<Double>("elevatorPosTolerance", 2.0)()
+
+
         val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 0.0)()
         val elevatorFF get() = generateConstantGetter<Double>("elevatorFF", 0.0)()
         val elevatorMax get() = generateConstantGetter<Double>("elevatorMax", 0.0)()
