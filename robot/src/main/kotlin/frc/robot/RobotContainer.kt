@@ -168,6 +168,18 @@ class RobotContainer {
             AutoClimb(winch, climbPneumatics)
         )
 
+        POVButton(controller1, 0).whenHeld(
+            WinchPIDCommand(winch, { Constants.elevatorMaxPos })
+        )
+
+        POVButton(controller1, 180).whenHeld(
+            WinchPIDCommand(winch, { Constants.elevatorMinPos })
+        )
+
+        POVButton(controller1, 90).whenHeld(
+            WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 })
+        )
+
         // RB - Run Intake/Indexer/Gate
         Trigger { controller1.rightTriggerAxis > 0.2 }.whileActiveOnce(
             ParallelCommandGroup(

@@ -80,27 +80,35 @@ class WinchPIDCommand(val climber: WinchSubsystem, val setPt: () -> Double) : Co
     }
 }
 
-// Autoclimb sequence
-fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
-    // TODO: Get correct sequence + timing necessary to climb
+// Climb sequence when the robot starts on a bar with pneumatics hooked
+fun ClimbToNext(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
     return SequentialCommandGroup(
-        // first step: getting onto bar
-        WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
-        WinchPIDCommand(climber) { Constants.elevatorMinPos }, // lower elevator
-        // second step: pneumatics handoff
-        PneumaticCommand(solenoid, Value.kReverse).withTimeout(1.0), // deploy pneumatics in reverse, locking onto bar
-        WinchPIDCommand(climber) {Constants.elevatorMaxPos * 0.5}, //half-raise climber to release
-        PneumaticCommand(solenoid, Value.kReverse).withTimeout(1.0), // push the robot backwards
-        // third step: getting onto second bar
-        // todo: not so sure about this one
-        WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
-        PneumaticCommand(solenoid, Value.kForward).withTimeout(1.0), // release pneumatics
-        WinchPIDCommand(climber) {Constants.elevatorMinPos }, // lower elevator
-        PneumaticCommand(solenoid, Value.kForward).withTimeout(1.0), // release pneumatics
+        // Raise climber
+        WinchPIDCommand(climber) {Constants.elevatorMaxPos * 0.33},
+        // Move pneumatics backward then forwards to tilt robot toward bar
+        PneumaticCommand(solenoid, Value.kReverse).withTimeout(2.0),
+        PneumaticCommand(solenoid, Value.kForward).withTimeout(5.0),
+        // Raise climber to reach bar distance
+        WinchPIDCommand(climber) { Constants.elevatorMaxPos },
+        // Move pneumatics backwards to grab bar
+        PneumaticCommand(solenoid, Value.kReverse).withTimeout(2.0),
+        // Lower elevator to climb bar
+        WinchPIDCommand(climber) {Constants.elevatorMinPos },
+        // Move pneumatics forward to grab bar
+        PneumaticCommand(solenoid, Value.kForward).withTimeout(2.0),
+    )
+}
 
+// Automatic climbing sequence.
+// This should be started with the climber raised over the bar.
+fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
+    return SequentialCommandGroup(
+        // Lower climber to bottom, lifting the robot
+        WinchPIDCommand(climber) { Constants.elevatorMinPos },
+        // Move pneumatics forward to grab bar
+        PneumaticCommand(solenoid, Value.kForward).withTimeout(2.0),
 
-
-
-
+        ClimbToNext(climber, solenoid),
+        ClimbToNext(climber, solenoid)
     )
 }
