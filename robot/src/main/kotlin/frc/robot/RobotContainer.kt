@@ -66,13 +66,10 @@ class RobotContainer {
     val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
 
-<<<<<<< HEAD
     // todo: set values!
     val shooterElevationEncoder = Encoder(Constants.shooterElevationEncoderIDA, Constants.shooterElevationEncoderIDB) 
     val shooterElevation = ShooterElevationSubsystem(WPI_TalonSRX(Constants.shooterElevationMotorID))
     */
-=======
->>>>>>> 59ab0e78a4259eb8064370939a3ffb34beb8add0
     // intake / indexer / gate
     /* 
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -124,12 +121,14 @@ class RobotContainer {
      */
     private fun configureButtonBindings() {
         // use d-pad for turn to angle
+        /* 
         for (i in 0 until 8) {
             val angleDeg = 45 * i
             POVButton(controller0, angleDeg).whenHeld(
                 TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
             )
         }
+        */
 
         // run shooter + vision on controller0 right bumper
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
@@ -204,6 +203,7 @@ class RobotContainer {
         */
 
         // Y/A - Raise / Lower intake pneumatics
+        /*
         JoystickButton(controller0, kY.value).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
         )
@@ -211,6 +211,7 @@ class RobotContainer {
         JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
         )
+        */
 
         // SECONDARY DRIVER
 
@@ -253,6 +254,7 @@ class RobotContainer {
         )
         */
         // A - Pneumatic Climber Forward
+        /*
         JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
 
@@ -262,7 +264,7 @@ class RobotContainer {
         JoystickButton(controller0, kX.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
         )
-
+        */
         // D-Pad Up - Intake Pneumatic Up TODO
         // D-Pad Down - Intake Pneumatic Down TODO
 

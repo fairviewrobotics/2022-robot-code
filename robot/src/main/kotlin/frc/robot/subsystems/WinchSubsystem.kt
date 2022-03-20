@@ -43,7 +43,7 @@ class WinchSubsystem(val winch: CANSparkMax,
         }
         */
         
-        /* 
+
         if (!isPID){
             // 50% increase / 1 second
             
@@ -56,11 +56,12 @@ class WinchSubsystem(val winch: CANSparkMax,
             
             if (!upperLimit.get() || !lowerLimit.get()){
                 winch.setVoltage(0.0)
+                targetSpeed = 0.0
             } else{
                 winch.setVoltage(targetSpeed)
             }
         }
-        */
+
         
         // todo: experiment with software limits: if encoder hits a value, stop
         if (!lowerLimit.get()){
@@ -110,6 +111,4 @@ class WinchSubsystem(val winch: CANSparkMax,
     fun atLower() : Boolean{
         return lowerLimit.get()
     }
-    var hitUpper = upperLimit.get()
-    var hitLower = lowerLimit.get()
 }

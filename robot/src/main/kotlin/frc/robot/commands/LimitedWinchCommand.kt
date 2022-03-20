@@ -23,9 +23,9 @@ class LimitedWinchCommand(val climber: WinchSubsystem, val voltage: () -> Double
     // Returns true when the command should end.
     override fun isFinished() : Boolean {
         if (voltage() < 0){
-            return climber.hitLower
+            return climber.atLower()
         } else{
-            return climber.hitUpper
+            return climber.atUpper()
         }
         
     }
