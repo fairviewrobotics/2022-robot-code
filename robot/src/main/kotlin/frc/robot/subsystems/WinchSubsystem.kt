@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkMax.ControlType.*
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import frc.robot.Constants
 
 class WinchSubsystem(winch: CANSparkMax,
                      val lowerLimit: DigitalInput, 
@@ -22,8 +23,9 @@ class WinchSubsystem(winch: CANSparkMax,
     val encoder = winch.getEncoder()
 
     init {
-        winch.setSmartCurrentLimit(40)
-        winch.setSecondaryCurrentLimit(40.0)
+        winch.setSmartCurrentLimit(Constants.elevatorMaxCurrent.toInt())
+        winch.setSecondaryCurrentLimit(Constants.elevatorMaxCurrent)
+        winch.setIdleMode(CANSparkMax.IdleMode.kBrake)
     }
 
     // Return true if it is unsafe to run the motor due to upper limit switch
@@ -72,7 +74,6 @@ class WinchSubsystem(winch: CANSparkMax,
         else if (lowerLimitHit()){
             pid.setReference(0.0, kDutyCycle)
             pid.setIAccum(0.0)
-            targetDist = 0.0
             
         } else{
             if(targetVoltage != null) {
@@ -86,7 +87,7 @@ class WinchSubsystem(winch: CANSparkMax,
             SmartDashboard.putString("Winch Mode", if(targetVoltage != null) "Voltage" else "PID Position")
             SmartDashboard.putNumber("Winch Target Voltage", if(targetVoltage != null) targetVoltage!! else 0.0)
             SmartDashboard.putNumber("Winch Target Position", targetDist)
-            SmartDashboard.putNumber("Winch Current Position", encoder.position)
+            SmartDashboard.putNumber("Winch Current Position", getPosition())
             SmartDashboard.putBoolean("Winch lower limit hit", !lowerLimit.get())
             SmartDashboard.putBoolean("Winch upper limit hit", !upperLimit.get())
         }
@@ -94,11 +95,22 @@ class WinchSubsystem(winch: CANSparkMax,
 
     // set target direct speed for the motor
     fun setVoltage(voltage: Double?) {
-        targetVoltage = voltage
+        if (voltage != null && ((upperLimitHit() && voltage > 0.0) || (lowerLimitHit() && voltage < 0.0))) {
+            // if at an upper limit and voltage we want to set is greater than 0, or the opposite at the bottom, set voltage to 0
+            targetVoltage = 0.0
+        } else {
+            targetVoltage = voltage
+        }
     }
 
     fun setTarget(distance: Double){
-        targetDist = distance
+        if ((upperLimitHit() && distance > getPosition()) || (lowerLimitHit() && distance < getPosition())){
+            // if at a lower / upper limit and distance exceeds the current encoder values, set target distance to the current position instead.
+            targetDist = getPosition()
+        } else{
+            targetDist = distance
+        }
+
     }
 
 
