@@ -1,76 +1,10 @@
-import argparse
-from tabnanny import check
-
+import collections
 import cv2
 import numpy as np
-from time import time
-import tflite_runtime.interpreter as tflite
-# from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
-# from networktables import NetworkTablesInstance
-import cv2
-import collections
-import json
-import sys
+import tensorflow as tf
 
-class ConfigParser:
-    def __init__(self, config_path):
-        self.team = -1
+from networktables import NetworkTablesInstance
 
-        # parse file
-        try:
-            with open(config_path, "rt", encoding="utf-8") as f:
-                j = json.load(f)
-        except OSError as err:
-            print("could not open '{}': {}".format(config_path, err), file=sys.stderr)
-
-        # top level must be an object
-        if not isinstance(j, dict):
-            self.parseError("must be JSON object", config_path)
-
-        # team number
-        try:
-            self.team = j["team"]
-        except KeyError:
-            self.parseError("could not read team number", config_path)
-
-        # cameras
-        try:
-            self.cameras = j["cameras"]
-        except KeyError:
-            self.parseError("could not read cameras", config_path)
-
-    def parseError(self, str, config_file):
-        """Report parse error."""
-        print("config error in '" + config_file + "': " + str, file=sys.stderr)
-
-
-class PBTXTParser:
-    def __init__(self, path):
-        self.path = path
-        self.file = None
-
-    def parse(self):
-        with open(self.path, 'r') as f:
-            self.file = ''.join([i.replace('item', '') for i in f.readlines()])
-            blocks = []
-            obj = ""
-            for i in self.file:
-                if i == '}':
-                    obj += i
-                    blocks.append(obj)
-                    obj = ""
-                else:
-                    obj += i
-            self.file = blocks
-            label_map = []
-            for obj in self.file:
-                obj = [i for i in obj.split('\n') if i]
-                name = obj[2].split()[1][1:-1]
-                label_map.append(name)
-            self.file = label_map
-
-    def get_labels(self):
-        return self.file
 
 
 class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
@@ -89,145 +23,126 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
 
 
 class Tester:
-    def __init__(self, config_parser):
-        print("Initializing TFLite runtime interpreter")
+    def __init__(self):
         try:
             model_path = "output_tflite_graph_edgetpu.tflite"
-            self.interpreter = tflite.Interpreter(model_path, experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
+            self.interpreter = tf.lite.Interpreter(model_path, experimental_delegates=[tf.lite.experimental.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
-        except:
+        except Exception as e:
+            print(e)
             print("Failed to create Interpreter with Coral, switching to unoptimized")
             model_path = "output_tflite_graph.tflite"
-            self.interpreter = tflite.Interpreter(model_path)
+            self.interpreter = tf.lite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
 
         self.interpreter.allocate_tensors()
 
-        print("Getting labels")
-        parser = PBTXTParser("label_map.pbtxt")
-        parser.parse()
-        self.labels = parser.get_labels()
-
-        print("Connecting to Network Tables")
-        ntinst = NetworkTablesInstance.getDefault()
-        ntinst.startClientTeam(config_parser.team)
-        ntinst.startDSClient()
-        self.entry = ntinst.getTable("ML").getEntry("detections")
-
-        self.coral_entry = ntinst.getTable("ML").getEntry("coral")
-        self.fps_entry = ntinst.getTable("ML").getEntry("fps")
-        self.resolution_entry = ntinst.getTable("ML").getEntry("resolution")
-        self.target_entry = ntinst.getTable("ML").getEntry("targetIndex")
-        self.target_angle = ntinst.getTable("ML").getEntry("targetAngle")
+        self.labels = ["Red", "Blue"]
         self.temp_entry = []
 
-        # TODO: retrieve this from network tables
-        self.is_red_alliance = True
+        # set up network tables
+        ntinst = NetworkTablesInstance.getDefault()
+        ntinst.startClientTeam(2036)
+        ntinst.startDSClient()
+        self.table = ntinst.getTable("ML")
 
-        print("Starting camera server")
-        cs = CameraServer.getInstance()
-        camera = cs.startAutomaticCapture()
-        camera_config = config_parser.cameras[0]
-        WIDTH, HEIGHT = camera_config["width"], camera_config["height"]
-        camera.setResolution(WIDTH, HEIGHT)
-        self.cvSink = cs.getVideo()
-        self.img = np.zeros(shape=(HEIGHT, WIDTH, 3), dtype=np.uint8)
-        self.output = cs.putVideo("Axon", WIDTH, HEIGHT)
-        self.frames = 0
+        self.fps_entry = self.table.getEntry("fps")
+        self.angle_entry = self.table.getEntry("targetAngle")
+        self.found_target_entry = self.table.getEntry("foundTarget")
 
-        self.coral_entry.setString(self.hardware_type)
-        self.resolution_entry.setString(str(WIDTH) + ", " + str(HEIGHT))
 
     def check_box(self, box):
         width = box[2] - box[0]
         height = box[3] - box[1]
         return height != 0 and abs(1 - width / height) <= 0.3
 
-    def is_red(self, image, box):
-        # select points from within box, check if red/blue
-        pixels = np.float32(image[box[0]:box[2], box[1]:box[3]])
 
-        n_colors = 5
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 200, .1)
-        flags = cv2.KMEANS_RANDOM_CENTERS
-
-        _, labels, palette = cv2.kmeans(pixels, n_colors, None, criteria, 10, flags)
-        _, counts = np.unique(labels, return_counts=True)
-
-        dominant = palette[np.argmax(counts)]
-        red = dominant[0]
-        blue = dominant[2]
-        return red > blue
-
-    def score_target(self, image, box):
-        # if self.is_red(image, box) ^ self.is_red_alliance:
-        #     return -1
+    def score_box(self, box):
+        # score boxes by their width
         return box[2] - box[0]
 
+
     def run(self):
-        print("Starting mainloop")
         while True:
-            start = time()
-            # Acquire frame and resize to expected shape [1xHxWx3]
-            ret, frame_cv2 = self.cvSink.grabFrame(self.img)
-            frame_cv2 = cv2.cvtColor(frame_cv2, cv2.COLOR_BGR2RGB)
+            frame = cv2.imread("../test_image.png")
+            if True:
+                scale = self.set_input(frame)
+                self.interpreter.invoke()
+                boxes, class_ids, scores, _, _ = self.get_output(scale)
+                width, height = self.input_size()
+                resized = cv2.resize(frame, (width, height))
 
-            if not ret:
-                print("Image failed")
-                continue
+                best_box = None
+                best_box_score = 0
 
-            # input
-            scale = self.set_input(frame_cv2)
+                for i, box in enumerate(boxes):
+                    if scores[i] > 0.4 and self.check_box(box):
+                        score = self.score_box(box)
+                        if score > best_box_score:
+                            best_box_score = score
+                            best_box = box
 
-            # run inference
-            self.interpreter.invoke()
+                        class_id = class_ids[i]
+                        
+                        if np.isnan(class_id):
+                            continue
 
-            # output
-            boxes, class_ids, scores, _, _ = self.get_output(scale)
-            width, height = self.input_size()
-            resized = cv2.resize(frame_cv2, (width, height))
-
-            # find target box by largest height and set angle
-            target_index = boxes.index(max(boxes, key=lambda box: self.score_target(resized, list(box))))
-            self.target_entry.setNumber(
-                target_index
-            )
-            target_box = boxes[target_index]
-            center = target_box[2] - target_box[0]
-            offset = center - width / 2
-            angle = offset / 160
-            self.target_angle.setNumber(angle)
-
-            # draw boxes
-            for i, box in enumerate(boxes):
-                if scores[i] > .4 and self.check_box(box):
-                    class_id = class_ids[i]
-                    if np.isnan(class_id):
-                        continue
-
-                    class_id = int(class_id)
-                    if class_id not in range(len(self.labels)):
-                        continue
-                    
-                    if i == target_index:
-                        color = (0, 255, 0)
-                    else:
+                        class_id = int(class_id)
+                        if class_id not in range(len(self.labels)):
+                            continue
+                        
                         color = (0, 0, 255)
 
-                    resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width,
-                                                 height, color)
+                        resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width,
+                                                        height, color)
+            
+            if best_box != None:
+                center = best_box[2] - best_box[0]
+                offset = center - width / 2
+                angle = offset / 160
+                self.angle_entry.setNumber(angle)
+                self.found_target_entry.setBoolean(True)
+            else:
+                self.angle_entry.setNumber(0)
+                self.found_target_entry.setBoolean(False)
 
-            self.output.putFrame(resized)
-            self.entry.setString(json.dumps(self.temp_entry))
-            self.temp_entry = []
-            if self.frames % 100 == 0:
-                print("Completed", self.frames, "frames. FPS:", (1 / (time() - start)))
-            if self.frames % 10 == 0:
-                self.fps_entry.setNumber((1 / (time() - start)))
-            self.frames += 1
+    
+    def input_size(self):
+        """Returns input image size as (width, height) tuple."""
+        _, height, width, _ = self.interpreter.get_input_details()[0]['shape']
+        return width, height
 
-           
 
+    def set_input(self, frame):
+        """Copies a resized and properly zero-padded image to the input tensor.
+        Args:
+          frame: image
+        Returns:
+          Actual resize ratio, which should be passed to `get_output` function.
+        """
+        width, height = self.input_size()
+        h, w, _ = frame.shape
+        new_img = np.reshape(cv2.resize(frame, (width, height)), (1, width, height, 3))
+        self.interpreter.set_tensor(self.interpreter.get_input_details()[0]['index'], np.copy(new_img))
+        return width / w, height / h
+
+    
+    def output_tensor(self, i):
+        tensor = self.interpreter.get_tensor(self.interpreter.get_output_details()[i]['index'])
+        return np.squeeze(tensor)
+
+
+    def get_output(self, scale):
+        boxes = self.output_tensor(1)
+        class_ids = self.output_tensor(3)
+        scores = self.output_tensor(0)
+
+        width, height = self.input_size()
+        image_scale_x, image_scale_y = scale
+        x_scale, y_scale = width / image_scale_x, height / image_scale_y
+        return boxes, class_ids, scores, x_scale, y_scale
+
+    
     def label_frame(self, frame, object_name, box, score, x_scale, y_scale, color):
         ymin, xmin, ymax, xmax = box
         score = float(score)
@@ -258,42 +173,7 @@ class Tester:
         cv2.putText(frame, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
         return frame
 
-    def input_size(self):
-        """Returns input image size as (width, height) tuple."""
-        _, height, width, _ = self.interpreter.get_input_details()[0]['shape']
-        return width, height
 
-    def set_input(self, frame):
-        """Copies a resized and properly zero-padded image to the input tensor.
-        Args:
-          frame: image
-        Returns:
-          Actual resize ratio, which should be passed to `get_output` function.
-        """
-        width, height = self.input_size()
-        h, w, _ = frame.shape
-        new_img = np.reshape(cv2.resize(frame, (width, height)), (1, width, height, 3))
-        self.interpreter.set_tensor(self.interpreter.get_input_details()[0]['index'], np.copy(new_img))
-        return width / w, height / h
-
-    def output_tensor(self, i):
-        """Returns output tensor view."""
-        tensor = self.interpreter.get_tensor(self.interpreter.get_output_details()[i]['index'])
-        return np.squeeze(tensor)
-
-    def get_output(self, scale):
-        boxes = self.output_tensor(1)
-        class_ids = self.output_tensor(3)
-        scores = self.output_tensor(0)
-
-        width, height = self.input_size()
-        image_scale_x, image_scale_y = scale
-        x_scale, y_scale = width / image_scale_x, height / image_scale_y
-        return boxes, class_ids, scores, x_scale, y_scale
-
-
-if __name__ == '__main__':
-    config_file = "/boot/frc.json"
-    config_parser = ConfigParser(config_file)
-    tester = Tester(config_parser)
+if __name__ == "__main__":
+    tester = Tester()
     tester.run()
