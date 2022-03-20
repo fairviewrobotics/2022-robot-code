@@ -14,14 +14,11 @@ import kotlin.math.abs
 class FixedWinchVoltage(val climber: WinchSubsystem, val voltage: () -> Double) : CommandBase() {
     init {
         addRequirements(climber)
+        climber.pid.setOutputRange(-Constants.elevatorMaxVoltage, Constants.elevatorMaxVoltage)
     }
-    override fun execute() {
-        if (abs(voltage()) <= Constants.elevatorMaxVoltage){
-            climber.setVoltage(voltage())
-        } else{
-            climber.setVoltage(0.0)
-        }
 
+    override fun execute() {
+            climber.setVoltage(voltage())
     }
 
     override fun end(interrupted: Boolean) {
@@ -41,12 +38,12 @@ class WinchPIDCommand(val climber: WinchSubsystem, val setPt: () -> Double) : Co
         climber.pid.setP(Constants.elevatorP)
         climber.pid.setI(Constants.elevatorI)
         climber.pid.setD(Constants.elevatorD)
-        climber.pid.setOutputRange(-1.0*Constants.elevatorMaxVoltage, Constants.elevatorMaxVoltage) // in power (likely v?)
+        climber.pid.setOutputRange(-Constants.elevatorMaxVoltage, Constants.elevatorMaxVoltage)
         climber.pid.setSmartMotionMaxAccel(Constants.elevatorMaxAccel,0) // in rpm per sec
         climber.pid.setSmartMotionMaxVelocity(Constants.elevatorMaxVel, 0) // in rpm
 
-        climber.pid.setIZone(Constants.elevatorIZ) // - to + range where i parametre should take effect
-        climber.pid.setFF(Constants.elevatorFF)
+        //climber.pid.setIZone(Constants.elevatorIZ) // - to + range where i parameter should take effect
+        //climber.pid.setFF(Constants.elevatorFF)
 
         climber.pid.setSmartMotionAllowedClosedLoopError(Constants.elevatorPosTolerance, 0)
         climber.pid.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0)
@@ -81,15 +78,15 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
     // TODO: Get correct sequence + timing necessary to climb
     return SequentialCommandGroup(
         // first step: getting onto bar
-        WinchPIDCommand(climber) { Constants.elevatorTopPosition }, // raise elevator todo: should this be same value as elevatorMaxPos?
+        WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
         WinchPIDCommand(climber) { 0.0 }, // lower elevator
         // second step: pneumatics handoff
         PneumaticCommand(solenoid, Value.kReverse), // deploy pneumatics in reverse, locking onto bar
-        WinchPIDCommand(climber) {Constants.elevatorTopPosition * 0.5}, //half-raise climber to release
+        WinchPIDCommand(climber) {Constants.elevatorMaxPos * 0.5}, //half-raise climber to release
         PneumaticCommand(solenoid, Value.kReverse), // push the robot backwards
         // third step: getting onto second bar
         // todo: not so sure about this one
-        WinchPIDCommand(climber) { Constants.elevatorTopPosition }, // raise elevator todo: should this be same value as elevatorMaxPos?
+        WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
         PneumaticCommand(solenoid, Value.kForward), // release pneumatics
         WinchPIDCommand(climber) { 0.0 }, // lower elevator
         PneumaticCommand(solenoid, Value.kForward), // release pneumatics

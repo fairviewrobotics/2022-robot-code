@@ -105,31 +105,26 @@ class Constants {
 
 
         // elevator PID controller gains
-        val elevatorP get() = generateConstantGetter<Double>("elevatorP", 1.0)()
-        val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.1)()
+        val elevatorP get() = generateConstantGetter<Double>("elevatorP", 0.015)()
+        val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.0000009)()
         val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
-
-        // top position of the elevator to run to
-        val elevatorTopPosition get() = generateConstantGetter<Double>("elevatorTopPosition", 225.0)()
 
         // tolerance allowed between elevator target location and current location to consider at the target
         val elevatorPosTolerance get() = generateConstantGetter<Double>("elevatorPosTolerance", 2.0)()
 
 
-        val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 0.0)()
+        val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 10.0)()
         val elevatorFF get() = generateConstantGetter<Double>("elevatorFF", 0.0)()
-        val elevatorMaxAccel get() = generateConstantGetter<Double>("elevatorMaxAccel", 0.0)()
-        val elevatorMaxVel get() = generateConstantGetter<Double>("elevatorMaxVel", 0.0)()
-        val elevatorMinVel get() = generateConstantGetter<Double>("elevatorMinVel", 0.0)()
+        val elevatorMaxAccel get() = generateConstantGetter<Double>("elevatorMaxAccel", 100.0)()
+        val elevatorMaxVel get() = generateConstantGetter<Double>("elevatorMaxVel", 1500.0)()
 
         // max elevator current and voltage
         val elevatorMaxCurrent get() = generateConstantGetter<Double>("elevatorMaxCurrent", 10.0)()
-        val elevatorMaxVoltage get() = generateConstantGetter<Double>("elevatorMaxVoltage", 8.0)()
+        val elevatorMaxVoltage = 5.0
 
-        // max and min elevator position
+        // max and min elevator position. These are where we run the elevator to climb
         val elevatorMaxPos get() = generateConstantGetter<Double>("elevatorMaxPos", 225.0)()
         val elevatorMinPos get() = generateConstantGetter<Double>("elevatorMinPos", 5.0)()
-
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
