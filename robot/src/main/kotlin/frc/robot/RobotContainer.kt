@@ -91,6 +91,12 @@ class RobotContainer {
                 TurnToHighGoal(drivetrain)
             )
         )
+        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+            ParallelCommandGroup(
+                TurnToBall(controller0, drivetrain),
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed } )
+            )
+        )
 
         // LB - Fine Drive, Left Joystick - Normal Drive, Right Joystick - Inverted Drive
         drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, controller0)
@@ -116,8 +122,16 @@ class RobotContainer {
         // A - deploy intake pneumatic
         JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
-            
         )
+
+        // B - Run Intake, Indexer, and, until color sensor detects, Gate
+        JoystickButton(controller0, kB.value).whenHeld(
+            ParallelCommandGroup(
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
+                FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
+            )
+        )
+        
         // Y - retract intake pneumatic
         JoystickButton(controller0, kY.value).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
