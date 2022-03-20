@@ -19,15 +19,16 @@ class Constants {
         val driveBackRightID = 4
 
         // climber (2 solenoids and one winch motor)
-        val climbSolenoidLeftID = Pair(1, 2)
-        val climbSolenoidRightID = Pair(3, 4)
+        val climbSolenoidID = Pair(1, 2)
         val climbWinchID = 33
+        val climbMaxVal = 100.0 // todo: set!
 
         // shooter (2 spark max to run wheels)
         val shooterLowID = 20
         val shooterHighID = 21
 
         // intake / indexer / gate (on talon each)
+        val intakeSolenoidID = Pair(3, 4)
         val intakeID = 9
         val indexerID = 7
         val gateID = 8
@@ -59,8 +60,8 @@ class Constants {
 
         // drivetrain pid control coefficients
         // these are used for angular control
-        val kTTAPidP get() = generateConstantGetter<Double>("kTTAPidP", 2.005)()
-        val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 0.5729)()
+        val kTTAPidP get() = generateConstantGetter<Double>("kTTAPidP", 0.48)()
+        val kTTAPidI get() = generateConstantGetter<Double>("kTTAPidI", 0.0)()
         val kTTAPidD get() = generateConstantGetter<Double>("kTTAPidD", 0.0)()
         // max control effort to exert on drivetrain
         val kTTAClamp = 0.4
@@ -107,9 +108,6 @@ class Constants {
         val elevatorP get() = generateConstantGetter<Double>("elevatorP", 0.5)()
         val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.0)()
         val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
-
-        val shooterElevationPosTolerance get() = generateConstantGetter<Double>("shooterElevationPosTolerance", 0.0)()
-        val shooterElevationVelocityTolerance get() = generateConstantGetter<Double>("shooterElevationVelocityTolerance", 0.0)()
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2

@@ -9,12 +9,14 @@ import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.XboxController.Button.*
 import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
+import edu.wpi.first.wpilibj.DoubleSolenoid
+import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
+import edu.wpi.first.wpilibj.DigitalInput
 
 import com.revrobotics.*
 import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
-import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
 
@@ -44,12 +46,14 @@ class RobotContainer {
     val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
 
     // climber
-    //val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    // TODO: attach limit switches directly to pins on Spark
-    //val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
+    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
+    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1))
 
-    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidLeftID.first,Constants.climbSolenoidLeftID.second) 
+    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
+    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
     val climbPneumatics = SolenoidSubsystem(climbSolenoid)
+    val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
+    
 
     // shooter
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
@@ -66,6 +70,7 @@ class RobotContainer {
     val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
 
     // simultaneous pneumatics push and pull
+    // todo: remove below: unnecessary
     val climberPull = ParallelCommandGroup(
         PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse).withTimeout(1.0)
     )
@@ -158,15 +163,23 @@ class RobotContainer {
             )
         )
 
-        // Y - Pneumatic Intake Up TODO
-        // A - Pneumatic Intake Down TODO
+        // Y/A - Raise / Lower intake pneumatics
+        JoystickButton(controller0, kY.value).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+        )
 
+        JoystickButton(controller0, kA.value).whenHeld(
+            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
+        )
 
         // SECONDARY DRIVER
 
         // LT - Climber Down TODO
         // RT - Climber Up TODO
-
+        // raise / lower climber pneumatic component
+        winch.defaultCommand = DebugClimbingCommand(winch, controller1)
+        //winch.defaultCommand = WinchPIDCommand(winch, controller1)
+        //winch.defaultCommand = LimitedWinchCommand(winch, { controller0.rightY })
 
         // LB - Auto Climb TODO
 
@@ -179,6 +192,7 @@ class RobotContainer {
             )
         )
 
+        // run indexer rejection on Y of secondary controller
         // Y - Direct shooter
         JoystickButton(controller1, kY.value).whileHeld(
             ParallelCommandGroup(
@@ -198,7 +212,15 @@ class RobotContainer {
         )
 
         // A - Pneumatic Climber Forward
+        JoystickButton(controller0, kA.value).whenHeld(
+            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
+
+        )
+
         // X - Pneumatic Climber Backward
+        JoystickButton(controller0, kX.value).whenHeld(
+            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
+        )
 
         // D-Pad Up - Intake Pneumatic Up TODO
         // D-Pad Down - Intake Pneumatic Down TODO
