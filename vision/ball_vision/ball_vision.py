@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 from time import time
 import tflite_runtime.interpreter as tflite
-from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
-from networktables import NetworkTablesInstance
+# from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
+# from networktables import NetworkTablesInstance
 import cv2
 import collections
 import json
@@ -160,8 +160,8 @@ class Tester:
         return red > blue
 
     def score_target(self, image, box):
-        if self.is_red(image, box) ^ self.is_red_alliance:
-            return -1
+        # if self.is_red(image, box) ^ self.is_red_alliance:
+        #     return -1
         return box[2] - box[0]
 
     def run(self):
@@ -170,6 +170,8 @@ class Tester:
             start = time()
             # Acquire frame and resize to expected shape [1xHxWx3]
             ret, frame_cv2 = self.cvSink.grabFrame(self.img)
+            frame_cv2 = cv2.cvtColor(frame_cv2, cv2.COLOR_BGR2RGB)
+
             if not ret:
                 print("Image failed")
                 continue
@@ -186,7 +188,7 @@ class Tester:
             resized = cv2.resize(frame_cv2, (width, height))
 
             # find target box by largest height and set angle
-            target_index = boxes.index(max(boxes, key=lambda box: self.score_target(resized, box)))
+            target_index = boxes.index(max(boxes, key=lambda box: self.score_target(resized, list(box))))
             self.target_entry.setNumber(
                 target_index
             )

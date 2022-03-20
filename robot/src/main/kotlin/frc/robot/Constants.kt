@@ -67,6 +67,7 @@ class Constants {
 
         val kDrivetrainAngleTolerance get() = generateConstantGetter<Double>("kDrivetrainAngleTolerance", 0.03490658504)()
         val kDrivetrainVelTolerance get() = generateConstantGetter<Double>("kDrivetrainVelTolerance", 0.6)()
+        val kColorSensorProximityThreshold get() = generateConstantGetter<Double>("kColorSensorProximityThreshold", 100.0)()
 
         // these are used for linear drivetrain velocity control
         val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
@@ -74,10 +75,10 @@ class Constants {
         val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
 
         // values used for drivetrain commands
-        val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 10000.0)()
+        val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 15.0)()
         val kDrivetrainSlewRateRotationLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateRotationLimit", 10000.0)()
         val kDrivetrainRegularForwardSpeed get() =  generateConstantGetter<Double>("kDrivetrainRegularForwardSpeed", 5.0)()
-        val kDrivetrainRegularRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainRegularRotationSpeed", 0.5)()
+        val kDrivetrainRegularRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainRegularRotationSpeed", 0.35)()
         val kDrivetrainFineForwardSpeed get() = generateConstantGetter<Double>("kDrivetrainFineForwardSpeed", 1.25)()
         val kDrivetrainFineRotationSpeed get() = generateConstantGetter<Double>("kDrivetrainFineRotationSpeed", 0.125)()
 
@@ -103,10 +104,18 @@ class Constants {
         val shooterDefaultDist = 3.0
 
 
-        val climbMaxVal get() = generateConstantGetter<Double>("climbMaxVal", 225.0)()
+        // elevator PID controller gains
         val elevatorP get() = generateConstantGetter<Double>("elevatorP", 1.0)()
         val elevatorI get() = generateConstantGetter<Double>("elevatorI", 0.1)()
         val elevatorD get() = generateConstantGetter<Double>("elevatorD", 0.0)()
+
+        // top position of the elevator to run to
+        val elevatorTopPosition get() = generateConstantGetter<Double>("elevatorTopPosition", 225.0)()
+
+        // tolerance allowed between elevator target location and current location to consider at the target
+        val elevatorPosTolerance get() = generateConstantGetter<Double>("elevatorPosTolerance", 2.0)()
+
+
         val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 0.0)()
         val elevatorFF get() = generateConstantGetter<Double>("elevatorFF", 0.0)()
         val elevatorMax get() = generateConstantGetter<Double>("elevatorMax", 0.0)()
