@@ -118,12 +118,18 @@ class Constants {
 
         val elevatorIZ get() = generateConstantGetter<Double>("elevatorIZ", 0.0)()
         val elevatorFF get() = generateConstantGetter<Double>("elevatorFF", 0.0)()
-        val elevatorMax get() = generateConstantGetter<Double>("elevatorMax", 0.0)()
-        val elevatorMin get() = generateConstantGetter<Double>("elevatorMin", 0.0)()
         val elevatorMaxAccel get() = generateConstantGetter<Double>("elevatorMaxAccel", 0.0)()
         val elevatorMaxVel get() = generateConstantGetter<Double>("elevatorMaxVel", 0.0)()
         val elevatorMinVel get() = generateConstantGetter<Double>("elevatorMinVel", 0.0)()
-        val elevatorCLErr get() = generateConstantGetter<Double>("elevatorCLErr", 0.0)()
+
+        // max elevator current and voltage
+        val elevatorMaxCurrent get() = generateConstantGetter<Double>("elevatorMaxCurrent", 10.0)()
+        val elevatorMaxVoltage get() = generateConstantGetter<Double>("elevatorMaxVoltage", 8.0)()
+
+        // max and min elevator position
+        val elevatorMaxPos get() = generateConstantGetter<Double>("elevatorMaxPos", 225.0)()
+        val elevatorMinPos get() = generateConstantGetter<Double>("elevatorMinPos", 5.0)()
+
 
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2

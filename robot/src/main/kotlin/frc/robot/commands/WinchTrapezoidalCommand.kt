@@ -25,7 +25,7 @@ class WinchTrapezoidal(targetDistance: Double, winch: WinchSubsystem) : Profiled
         // Set the controller tolerance - the delta tolerance ensures the robot is stationary at the
         // setpoint before it is considered as having reached the reference
         getController()
-                .setTolerance(Constants.elevatorCLErr, 0.0001)
+                .setTolerance(Constants.elevatorPosTolerance, 0.0001)
     }
     // End when the controller is at the reference.
     override fun isFinished(): Boolean{
