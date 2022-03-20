@@ -1,10 +1,12 @@
 package frc.robot.commands
 
+import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandBase
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value
 import com.revrobotics.SparkMaxPIDController.AccelStrategy
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import frc.robot.subsystems.WinchSubsystem
 import frc.robot.Constants
 import frc.robot.subsystems.SolenoidSubsystem
@@ -15,6 +17,9 @@ class FixedWinchVoltage(val climber: WinchSubsystem, val voltage: () -> Double) 
     init {
         addRequirements(climber)
         climber.pid.setOutputRange(-Constants.elevatorMaxVoltage, Constants.elevatorMaxVoltage)
+        climber.winch.setSmartCurrentLimit(Constants.elevatorMaxCurrent.toInt())
+        climber.winch.setSecondaryCurrentLimit(Constants.elevatorMaxCurrent)
+        climber.winch.setIdleMode(CANSparkMax.IdleMode.kBrake)
     }
 
     override fun execute() {
@@ -31,6 +36,9 @@ class FixedWinchVoltage(val climber: WinchSubsystem, val voltage: () -> Double) 
 // Run the winch to a specific position using the spark max's pid controller
 class WinchPIDCommand(val climber: WinchSubsystem, val setPt: () -> Double) : CommandBase() {
     init {
+        climber.winch.setSmartCurrentLimit(Constants.elevatorMaxCurrent.toInt())
+        climber.winch.setSecondaryCurrentLimit(Constants.elevatorMaxCurrent)
+        climber.winch.setIdleMode(CANSparkMax.IdleMode.kBrake)
         addRequirements(climber)
     }
 
@@ -63,8 +71,7 @@ class WinchPIDCommand(val climber: WinchSubsystem, val setPt: () -> Double) : Co
     }
 
     override fun isFinished(): Boolean {
-        return abs(climber.getPosition() - setPt()) <= Constants.elevatorPosTolerance // should be redundant in smart motion mode, but eh.
-
+        return abs(climber.getPosition() - setPt()) <= Constants.elevatorPosTolerance
     }
 
     override fun end(interrupted: Boolean) {
@@ -79,17 +86,17 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
     return SequentialCommandGroup(
         // first step: getting onto bar
         WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
-        WinchPIDCommand(climber) { 0.0 }, // lower elevator
+        WinchPIDCommand(climber) { Constants.elevatorMinPos }, // lower elevator
         // second step: pneumatics handoff
-        PneumaticCommand(solenoid, Value.kReverse), // deploy pneumatics in reverse, locking onto bar
+        PneumaticCommand(solenoid, Value.kReverse).withTimeout(1.0), // deploy pneumatics in reverse, locking onto bar
         WinchPIDCommand(climber) {Constants.elevatorMaxPos * 0.5}, //half-raise climber to release
-        PneumaticCommand(solenoid, Value.kReverse), // push the robot backwards
+        PneumaticCommand(solenoid, Value.kReverse).withTimeout(1.0), // push the robot backwards
         // third step: getting onto second bar
         // todo: not so sure about this one
         WinchPIDCommand(climber) { Constants.elevatorMaxPos }, // raise elevator
-        PneumaticCommand(solenoid, Value.kForward), // release pneumatics
-        WinchPIDCommand(climber) { 0.0 }, // lower elevator
-        PneumaticCommand(solenoid, Value.kForward), // release pneumatics
+        PneumaticCommand(solenoid, Value.kForward).withTimeout(1.0), // release pneumatics
+        WinchPIDCommand(climber) {Constants.elevatorMinPos }, // lower elevator
+        PneumaticCommand(solenoid, Value.kForward).withTimeout(1.0), // release pneumatics
 
 
 
