@@ -1,14 +1,11 @@
 #include "high_goal.hpp"
 
-#ifdef UNDISTORT
-#include "camera_distort.hpp"
-#endif
-
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 
-// define to draw debugging information on images (bounding rectangles on targets)
+// define to draw debugging information on images (bounding rectangles on
+// targets)
 #define DRAW_DEBUG
 
 namespace frc::robot::vision {
@@ -18,14 +15,8 @@ double calcAngle(long value, long centerVal, double focalLen) {
   return atan((double) (value - centerVal) / focalLen);
 }
 
-const cv::Scalar hsvLow{57.0, 160.0, 60.0};
-const cv::Scalar hsvHigh{100.0, 255.0, 255.0};
-
 const cv::Mat openKernel =
-    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3}, cv::Point{1, 1});
-
-const int closeIters = 2;
-const int openIters = 2;
+    getStructuringElement(cv::MORPH_RECT, cv::Size{3, 3}, cv::Point{-1, -1});
 
 // number of contours to consider (by size)
 const size_t numContours = 8;
@@ -56,13 +47,13 @@ double areaCoverScore(const cv::RotatedRect &rect,
 }
 
 // score a target on it's aspect ratio (should be close to 5"/2" = 2.5)
-const double aspectExp = 4.0;
+const double aspectExp = 0.8;
 double aspectScore(const cv::RotatedRect &rect) {
   const double w = rect.size.width;
   const double h = rect.size.height;
   auto aspect = cv::max(w, h) / cv::min(w, h);
 
-  return cv::max(1.0 - pow(abs(aspect - 2.5), aspectExp), 0.0);
+  return cv::max(1.0 - pow(abs(aspect - 2.6), aspectExp), 0.0);
 }
 
 double rotatedRectAngle(const cv::RotatedRect &rect) {
@@ -78,22 +69,31 @@ double targetAngleScore(const cv::RotatedRect &rect) {
   return hit ? 1.0 : 0.0;
 }
 
-// check if a contour with the given bounding rectangle is a valid target
-const double scoreThresh = 0.5;
-bool checkTarget(const cv::RotatedRect &rect,
-                 const std::vector<cv::Point> &contour) {
-  return (aspectScore(rect) + areaCoverScore(rect, contour) +
-          targetAngleScore(rect)) /
-             3.0 >
-         scoreThresh;
+// score a target based on it's relative size in the image
+double targetSizeScore(const cv::RotatedRect &rect, double image_size, double relative_thresh) {
+  double thresh = image_size * relative_thresh;
+  return cv::max(rect.size.width, rect.size.height) >= thresh ? 1.0 : 0.0;
 }
 
-std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldView, double aspectH, double aspectV) {
-  // calculate camera information
-  double aspectDiag = hypot(aspectH, aspectV);
+// check if a contour with the given bounding rectangle is a valid target
+bool checkTarget(const cv::RotatedRect &rect,
+                 const std::vector<cv::Point> &contour, double score_thresh, double image_size, double size_rel_thresh) {
+  return (
+            aspectScore(rect) +
+            areaCoverScore(rect, contour) +
+            targetAngleScore(rect) +
+            2.0 * targetSizeScore(rect, image_size, size_rel_thresh)
+          ) /
+             5.0 >
+         score_thresh;
+}
 
-  double fieldViewH = atan(tan(diagFieldView / 2.0) * (aspectH / aspectDiag)) * 2.0;
-  double fieldViewV = atan(tan(diagFieldView / 2.0) * (aspectV / aspectDiag)) * 2.0;
+std::optional<TargetAngle> find_target_angles(const VisionConfig& config, const CameraFOV &fov, cv::Mat &image) {
+  // calculate camera information
+  double aspectDiag = hypot(fov.aspect_h, fov.aspect_v);
+
+  double fieldViewH = atan(tan(fov.diag_field_view / 2.0) * (fov.aspect_h / aspectDiag)) * 2.0;
+  double fieldViewV = atan(tan(fov.diag_field_view / 2.0) * (fov.aspect_v / aspectDiag)) * 2.0;
 
   double hFocalLen = image.size().width / (2.0 * tan(fieldViewH / 2.0));
   double vFocalLen = image.size().height / (2.0 * tan(fieldViewV / 2.0));
@@ -103,13 +103,17 @@ std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldVi
   cv::cvtColor(image, mask, cv::COLOR_BGR2HSV);
 
   // generate hsv threshold mask
-  cv::inRange(mask, hsvLow, hsvHigh, mask);
+  cv::Scalar hsv_low(config.hsvLowH, config.hsvLowS, config.hsvLowV);
+  cv::Scalar hsv_high(config.hsvHighH, config.hsvHighS, config.hsvHighV);
 
+  cv::inRange(mask, hsv_low, hsv_high, mask);
+
+  if(config.do_dilate) {
+    cv::morphologyEx(mask, mask, cv::MORPH_DILATE, openKernel);
+  }
   // close + open mask to patch up small holes
-  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1),
-                   closeIters);
-  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1),
-                   openIters);
+  cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, openKernel, cv::Point(-1, -1), config.close_iters);
+  cv::morphologyEx(mask, mask, cv::MORPH_OPEN, openKernel, cv::Point(-1, -1), config.open_iters);
 
   // find all contours in image
   std::vector<std::vector<cv::Point>> contours;
@@ -128,7 +132,7 @@ std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldVi
   for (size_t i = 0; i < cv::min(numContours, contours.size()); i++) {
     auto &contour = contours[i];
     auto rect = cv::minAreaRect(contour);
-    auto hit = checkTarget(rect, contour);
+    auto hit = checkTarget(rect, contour, config.score_thresh, cv::max(image.size().width, image.size().height), config.size_rel_thresh);
 
     if (hit) {
 #ifdef DRAW_DEBUG
@@ -148,9 +152,16 @@ std::optional<TargetAngle> find_target_angles(cv::Mat &image, double diagFieldVi
   cv::RotatedRect *high_target = nullptr;
   for (auto &target : targets) {
     if (target.boundingRect().y < center_y) {
-      center_x = rotatedRectAngle(target) < 90
-                     ? target.boundingRect().x
-                     : target.boundingRect().x + target.boundingRect().width;
+      // center x is taken to be the center of the rectangle + cos(angle) towards the higher side
+      center_x = target.boundingRect().x + target.boundingRect().width * 0.5;
+      auto angle = rotatedRectAngle(target);
+      auto adjust = 0.5 * sin(angle * 3.1415926 / 180.0) * target.boundingRect().width;
+      if(angle < 90.0) {
+        center_x -= adjust;
+      } else {
+        center_x += adjust;
+      }
+
       center_y = target.boundingRect().y;
       high_target = &target;
     }

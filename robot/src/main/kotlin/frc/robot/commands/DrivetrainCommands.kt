@@ -1,11 +1,10 @@
 package frc.robot.commands
 
 import edu.wpi.first.math.controller.PIDController
-import edu.wpi.first.math.controller.ProfiledPIDController
+import edu.wpi.first.math.filter.SlewRateLimiter
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
-import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.CommandBase
@@ -13,20 +12,17 @@ import frc.robot.Constants
 import frc.robot.subsystems.DrivetrainSubsystem
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlin.math.sqrt
 
 class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
-    val leftPID = ProfiledPIDController(
+    val leftPID = PIDController(
         Constants.kDrivetrainPidP,
         Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
-        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
+        Constants.kDrivetrainPidD)
 
-    val rightPID = ProfiledPIDController(
+    val rightPID = PIDController(
         Constants.kDrivetrainPidP,
         Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD,
-        TrapezoidProfile.Constraints(Constants.kDrivetrainMaxVelocity, Constants.kDrivetrainMaxAcceleration))
+        Constants.kDrivetrainPidD)
 
     init {
         leftPID.setIntegratorRange(-0.5, 0.5)
@@ -57,8 +53,7 @@ class DrivetrainPIDAngularController(val drivetrainSubsystem: DrivetrainSubsyste
     val angleController = PIDController(
         0.05,
         0.0,
-        0.0
-    )
+        0.0)
 
     init {
         angleController.enableContinuousInput(0.0, 2.0 * Math.PI)
@@ -127,11 +122,44 @@ fun JoystickDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) :
 
 fun ArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
     val kinematics = DifferentialDriveKinematics(21.5)
-    return DrivetrainPIDCommand(drivetrain) {
-        var forward = -controller.leftY * abs(controller.leftY) * 5
-        var rotation = controller.leftX * abs(controller.leftX) * 1
+    val forwardFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateForwardLimit)
+    val rotationFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateRotationLimit)
 
-        kinematics.toWheelSpeeds(ChassisSpeeds(-forward, 0.0, -rotation))
+    return DrivetrainPIDCommand(drivetrain) {
+        var forward = controller.leftY * abs(controller.leftY) * 5
+        var rotation = -controller.leftX * abs(controller.leftX) * 1
+
+        kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
+    }
+}
+
+fun DualStickArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxController) : DrivetrainPIDCommand {
+    val kinematics = DifferentialDriveKinematics(21.5)
+    val forwardFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateForwardLimit)
+    val rotationFilter = SlewRateLimiter(Constants.kDrivetrainSlewRateRotationLimit)
+
+    val regularForwardSpeed = Constants.kDrivetrainRegularForwardSpeed
+    val regularRotationSpeed= Constants.kDrivetrainRegularRotationSpeed
+
+    val fineForwardSpeed = Constants.kDrivetrainFineForwardSpeed
+    val fineRotationSpeed = Constants.kDrivetrainFineRotationSpeed
+
+    return DrivetrainPIDCommand(drivetrain) {
+        var fWeight = 1.0
+        var rWeight = 1.0
+
+        if (controller.leftBumper) {
+            fWeight = fineForwardSpeed
+            rWeight = fineRotationSpeed
+        } else {
+            fWeight = regularForwardSpeed
+            rWeight = regularRotationSpeed
+        }
+
+        val forward = (controller.leftY * fWeight) + (controller.rightY * fineForwardSpeed)
+        val rotation = (-controller.leftX * abs(controller.leftX) * rWeight) + (-controller.rightX * abs(controller.rightX) * fineRotationSpeed)
+
+        kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
     }
 }
 
@@ -146,7 +174,7 @@ class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
         * Left joystick for faster motion, right joystick for aiming.
         * Right joystick y is inverted for shooting.
         * */
-        drivetrain.arcadeDrive(controller.leftY - controller.rightY, controller.leftX + controller.rightX * 0.5)
+        drivetrain.arcadeDrive(controller.leftY  * Constants.kDrivetrainRegularForwardSpeed, controller.leftX * Constants.kDrivetrainRegularRotationSpeed)
         /*val inverted = controller.rightBumper
 
         val xPos = controller.rightX

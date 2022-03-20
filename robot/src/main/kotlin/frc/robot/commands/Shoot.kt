@@ -23,12 +23,15 @@ import kotlin.math.pow
 Control the indexer and gate while shooting is happening.
 This command does not control the ShooterSubsystem, but
 monitors its speed.
+
+If endAfterOneBall is true, the command stops after it thinks a ball has been shot
  */
 class ShootBallMotor(
     val shooter1: ShooterSubsystem,
     val shooter2: ShooterSubsystem,
     val gate: BallMotorSubsystem,
-    val indexer: BallMotorSubsystem
+    val indexer: BallMotorSubsystem,
+    val endAfterOneBall: Boolean = false
 ) : CommandBase() {
 
     companion object {
@@ -109,13 +112,21 @@ class ShootBallMotor(
         belowSpeedCycles = 0
     }
 
-    override fun isFinished() = false
+    override fun isFinished(): Boolean {
+        return if(!endAfterOneBall) {
+            false
+        } else {
+            // end after we were once at speed, then dropped, then are now at speed again.
+            // this means we speed up, shot, and have had time for the ball to fully clear
+            atSpeedOnce && belowSpeedOnce && atSpeed()
+        }
+    }
 }
 
 object HighGoalVisionNT {
     val ntInst = NetworkTableInstance.getDefault()
     val table = ntInst.getTable("high_goal")
-    val found_target = table.getEntry("found_target")
+    val found_target = table.getEntry("target_found")
     val yaw = table.getEntry("yaw")
     val pitch = table.getEntry("pitch")
     val center_distance = table.getEntry("center_distance")
@@ -123,26 +134,51 @@ object HighGoalVisionNT {
 
 /**
  * Turn the drivetrain towards the target location reported in network tables.
+ * This uses the continuously updated target position to reorient the robot, and may not stabilize with noisy vision data.
  */
-class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
-    PIDController(
-        Constants.kDrivetrainPidP, Constants.kDrivetrainPidI, Constants.kDrivetrainPidD
-    ),
-    drivetrain::heading,
-    {
-        // target location is current position + vision offset
-        drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0)
-    },
-    { output -> drivetrain.arcadeDrive(0.0, output) },
-    drivetrain
-) {
-    init {
-        controller.enableContinuousInput(-Math.PI, Math.PI)
-        controller.setTolerance(Constants.kDrivetrainAngleTolerance, Constants.kDrivetrainVelTolerance)
+class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+
+    override fun execute() {
+        control.execute({
+            // target location is current position + vision offset.
+            // the 1.2 factor is used to dampen the amount that we turn at each step to remove oscillation caused by time delay on vision data.
+            // this is non ideal, but the robot's position should asymptotically approach the target
+            drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0) / 1.2
+        })
     }
 
     override fun isFinished(): Boolean {
-        return (!HighGoalVisionNT.found_target.getBoolean(false)) || controller.atSetpoint()
+        return (!HighGoalVisionNT.found_target.getBoolean(false)) || control.finished()
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
+}
+
+/**
+ * Turn the drivetrain towards the target location reported in networktables.
+ * This fixes the location at the start of the command, and does not adjust if the reported position changes.
+ */
+class TurnToFixedHighGoal(val drivetrain: DrivetrainSubsystem): CommandBase() {
+    val control = TurnToAngleController(drivetrain)
+    var angle = 0.0
+
+    override fun initialize() {
+        angle = drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0)
+    }
+
+    override fun execute() {
+        control.execute({ angle })
+    }
+
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0, 0.0)
+    }
+
+    override fun isFinished(): Boolean {
+        return control.finished()
     }
 }
 
@@ -152,6 +188,7 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : PIDCommand(
  * Returns Pair(speed, lower adjust).
  */
 fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSpeed {
+    /* Data calibrated at 1619:
     // Clamp distance to range that we collected data for
     val dist = clamp(distance_to_target_center, 2.5, 4.0)
     // These are just curves fit to the empirical data from 3/12
@@ -159,6 +196,14 @@ fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSp
     val adjust = -480.0 + 317.0 * dist + -76.5 * dist.pow(2.0)
 
     return DualShootSpeed(max(speed, 570.0), min(adjust, -speed))
+     */
+
+    // Data calibrated at ssd on 3/18:
+    val dist = clamp(distance_to_target_center, 2.4, 4.48)
+    val speed = 812 + -343*dist + 60.7 * dist.pow(2.0)
+    val adjust = -290 + 163*dist + -26.7 * dist.pow(2.0)
+
+    return DualShootSpeed(speed, adjust)
 }
 
 /**
@@ -176,7 +221,7 @@ fun ShooterSpinUpVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem):
  * Run the shooter at the speed reported by the vision system at the beginning of the command.
  * This means the distance is fixed, so shooter speed should quickly stabilize and allow for putting a ball through.
  */
-class ShooterFixedVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem) : CommandBase() {
+class ShooterFixedVision(val shooter1: ShooterSubsystem, val shooter2: ShooterSubsystem) : CommandBase() {
     val control = DualShooterPIDController(shooter1, shooter2)
 
     var speeds = DualShootSpeed(0.0, 0.0)
@@ -192,6 +237,13 @@ class ShooterFixedVision(shooter1: ShooterSubsystem, shooter2: ShooterSubsystem)
 
     override fun execute() {
         control.execute(speeds)
+    }
+
+    override fun end(interrupted: Boolean) {
+        shooter1.setVoltage(0.0)
+        shooter1.setTarget(0.0)
+        shooter2.setVoltage(0.0)
+        shooter2.setTarget(0.0)
     }
 }
 
@@ -227,20 +279,22 @@ fun ShootVision(
     shooter2: ShooterSubsystem,
     gate: BallMotorSubsystem,
     indexer: BallMotorSubsystem,
-    alertController: XboxController
+    alertController: XboxController,
+    endAfterOneBall: Boolean = false
 ): Command {
     return SequentialCommandGroup(
         // rumble controller if no vision
         CheckVisionOrRumble(alertController),
         // spin up shooter while turning to target
-        ParallelCommandGroup(
-            TurnToHighGoal(drivetrain),
+        TurnToHighGoal(drivetrain).raceWith(
             ShooterSpinUpVision(shooter1, shooter2)
         ),
         // maintain shooter speed and shoot
-        ParallelCommandGroup(
-            ShooterFixedVision(shooter1, shooter2),
-            ShootBallMotor(shooter1, shooter2, gate, indexer)
+        ShootBallMotor(shooter1, shooter2, gate, indexer, endAfterOneBall).raceWith(
+            ParallelCommandGroup(
+                MaintainAngle(drivetrain),
+                ShooterFixedVision(shooter1, shooter2),
+            )
         )
     )
 }
@@ -251,12 +305,11 @@ fun ShootDefaultDistance(
     shooter2: ShooterSubsystem,
     gate: BallMotorSubsystem,
     indexer: BallMotorSubsystem,
+    endAfterOneBall: Boolean = false
 ): Command {
     val speeds = get_shoot_speed_for_distance(Constants.shooterDefaultDist)
-    return ParallelCommandGroup(
+    return ShootBallMotor(shooter1, shooter2, gate, indexer, endAfterOneBall).raceWith(
         DualShooterPID(shooter1, shooter2, { speeds }),
-        // run gate + magazine if shooters are running fast enough
-        ShootBallMotor(shooter1, shooter2, gate, indexer)
     )
 }
 

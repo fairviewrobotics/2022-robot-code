@@ -13,12 +13,8 @@ endif()
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-add_executable(vision_test high_goal.cpp camera_distort.cpp vision_test.cpp)
+add_executable(vision_test high_goal.cpp vision_test.cpp)
 target_link_libraries(vision_test ${OpenCV_LIBS} )
 
-add_executable(camera_calibration camera_calibration.cpp camera_distort.cpp)
-target_link_libraries(camera_calibration ${OpenCV_LIBS} )
-
+add_executable(rpi cs_main.cpp high_goal.cpp)
 include_directories(./include/)
-add_executable(rpi main.cpp high_goal.cpp high_goal_pipeline.cpp)
-add_executable(rpi_cs cs_main.cpp high_goal.cpp high_goal_pipeline.cpp)

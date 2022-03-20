@@ -4,55 +4,117 @@
 package frc.robot.subsystems
 
 import com.revrobotics.CANSparkMax
+import com.revrobotics.CANSparkMax.ControlType.*
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj.DigitalInput
-import edu.wpi.first.wpilibj.motorcontrol.MotorController
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sign
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 
-class WinchSubsystem(val winch: CANSparkMax,
+class WinchSubsystem(winch: CANSparkMax,
                      val lowerLimit: DigitalInput, 
-                     val upperLimit: DigitalInput) : SubsystemBase() {
-    var actualSpeed = 0.0
-    var targetSpeed = 0.0
-    val encoder = winch.encoder
+                     val upperLimit: DigitalInput,
+                     val debug: Boolean = false) : SubsystemBase() {
+    // Target voltage to run the motor at. If non null, motor is run directly at targetVoltage.
+    var targetVoltage: Double? = 0.0
+    // Target distance to run the motor to with PID control. PID control is only enabled if targetVoltage is null.
+    var targetDist = 0.0
+
+    val pid = winch.getPIDController()
+    val encoder = winch.getEncoder()
+
+    init {
+        winch.setSmartCurrentLimit(40)
+        winch.setSecondaryCurrentLimit(40.0)
+    }
+
+    // Return true if it is unsafe to run the motor due to upper limit switch
+    fun upperLimitHit(): Boolean {
+        // if limit switch isn't triggered, it is safe to run motor
+        if(upperLimit.get()) {
+            return false
+        }
+        // if in voltage mode, don't run motor forwards
+        if(targetVoltage != null) {
+            return targetVoltage!! > 0.0
+        }
+        // if in pid mode, don't run towards a setpoint that is higher than current position
+        else {
+            return getPosition() < targetDist
+        }
+    }
+
+    // Return true if it is unsafe to run the motor due to lower limit switch
+    fun lowerLimitHit(): Boolean {
+        // if limit switch isn't triggered, safe to run
+        if(lowerLimit.get()) {
+            return false
+        }
+        // if in voltage mode, don't run motor backwards
+        if(targetVoltage != null) {
+            return targetVoltage!! < 0.0
+        }
+        // if in pid mode, don't run towards a setpoint lower than current position
+        else {
+            return getPosition() > targetDist
+        }
+    }
 
     override fun periodic() {
-        // 50% increase / 1 second
-        if ((actualSpeed - targetSpeed) > (.5 / 50)) {
-            val update = sign(targetSpeed) * (.5 / 50)
-            actualSpeed += update
-        } else {
-            targetSpeed = actualSpeed
-        }
-
-        if (lowerLimit.get()) {
+        // if we reached the lower limit switch, reset encoder position to zero
+        if (!lowerLimit.get()){
             resetEncoder()
-            winch.setVoltage(min(0.0, actualSpeed))
         }
 
-        if (upperLimit.get()) {
-            winch.setVoltage(max(0.0, actualSpeed))
+        // if the upper limit is hit and either
+        if (upperLimitHit()){
+            pid.setReference(0.0, kDutyCycle)
+            pid.setIAccum(0.0)
+        }
+        else if (lowerLimitHit()){
+            pid.setReference(0.0, kDutyCycle)
+            pid.setIAccum(0.0)
+            targetDist = 0.0
+            
+        } else{
+            if(targetVoltage != null) {
+                pid.setReference(targetVoltage!!, kVoltage)
+            } else {
+                pid.setReference(targetDist, kPosition)
+            }
+        }
+
+        if(debug) {
+            SmartDashboard.putString("Winch Mode", if(targetVoltage != null) "Voltage" else "PID Position")
+            SmartDashboard.putNumber("Winch Target Voltage", if(targetVoltage != null) targetVoltage!! else 0.0)
+            SmartDashboard.putNumber("Winch Target Position", targetDist)
+            SmartDashboard.putNumber("Winch Current Position", encoder.position)
+            SmartDashboard.putBoolean("Winch lower limit hit", !lowerLimit.get())
+            SmartDashboard.putBoolean("Winch upper limit hit", !upperLimit.get())
         }
     }
 
-    // set target voltage for the motor
-    // the voltage will be lowered to this voltage at the acceleration limit
-    fun setVoltage(voltage: Double) {
-        targetSpeed = voltage
+    // set target direct speed for the motor
+    fun setVoltage(voltage: Double?) {
+        targetVoltage = voltage
     }
+
+    fun setTarget(distance: Double){
+        targetDist = distance
+    }
+
 
     fun getPosition(): Double {
-        return winch.getEncoder().position
+        return encoder.getPosition()
     }
 
     fun resetEncoder() {
-        encoder.position = 0.0
+        encoder.setPosition(0.0)
     }
 
-    var distance = encoder.position * 16 * (2 * 3.14159 * 3.175)
-    var hitUpper = upperLimit.get()
-    var hitLower = lowerLimit.get()
+    fun atUpper() : Boolean{
+        return upperLimit.get()
+    }
+    
+    fun atLower() : Boolean{
+        return lowerLimit.get()
+    }
 }
