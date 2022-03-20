@@ -106,7 +106,7 @@ class RobotContainer {
         for (i in 0 until 8) {
             val angleDeg = 45 * i
             POVButton(controller0, angleDeg).whenHeld(
-                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 }, 0.0)
+                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
             )
         }
 
@@ -120,6 +120,12 @@ class RobotContainer {
             SequentialCommandGroup(
                 CheckVisionOrRumble(controller0),
                 TurnToHighGoal(drivetrain)
+            )
+        )
+        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+            ParallelCommandGroup(
+                TurnToBall(controller0, drivetrain),
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed } )
             )
         )
 
@@ -144,9 +150,12 @@ class RobotContainer {
             FixedBallMotorSpeed(gate, { Constants.gateSpeed })
         )
 
-        // B - Run Intake
+        // B - Run Intake, Indexer, and, until color sensor detects, Gate
         JoystickButton(controller0, kB.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
+            ParallelCommandGroup(
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
+                FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
+            )
         )
 
         // Y - Pneumatic Intake Up TODO

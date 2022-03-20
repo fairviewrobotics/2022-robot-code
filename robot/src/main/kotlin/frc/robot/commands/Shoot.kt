@@ -129,12 +129,12 @@ class TurnToHighGoal(val drivetrain: DrivetrainSubsystem) : CommandBase() {
     val control = TurnToAngleController(drivetrain)
 
     override fun execute() {
-        control.execute {
+        control.execute({
             // target location is current position + vision offset.
             // the 1.2 factor is used to dampen the amount that we turn at each step to remove oscillation caused by time delay on vision data.
             // this is non ideal, but the robot's position should asymptotically approach the target
             drivetrain.heading + HighGoalVisionNT.yaw.getDouble(0.0) / 1.2
-        }
+        })
     }
 
     override fun isFinished(): Boolean {
@@ -159,7 +159,7 @@ class TurnToFixedHighGoal(val drivetrain: DrivetrainSubsystem): CommandBase() {
     }
 
     override fun execute() {
-        control.execute { angle }
+        control.execute({ angle })
     }
 
     override fun end(interrupted: Boolean) {

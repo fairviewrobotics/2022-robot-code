@@ -14,11 +14,12 @@ class TurnToAngleController(val drivetrain: DrivetrainSubsystem) {
         pid.setTolerance(Constants.kDrivetrainAngleTolerance, Constants.kDrivetrainVelTolerance)
     }
 
-    fun execute(setPt: () -> Double) {
+    fun execute(setPt: () -> Double, forward: Double = 0.0) {
+        // forward is in volts
         val output = pid.calculate(drivetrain.heading, setPt())
         val effort = clamp(output, -Constants.kTTAClamp, Constants.kTTAClamp)
 
-        drivetrain.tankDriveVolts(effort * 12.0, -effort * 12.0)
+        drivetrain.tankDriveVolts(effort * 12.0 + forward, -effort * 12.0 + forward)
     }
 
     fun finished(): Boolean {
@@ -32,7 +33,7 @@ class TurnToAngle(val driveSubsystem: DrivetrainSubsystem, val targetAngle: () -
     val control = TurnToAngleController(driveSubsystem)
 
     override fun execute() {
-        control.execute { targetAngle() }
+        control.execute({ targetAngle() })
     }
 
     override fun isFinished(): Boolean {
@@ -54,7 +55,7 @@ class MaintainAngle(val drivetrain: DrivetrainSubsystem): CommandBase() {
     }
 
     override fun execute() {
-        control.execute { angle }
+        control.execute({ angle })
     }
 
     override fun end(interrupted: Boolean) {
