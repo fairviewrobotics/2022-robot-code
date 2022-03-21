@@ -26,7 +26,15 @@ class WinchSubsystem(winch: CANSparkMax,
         winch.setSmartCurrentLimit(Constants.elevatorMaxCurrent.toInt())
         winch.setSecondaryCurrentLimit(Constants.elevatorMaxCurrent)
         winch.setIdleMode(CANSparkMax.IdleMode.kBrake)
+
+        status = "OK"
+        if (!lowerLimit.get()){
+            status = "WARNING: Elevator is not at lowest position. Please turn the robot off and fully lower the elevator by hand."
+        }
+        SmartDashboard.putString("Status", status)
     }
+
+
 
     // Return true if it is unsafe to run the motor due to upper limit switch
     fun upperLimitHit(): Boolean {

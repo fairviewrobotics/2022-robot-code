@@ -84,15 +84,15 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
         WinchPIDCommand(climber) { Constants.elevatorTopPosition }, // raise elevator todo: should this be same value as elevatorMaxPos?
         WinchPIDCommand(climber) { 0.0 }, // lower elevator
         // second step: pneumatics handoff
-        PneumaticCommand(solenoid, Value.kReverse), // deploy pneumatics in reverse, locking onto bar
+        PneumaticCommand(solenoid, Value.kForward), // deploy pneumatics in reverse, locking onto bar
         WinchPIDCommand(climber) {Constants.elevatorTopPosition * 0.5}, //half-raise climber to release
-        PneumaticCommand(solenoid, Value.kReverse), // push the robot backwards
+        PneumaticCommand(solenoid, Value.kForward), // push the robot backwards
         // third step: getting onto second bar
         // todo: not so sure about this one
         WinchPIDCommand(climber) { Constants.elevatorTopPosition }, // raise elevator todo: should this be same value as elevatorMaxPos?
-        PneumaticCommand(solenoid, Value.kForward), // release pneumatics
+        PneumaticCommand(solenoid, Value.kReverse), // release pneumatics
         WinchPIDCommand(climber) { 0.0 }, // lower elevator
-        PneumaticCommand(solenoid, Value.kForward), // release pneumatics
+        PneumaticCommand(solenoid, Value.kReverse), // release pneumatics
 
 
 
