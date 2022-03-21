@@ -3,6 +3,7 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
+import CheckVisionOrRumble
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
@@ -84,26 +85,26 @@ class RobotContainer {
         // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
 
         // PRIMARY DRIVER
+        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, controller0)
 
-        // LT - Vision Lineup
-        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
-            SequentialCommandGroup(
-                CheckVisionOrRumble(controller0),
-                TurnToHighGoal(drivetrain)
-            )
-        )
-        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce(
+        // LT - Vision Lineup to ball
+        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce (
             ParallelCommandGroup(
                 TurnToBall(controller0, drivetrain),
                 FixedBallMotorSpeed(intake, { Constants.intakeSpeed } )
             )
         )
 
-        // LB - Fine Drive, Left Joystick - Normal Drive, Right Joystick - Inverted Drive
-        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, controller0)
+        // LB - Vision Lineup to High Goal
+        JoystickButton(controller0, kLeftBumper.value).whenHeld(
+            SequentialCommandGroup(
+                CheckVisionOrRumble(controller0),
+                TurnToHighGoal(drivetrain)
+            )
+        )
 
         // RT - Set Manual Shooting Power
-        Trigger { controller0.rightTriggerAxis > 0.2 }.whenActive(
+        Trigger { controller0.rightTriggerAxis > 0.2 }.whileActiveOnce (
             ParallelCommandGroup(
                 FixedShooterSpeed(shooter1, { controller0.rightTriggerAxis }),
                 FixedShooterSpeed(shooter2, { controller0.rightTriggerAxis })
@@ -154,12 +155,12 @@ class RobotContainer {
         // SECONDARY DRIVER
 
         // LT - Climber Down
-        Trigger({ controller1.leftTriggerAxis > 0.2 }).whenActive(
+        Trigger({ controller1.leftTriggerAxis > 0.2 }).whileActiveOnce (
             FixedWinchVoltage(winch, { 5.0 * controller1.leftTriggerAxis })
         )
 
         // RT - Climber Up
-        Trigger({ controller1.rightTriggerAxis > 0.2 }).whenActive(
+        Trigger({ controller1.rightTriggerAxis > 0.2 }).whileActiveOnce (
             FixedWinchVoltage(winch, { -5.0 * controller1.rightTriggerAxis })
         )
 

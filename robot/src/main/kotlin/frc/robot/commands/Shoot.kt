@@ -1,5 +1,6 @@
 package frc.robot.commands
 
+import CheckVisionOrRumble
 import edu.wpi.first.math.MathUtil.clamp
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -247,27 +248,6 @@ class ShooterFixedVision(val shooter1: ShooterSubsystem, val shooter2: ShooterSu
     }
 }
 
-/**
- * Do nothing if a vision target is found.
- * Otherwise, rumble the given controller. This is mean to make it clear to the driver they need to shoot manually.
- */
-class CheckVisionOrRumble(val controller: XboxController) : CommandBase() {
-    override fun execute() {
-        if (!HighGoalVisionNT.found_target.getBoolean(false)) {
-            controller.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0)
-            controller.setRumble(GenericHID.RumbleType.kRightRumble, 1.0)
-        }
-    }
-
-    override fun end(interrupted: Boolean) {
-        controller.setRumble(GenericHID.RumbleType.kLeftRumble, 0.0)
-        controller.setRumble(GenericHID.RumbleType.kRightRumble, 0.0)
-    }
-
-    override fun isFinished(): Boolean {
-        return HighGoalVisionNT.found_target.getBoolean(false)
-    }
-}
 
 // --- These are complete shooting modes that are meant to be triggered by the user ---
 
