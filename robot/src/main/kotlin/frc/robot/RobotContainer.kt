@@ -169,15 +169,17 @@ class RobotContainer {
             AutoClimb(winch, climbPneumatics)
         )
 
-        POVButton(controller1, 0).whenHeld(
+        // POV button climber control
+        // Right - run climber all the way up
+        POVButton(controller1, 90).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMaxPos })
         )
-
-        POVButton(controller1, 180).whenHeld(
+        // Left - run climber all the way down
+        POVButton(controller1, 270).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMinPos })
         )
-
-        POVButton(controller1, 90).whenHeld(
+        // Left-up - run climber half way up
+        POVButton(controller1, 315).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 })
         )
 
