@@ -30,7 +30,10 @@ class WinchSubsystem(val winch: CANSparkMax,
         winch.setSmartCurrentLimit(Constants.elevatorMaxCurrent.toInt())
         winch.setSecondaryCurrentLimit(Constants.elevatorMaxCurrent)
         winch.setIdleMode(CANSparkMax.IdleMode.kBrake)
+
     }
+
+
 
     // Return true if it is unsafe to run the motor due to upper limit switch
     fun upperLimitHit(): Boolean {

@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandBase
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
+import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value
 import com.revrobotics.SparkMaxPIDController.AccelStrategy
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
@@ -102,7 +103,11 @@ fun ClimbToNext(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
 // Automatic climbing sequence.
 // This should be started with the climber raised over the bar.
 fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
-    return SequentialCommandGroup(
+    if (!climber.atLower()){
+        SmartDashboard.putString("Elevator Warning", "Elevator is not lowered.")
+        return SequentialCommandGroup(WaitCommand(0.5))
+    } else{
+        return SequentialCommandGroup(
         // Lower climber to bottom, lifting the robot
         WinchPIDCommand(climber) { Constants.elevatorMinPos },
         // Move pneumatics forward to grab bar
@@ -111,4 +116,6 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
         ClimbToNext(climber, solenoid),
         ClimbToNext(climber, solenoid)
     )
+    }
+    
 }
