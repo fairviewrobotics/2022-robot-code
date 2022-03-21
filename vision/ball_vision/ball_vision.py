@@ -1,7 +1,12 @@
 import collections
+import struct
 import cv2
+import socket
+import pickle
+import math
 import numpy as np
-import tensorflow as tf
+import tflite_runtime.interpreter as tflite
+from threading import Thread
 
 from networktables import NetworkTablesInstance
 
@@ -24,15 +29,16 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
 
 class Tester:
     def __init__(self):
+        print("Loading model...")
         try:
             model_path = "output_tflite_graph_edgetpu.tflite"
-            self.interpreter = tf.lite.Interpreter(model_path, experimental_delegates=[tf.lite.experimental.load_delegate('libedgetpu.so.1')])
+            self.interpreter = tflite.Interpreter(model_path, experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
         except Exception as e:
             print(e)
             print("Failed to create Interpreter with Coral, switching to unoptimized")
             model_path = "output_tflite_graph.tflite"
-            self.interpreter = tf.lite.Interpreter(model_path)
+            self.interpreter = tflite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
 
         self.interpreter.allocate_tensors()
@@ -41,14 +47,28 @@ class Tester:
         self.temp_entry = []
 
         # set up network tables
-        ntinst = NetworkTablesInstance.getDefault()
-        ntinst.startClientTeam(2036)
-        ntinst.startDSClient()
-        self.table = ntinst.getTable("ML")
+        print("Setting up network tables...")
+        self.ntinst = NetworkTablesInstance.getDefault()
+        self.ntinst.startClientTeam(2036)
+        self.ntinst.startDSClient()
+        self.table = self.ntinst.getTable("ML")
 
         self.fps_entry = self.table.getEntry("fps")
         self.angle_entry = self.table.getEntry("targetAngle")
         self.found_target_entry = self.table.getEntry("foundTarget")
+
+        # set up socket for streaming
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ip = "10.20.36.6"
+        port = 6666
+        self.sock.bind((ip, port))
+        self.sock.listen(10)
+        print("Awaiting connection...")
+
+        # set up thread for accepting clients
+        self.conn = None
+        t = Thread(target=lambda: self.accept_client())
+        t.start()
 
 
     def check_box(self, box):
@@ -62,10 +82,17 @@ class Tester:
         return box[2] - box[0]
 
 
+    def accept_client(self):
+        self.conn, addr = self.sock.accept()
+        print(f"Connected to client: ({self.conn}, {addr})")
+
+
     def run(self):
+        cap = cv2.VideoCapture(0)
+
         while True:
-            frame = cv2.imread("../test_image.png")
-            if True:
+            ret, frame = cap.read()
+            if ret == True:
                 scale = self.set_input(frame)
                 self.interpreter.invoke()
                 boxes, class_ids, scores, _, _ = self.get_output(scale)
@@ -74,15 +101,17 @@ class Tester:
 
                 best_box = None
                 best_box_score = 0
+                best_box_label = ""
 
                 for i, box in enumerate(boxes):
                     if scores[i] > 0.4 and self.check_box(box):
+                        class_id = class_ids[i]
+
                         score = self.score_box(box)
                         if score > best_box_score:
                             best_box_score = score
                             best_box = box
 
-                        class_id = class_ids[i]
                         
                         if np.isnan(class_id):
                             continue
@@ -95,16 +124,30 @@ class Tester:
 
                         resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width,
                                                         height, color)
-            
-            if best_box != None:
-                center = best_box[2] - best_box[0]
-                offset = center - width / 2
-                angle = offset / 160
-                self.angle_entry.setNumber(angle)
-                self.found_target_entry.setBoolean(True)
+                
+                # write result to network tables
+                if best_box is None:
+                    self.angle_entry.setNumber(0)
+                    self.found_target_entry.setBoolean(False)
+                else:
+                    center = (best_box[2] + best_box[0]) / 2
+                    offset = (center - 0.5)
+                    focalLen = 1.0 / (2.0 * math.tan(math.radians(80) / 2.0))
+                    angle = math.atan(offset / focalLen)
+                    self.angle_entry.setNumber(angle)
+                    self.found_target_entry.setBoolean(True)
+                    print(math.degrees(angle))
+                self.ntinst.flush()
+
+                # # stream output to socket
+                # try:
+                #     data = pickle.dumps(resized)
+                #     message_size = struct.pack("L", len(data))
+                #     self.conn.sendall(message_size + data)
+                # except Exception as e:
+                #     print(e)
             else:
-                self.angle_entry.setNumber(0)
-                self.found_target_entry.setBoolean(False)
+                 break
 
     
     def input_size(self):
