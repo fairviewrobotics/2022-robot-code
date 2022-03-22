@@ -13,15 +13,17 @@
 using namespace frc::robot::vision;
 
 VisionConfig config{
-    57.0, 160.0, 85.0,
-    100.0, 255.0, 255.0,
+    50.0, 160.0, 150.0,
+    89.0, 255.0, 255.0,
     1, 1,
-    0.5
+    0.018,
+    0.5,
+    false
 };
 
 CameraFOV camera_fov{
     68.5 * PI / 180.0,
-    16.0, 9.0
+    9.0, 16.0
 };
 
 //#define WEBCAM
@@ -42,7 +44,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  cv::resize(img, img, cv::Size(640, 480));
+  cv::resize(img, img, cv::Size(480, 640));
 
   auto target = find_target_angles(config, camera_fov, img);
   if(target) {
@@ -74,7 +76,7 @@ int main() {
   while(true) {
     cap.read(img);
 
-    cv::resize(img, img, cv::Size(640, 480));
+    cv::resize(img, img, cv::Size(480, 640));
 
     auto target = find_target_angles(config, camera_fov, img);
     if(target) {

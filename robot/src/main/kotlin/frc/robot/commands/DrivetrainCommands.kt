@@ -156,8 +156,8 @@ fun DualStickArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxContro
             rWeight = regularRotationSpeed
         }
 
-        var forward = (controller.leftY * abs(controller.leftY) * fWeight) - (controller.rightY * abs(controller.leftY) * fWeight)
-        var rotation = (-controller.leftX * abs(controller.leftX) * rWeight) - (-controller.rightX * abs(controller.leftX) * rWeight)
+        val forward = (controller.leftY * fWeight) + (controller.rightY * fineForwardSpeed)
+        val rotation = (-controller.leftX * abs(controller.leftX) * rWeight) + (-controller.rightX * abs(controller.rightX) * fineRotationSpeed)
 
         kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
     }

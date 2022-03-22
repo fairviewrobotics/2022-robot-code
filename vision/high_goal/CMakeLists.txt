@@ -16,3 +16,5 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 add_executable(vision_test high_goal.cpp vision_test.cpp)
 target_link_libraries(vision_test ${OpenCV_LIBS} )
 
+add_executable(rpi cs_main.cpp high_goal.cpp)
+include_directories(./include/)
