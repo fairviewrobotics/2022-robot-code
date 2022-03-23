@@ -140,9 +140,12 @@ class RobotContainer {
         )
 
         // B - Run Intake
+        // TODO: conflict!
+        /* 
         JoystickButton(controller0, kB.value).whenHeld(
             FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
         )
+        */
 
         // D-Pad: Turn to fixed angle
         for (i in 0 until 8) {
@@ -184,6 +187,8 @@ class RobotContainer {
         )
 
         // RB - Run Intake/Indexer/Gate
+        // TODO: Conflict!
+        /* 
         Trigger { controller1.rightTriggerAxis > 0.2 }.whileActiveOnce(
             ParallelCommandGroup(
                 FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
@@ -191,6 +196,7 @@ class RobotContainer {
                 GateSensored(gate, { Constants.gateSpeed }, colorSensor)
             )
         )
+        */
 
         // run indexer rejection on Y of secondary controller
         // Y - Direct shooter
