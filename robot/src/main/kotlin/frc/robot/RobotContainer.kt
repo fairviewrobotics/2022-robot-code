@@ -174,7 +174,7 @@ class RobotContainer {
         // B - Run Intake
         // X - Run Gate
         // D-Pad - Direct Angle Turn
-        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)                         
+        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)
         Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce ( visionLineupToBall(primaryController) )
         JoystickButton(primaryController, kLeftBumper.value).whenHeld(visionLineupToHighGoal(primaryController))
         Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(setManualShootingPower(primaryController))
@@ -196,17 +196,19 @@ class RobotContainer {
         // X - Climber Pneumatics Backward
         // Y - Direct Shooter
         Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
-        Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runWinchDown(secondaryController))
+        Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce()
         JoystickButton(secondaryController, kLeftBumper.value).whenHeld(autoClimb())
         POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
         POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
         POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
         JoystickButton(secondaryController, kY.value).whileHeld(directShooter())
         JoystickButton(secondaryController, kB.value).whileHeld(reverseIntakeIndexerGate())
-        JoystickButton(primaryController, kA.value).whenHeld(setClimberPneumaticForward())
+        JoystickButton(secondaryController, kA.value).whenHeld(setClimberPneumaticForward())
         JoystickButton(secondaryController, kX.value).whenHeld(setClimberPneumaticBackward())
         POVButton(secondaryController, 90).whenHeld(setIntakePnemuaticUp())
         POVButton(secondaryController, 270).whenHeld(setIntakePnemuaticDown())
+
+
     }
 
     private fun configureAutoOptions() {
