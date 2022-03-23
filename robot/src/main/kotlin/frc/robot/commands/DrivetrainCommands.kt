@@ -145,19 +145,8 @@ fun DualStickArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxContro
     val fineRotationSpeed = Constants.kDrivetrainFineRotationSpeed
 
     return DrivetrainPIDCommand(drivetrain) {
-        var fWeight = 1.0
-        var rWeight = 1.0
-
-        if (controller.leftBumper) {
-            fWeight = fineForwardSpeed
-            rWeight = fineRotationSpeed
-        } else {
-            fWeight = regularForwardSpeed
-            rWeight = regularRotationSpeed
-        }
-
-        val forward = (controller.leftY * fWeight) + (controller.rightY * fineForwardSpeed)
-        val rotation = (-controller.leftX * abs(controller.leftX) * rWeight) + (-controller.rightX * abs(controller.rightX) * fineRotationSpeed)
+        val forward = (controller.leftY * abs(controller.leftY) * regularForwardSpeed) + (controller.rightY * abs(controller.rightY) * fineForwardSpeed)
+        val rotation = (-controller.leftX * abs(controller.leftX) * regularRotationSpeed) + (-controller.rightX * abs(controller.rightX) * fineRotationSpeed)
 
         kinematics.toWheelSpeeds(ChassisSpeeds(forwardFilter.calculate(forward), 0.0, rotationFilter.calculate(rotation)))
     }

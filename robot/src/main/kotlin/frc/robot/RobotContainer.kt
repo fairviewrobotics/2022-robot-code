@@ -35,9 +35,8 @@ import java.lang.Math.PI
  */
 class RobotContainer {
     // Hardware and subsystem initialization
-
-    val controller0 = XboxController(0)
-    val controller1 = XboxController(1)
+    val primaryController = XboxController(0)
+    val secondaryController = XboxController(1)
 
     // drivetrain
     val motorFrontLeft = CANSparkMax(Constants.driveFrontLeftID, CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -50,7 +49,6 @@ class RobotContainer {
     val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
 
-
     val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
     val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
     val climbPneumatics = SolenoidSubsystem(climbSolenoid)
@@ -60,7 +58,7 @@ class RobotContainer {
 
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
     val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
-    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
+    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, -1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -82,163 +80,133 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        // See https://blackknightsrobotics.slack.com/files/UML602T96/F0377HEMXU3/image_from_ios.jpg For the control scheme.
+        // EVERY OTHER CONTROL SCHEME IS DISHONEST.
 
-        // PRIMARY DRIVER
-        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, controller0)
+        climbPneumatics.set(DoubleSolenoid.Value.kReverse)
+        intakePneumatics.set(DoubleSolenoid.Value.kForward)
 
-        // LT - Vision Lineup to ball
-        Trigger { controller0.leftTriggerAxis > 0.2 }.whileActiveOnce (
-            ParallelCommandGroup(
-                TurnToBall(controller0, drivetrain),
-                FixedBallMotorSpeed(intake, { Constants.intakeSpeed } )
-            )
-        )
-
-        // LB - Vision Lineup to High Goal
-        JoystickButton(controller0, kLeftBumper.value).whenHeld(
-            SequentialCommandGroup(
-                CheckVisionOrRumble(controller0),
-                TurnToHighGoal(drivetrain)
-            )
-        )
-
-        // RT - Set Manual Shooting Power
-        Trigger { controller0.rightTriggerAxis > 0.2 }.whileActiveOnce (
-            ParallelCommandGroup(
-                FixedShooterSpeed(shooter1, { controller0.rightTriggerAxis }),
-                FixedShooterSpeed(shooter2, { -1.0 * controller0.rightTriggerAxis })
-            )
-        )
-
-        // RB - Visual Shooting
-        JoystickButton(controller0, kRightBumper.value).whenHeld(
-            ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0)
-        )
-
-        // X - Gate Forward
-        JoystickButton(controller0, kX.value).whenHeld(
-            FixedBallMotorSpeed(gate, { Constants.gateSpeed })
-        )
-
-        // A - deploy intake pneumatic
-        JoystickButton(controller0, kA.value).whenHeld(
-            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
-        )
-
-        // B - Run Intake, Indexer, and, until color sensor detects, Gate
-        JoystickButton(controller0, kB.value).whenHeld(
-            ParallelCommandGroup(
-                FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
-                FixedBallMotorSpeed(indexer, { Constants.indexerSpeed })
-            )
-        )
+        // Commands
+        val shootVisually = { controller: XboxController -> ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller) }
+        val autoClimb = { AutoClimb(winch, climbPneumatics) }
         
-        // Y - retract intake pneumatic
-        JoystickButton(controller0, kY.value).whenHeld(
-            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
-        )
+        val runGateForward = { FixedBallMotorSpeed(gate, { Constants.gateSpeed}) }
+        val runGateBackward = { FixedBallMotorSpeed(gate, { -Constants.gateSpeed}) }
+        val runIntakeForward = { FixedBallMotorSpeed(intake, { Constants.intakeSpeed}) }
+        val runIntakeBackward = { FixedBallMotorSpeed(intake, { -Constants.intakeSpeed}) }
+        val runIndexerForward = { FixedBallMotorSpeed(intake, { -Constants.indexerSpeed}) }
+        val runIndexerBackward = { FixedBallMotorSpeed(intake, { -Constants.indexerSpeed}) }
 
-        // B - Run Intake
-        // TODO: conflict!
-        /* 
-        JoystickButton(controller0, kB.value).whenHeld(
-            FixedBallMotorSpeed(intake, { Constants.intakeSpeed })
-        )
-        */
-
-        // D-Pad: Turn to fixed angle
-        for (i in 0 until 8) {
-            val angleDeg = 45 * i
-            POVButton(controller0, angleDeg).whenHeld(
-                TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
-            )
-        }
-
-        // SECONDARY DRIVER
-
-        // LT - Climber Down
-        Trigger({ controller1.leftTriggerAxis > 0.2 }).whileActiveOnce (
-            FixedWinchVoltage(winch, { 5.0 * controller1.leftTriggerAxis })
-        )
-
-        // RT - Climber Up
-        Trigger({ controller1.rightTriggerAxis > 0.2 }).whileActiveOnce (
-            FixedWinchVoltage(winch, { -5.0 * controller1.rightTriggerAxis })
-        )
-
-        // LB - Auto Climb
-        JoystickButton(controller1, kLeftBumper.value).whenHeld(
-            AutoClimb(winch, climbPneumatics)
-        )
-
-        // POV button climber control
-        // Right - run climber all the way up
-        POVButton(controller1, 0).whenHeld(
-            WinchPIDCommand(winch, { Constants.elevatorMaxPos })
-        )
-        // Left - run climber all the way down
-        POVButton(controller1, 180).whenHeld(
-            WinchPIDCommand(winch, { Constants.elevatorMinPos })
-        )
-        // Left-up - run climber half way up
-        POVButton(controller1, 135).whenHeld(
-            WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 })
-        )
-
-        // RB - Run Intake/Indexer/Gate
-        // TODO: Conflict!
-        /* 
-        Trigger { controller1.rightTriggerAxis > 0.2 }.whileActiveOnce(
+        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, {-5.0 * controller.rightTriggerAxis }) }
+        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, {5.0 * controller.leftTriggerAxis }) }
+        val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
+        val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
+        val runWinchHalfway = { WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 }) }
+        
+        val setIntakePnemuaticUp = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse) }
+        val setIntakePnemuaticDown = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward) }
+        val setClimberPneumaticForward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward) }
+        val setClimberPneumaticBackward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse) }
+        
+        val runIntakeIndexerGateUntilColorSensor = {
             ParallelCommandGroup(
-                FixedBallMotorSpeed(intake, { Constants.intakeSpeed }),
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed} ),
                 FixedBallMotorSpeed(indexer, { Constants.indexerSpeed }),
                 GateSensored(gate, { Constants.gateSpeed }, colorSensor)
             )
-        )
-        */
+        }
 
-        // run indexer rejection on Y of secondary controller
-        // Y - Direct shooter
-        JoystickButton(controller1, kY.value).whileHeld(
+        val visionLineupToBall = { controller: XboxController ->
+            ParallelCommandGroup(
+                TurnToBall(controller, drivetrain),
+                FixedBallMotorSpeed(intake, { Constants.intakeSpeed } )
+            )
+        }
+
+        val visionLineupToHighGoal = { controller: XboxController ->
+            SequentialCommandGroup(
+                CheckVisionOrRumble(controller),
+                TurnToHighGoal(drivetrain)
+            )
+        }
+
+        val setManualShootingPower = { controller: XboxController ->
+            ParallelCommandGroup(
+                FixedShooterSpeed(shooter1, { controller.rightTriggerAxis }),
+                FixedShooterSpeed(shooter2, { -1.0 * controller.rightTriggerAxis })
+            )
+        }
+
+        val turnToAngleOnDpad = { controller: XboxController ->
+            // D-Pad: Turn to fixed angle
+            for (i in 0 until 8) {
+                val angleDeg = 45 * i
+                POVButton(controller, angleDeg).whenHeld(
+                    TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
+                )
+            }
+        }
+        
+        val directShooter = {
             ParallelCommandGroup(
                 DualShooterPID(shooter1, shooter2) { DualShootSpeed(Constants.shooterRadPerS, Constants.shooterAdjustRadPerS) },
                 ShootBallMotor(shooter1, shooter2, gate, indexer),
                 MaintainAngle(drivetrain)
             )
-        )
-
-        // B - Reverse Intake/Indexer/Gate
-        JoystickButton(controller1, kB.value).whileHeld(
-            ParallelCommandGroup(
-                FixedBallMotorSpeed(intake, { -Constants.intakeSpeed }),
-                FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed }),
-                FixedBallMotorSpeed(gate, { -Constants.gateSpeed })
-            )
-        )
-
-        // A - Pneumatic Climber Forward
+        }
         
-        JoystickButton(controller1, kA.value).whenHeld(
-            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
+        val reverseIntakeIndexerGate = {
+            ParallelCommandGroup(
+                runIntakeBackward(),
+                runIndexerBackward(),
+                runGateBackward()
+            )
+        }
+        
+        // PRIMARY DRIVER
 
-        )
+        // Joysticks - Arcade drive
+        // LT - Vision Lineup to Ball
+        // LB - Vision Lineup to High Goal
+        // RT - Set Manual Shooting Power
+        // RB - Visual Shooting
+        // A - Intake Pneumatics Down
+        // Y - Intake Pneumatics Up
+        // B - Run Intake
+        // X - Run Gate
+        // D-Pad - Direct Angle Turn
+        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)                         
+        Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce ( visionLineupToBall(primaryController) )
+        JoystickButton(primaryController, kLeftBumper.value).whenHeld(visionLineupToHighGoal(primaryController))
+        Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(setManualShootingPower(primaryController))
+        JoystickButton(primaryController, kRightBumper.value).whenHeld(shootVisually(primaryController))
+        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticDown())
+        JoystickButton(primaryController, kY.value).whenHeld(setIntakePnemuaticUp())
+        JoystickButton(primaryController, kB.value).whenHeld(runIntakeForward())
+        JoystickButton(primaryController, kX.value).whenHeld(runGateForward())
+        turnToAngleOnDpad(primaryController)
 
-        // X - Pneumatic Climber Backward
-        JoystickButton(controller1, kX.value).whenHeld(
-            PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
-        )
+        // SECONDARY DRIVER
 
-        // D-Pad Up - Intake Pneumatic Up
-        POVButton(controller1, 90).whenHeld(
-            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
-        )
-
-        // D-Pad Down - Intake Pneumatic Down
-        POVButton(controller1, 270).whenHeld(
-            PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
-        )
-
+        // LT - Climber All the Way Down
+        // RT - Climber All the Way Up
+        // LB - Auto Climb
+        // RB - Run Intake+Indexer+Gate Until Color
+        // A - Climber Pneumatics Forward
+        // B - Reverse Intake+Indexer+Gate
+        // X - Climber Pneumatics Backward
+        // Y - Direct Shooter
+        Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
+        Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runWinchDown(secondaryController))
+        JoystickButton(secondaryController, kLeftBumper.value).whenHeld(autoClimb())
+        POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
+        POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
+        POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
+        JoystickButton(secondaryController, kY.value).whileHeld(directShooter())
+        JoystickButton(secondaryController, kB.value).whileHeld(reverseIntakeIndexerGate())
+        JoystickButton(primaryController, kA.value).whenHeld(setClimberPneumaticForward())
+        JoystickButton(secondaryController, kX.value).whenHeld(setClimberPneumaticBackward())
+        POVButton(secondaryController, 90).whenHeld(setIntakePnemuaticUp())
+        POVButton(secondaryController, 270).whenHeld(setIntakePnemuaticDown())
     }
 
     private fun configureAutoOptions() {
@@ -252,7 +220,7 @@ class RobotContainer {
         autoCommandChooser.addOption("Shoot Vision + Drive forward [6pt]",
             SequentialCommandGroup(
                 // shoot based on vision
-                ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller0, true).withTimeout(8.0),
+                ShootVision(drivetrain, shooter1, shooter2, gate, indexer, primaryController, true).withTimeout(8.0),
                 // shoot at default distance (just in case vision did not work)
                 ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(3.0),
                 // drive off tarmac
