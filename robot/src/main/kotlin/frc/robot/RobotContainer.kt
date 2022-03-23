@@ -60,7 +60,7 @@ class RobotContainer {
 
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
     val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
-    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
+    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, -1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -218,8 +218,7 @@ class RobotContainer {
         )
 
         // A - Pneumatic Climber Forward
-        
-        JoystickButton(controller1, kA.value).whenHeld(
+        JoystickButton(controller0, kA.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
 
         )
