@@ -107,7 +107,7 @@ class RobotContainer {
         Trigger { controller0.rightTriggerAxis > 0.2 }.whileActiveOnce (
             ParallelCommandGroup(
                 FixedShooterSpeed(shooter1, { controller0.rightTriggerAxis }),
-                FixedShooterSpeed(shooter2, { controller0.rightTriggerAxis })
+                FixedShooterSpeed(shooter2, { -1.0 * controller0.rightTriggerAxis })
             )
         )
 
@@ -171,15 +171,15 @@ class RobotContainer {
 
         // POV button climber control
         // Right - run climber all the way up
-        POVButton(controller1, 90).whenHeld(
+        POVButton(controller1, 0).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMaxPos })
         )
         // Left - run climber all the way down
-        POVButton(controller1, 270).whenHeld(
+        POVButton(controller1, 180).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMinPos })
         )
         // Left-up - run climber half way up
-        POVButton(controller1, 315).whenHeld(
+        POVButton(controller1, 135).whenHeld(
             WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 })
         )
 
@@ -213,23 +213,23 @@ class RobotContainer {
 
         // A - Pneumatic Climber Forward
         
-        JoystickButton(controller0, kA.value).whenHeld(
+        JoystickButton(controller1, kA.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward)
 
         )
 
         // X - Pneumatic Climber Backward
-        JoystickButton(controller0, kX.value).whenHeld(
+        JoystickButton(controller1, kX.value).whenHeld(
             PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse)
         )
 
         // D-Pad Up - Intake Pneumatic Up
-        POVButton(controller1, 0).whenHeld(
+        POVButton(controller1, 90).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
         )
 
         // D-Pad Down - Intake Pneumatic Down
-        POVButton(controller1, 180).whenHeld(
+        POVButton(controller1, 270).whenHeld(
             PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
         )
 
