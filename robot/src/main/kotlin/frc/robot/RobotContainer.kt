@@ -82,6 +82,9 @@ class RobotContainer {
     private fun configureButtonBindings() {
         // EVERY OTHER CONTROL SCHEME IS DISHONEST.
 
+        climbPneumatics.set(DoubleSolenoid.Value.kReverse)
+        intakePneumatics.set(DoubleSolenoid.Value.kForward)
+
         // Commands
         val shootVisually = { controller: XboxController -> ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller) }
         val autoClimb = { AutoClimb(winch, climbPneumatics) }
@@ -161,55 +164,37 @@ class RobotContainer {
         
         // PRIMARY DRIVER
 
-        //drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)
-
-        // LT - Vision Lineup to ball
+        // Joysticks - Arcade drive
+        // LT - Vision Lineup to Ball
         // LB - Vision Lineup to High Goal
         // RT - Set Manual Shooting Power
         // RB - Visual Shooting
-        // X - Gate Forward
-        // A - deploy intake pneumatic
-        // B - Run Intake, Indexer, and, until color sensor detects, Gate
-        // Y - retract intake pneumatic
-
-        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticDown())
-        JoystickButton(primaryController, kB.value).whenHeld(setIntakePnemuaticUp())
-
-        /**Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce ( visionLineupToBall(primaryController) )
+        // A - Intake Pneumatics Down
+        // Y - Intake Pneumatics Up
+        // B - Run Intake
+        // X - Run Gate
+        // D-Pad - Direct Angle Turn
+        drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)                         
+        Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce ( visionLineupToBall(primaryController) )
         JoystickButton(primaryController, kLeftBumper.value).whenHeld(visionLineupToHighGoal(primaryController))
         Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(setManualShootingPower(primaryController))
         JoystickButton(primaryController, kRightBumper.value).whenHeld(shootVisually(primaryController))
-        JoystickButton(primaryController, kX.value).whenHeld(
-            runGateForward()
-        )
-        JoystickButton(primaryController, kA.value).whenHeld(
-            setIntakePnemuaticUp()
-        )
-        JoystickButton(primaryController, kB.value).whenHeld(
-            runIntakeIndexerGateUntilColorSensor()
-        )
-        JoystickButton(primaryController, kY.value).whenHeld(
-            setIntakePnemuaticUp()
-        )
-        turnToAngleOnDpad(primaryController)**/
+        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticDown())
+        JoystickButton(primaryController, kY.value).whenHeld(setIntakePnemuaticUp())
+        JoystickButton(primaryController, kB.value).whenHeld(runIntakeForward())
+        JoystickButton(primaryController, kX.value).whenHeld(runGateForward())
+        turnToAngleOnDpad(primaryController)
 
         // SECONDARY DRIVER
 
-        // LT - Climber Down
-        // RT - Climber Up
+        // LT - Climber All the Way Down
+        // RT - Climber All the Way Up
         // LB - Auto Climb
-        // POV button climber control
-        // Right - run climber all the way up
-        // Left - run climber all the way down
-        // Left-up - run climber half way up
-        // run indexer rejection on Y of secondary controller
-        // Y - Direct shooter
-        // B - Reverse Intake/Indexer/Gate
-        // A - Pneumatic Climber Forward
-        // X - Pneumatic Climber Backward
-        // D-Pad Up - Intake Pneumatic Up
-        // D-Pad Down - Intake Pneumatic Down
-        /**
+        // RB - Run Intake+Indexer+Gate Until Color
+        // A - Climber Pneumatics Forward
+        // B - Reverse Intake+Indexer+Gate
+        // X - Climber Pneumatics Backward
+        // Y - Direct Shooter
         Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
         Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runWinchDown(secondaryController))
         JoystickButton(secondaryController, kLeftBumper.value).whenHeld(autoClimb())
@@ -221,7 +206,7 @@ class RobotContainer {
         JoystickButton(primaryController, kA.value).whenHeld(setClimberPneumaticForward())
         JoystickButton(secondaryController, kX.value).whenHeld(setClimberPneumaticBackward())
         POVButton(secondaryController, 90).whenHeld(setIntakePnemuaticUp())
-        POVButton(secondaryController, 270).whenHeld(setIntakePnemuaticDown())**/
+        POVButton(secondaryController, 270).whenHeld(setIntakePnemuaticDown())
     }
 
     private fun configureAutoOptions() {
