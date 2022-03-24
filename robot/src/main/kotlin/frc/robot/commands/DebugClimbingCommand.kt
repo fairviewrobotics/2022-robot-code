@@ -25,12 +25,5 @@ class DebugClimbingCommand(val climber: WinchSubsystem, val controller: XboxCont
         }
 
         climber.setVoltage(speed)
-
-        SmartDashboard.putNumber("Speed", speed)
-        SmartDashboard.putNumber("Controller Y", -controller.leftY)
-        //SmartDashboard.putNumber("Position", climber.distance)
-        SmartDashboard.putNumber("Actual Encoder Reading", climber.getPosition())
-        SmartDashboard.putBoolean("Lower Limit Hit", climber.atUpper())
-        SmartDashboard.putBoolean("Upper Limit Hit", climber.atLower())
     }
 }

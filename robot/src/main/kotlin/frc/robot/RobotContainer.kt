@@ -58,7 +58,7 @@ class RobotContainer {
 
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
     val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
-    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, -1.0)
+    val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, -1.0)
     // intake / indexer / gate
     val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
@@ -83,7 +83,7 @@ class RobotContainer {
         // EVERY OTHER CONTROL SCHEME IS DISHONEST.
 
         climbPneumatics.set(DoubleSolenoid.Value.kReverse)
-        intakePneumatics.set(DoubleSolenoid.Value.kForward)
+        intakePneumatics.set(DoubleSolenoid.Value.kReverse)
 
         // Commands
         val shootVisually = { controller: XboxController -> ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller) }
@@ -93,11 +93,11 @@ class RobotContainer {
         val runGateBackward = { FixedBallMotorSpeed(gate, { -Constants.gateSpeed}) }
         val runIntakeForward = { FixedBallMotorSpeed(intake, { Constants.intakeSpeed}) }
         val runIntakeBackward = { FixedBallMotorSpeed(intake, { -Constants.intakeSpeed}) }
-        val runIndexerForward = { FixedBallMotorSpeed(intake, { -Constants.indexerSpeed}) }
-        val runIndexerBackward = { FixedBallMotorSpeed(intake, { -Constants.indexerSpeed}) }
+        val runIndexerForward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
+        val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
 
-        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, {-5.0 * controller.rightTriggerAxis }) }
-        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, {5.0 * controller.leftTriggerAxis }) }
+        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -5.0 * controller.rightTriggerAxis }) }
+        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 5.0 * controller.leftTriggerAxis }) }
         val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
         val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
         val runWinchHalfway = { WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 }) }
@@ -132,7 +132,7 @@ class RobotContainer {
         val setManualShootingPower = { controller: XboxController ->
             ParallelCommandGroup(
                 FixedShooterSpeed(shooter1, { controller.rightTriggerAxis }),
-                FixedShooterSpeed(shooter2, { -1.0 * controller.rightTriggerAxis })
+                FixedShooterSpeed(shooter2, { controller.rightTriggerAxis })
             )
         }
 
@@ -146,7 +146,7 @@ class RobotContainer {
             }
         }
         
-        val directShooter = {
+        val fixedSpeedShooter = {
             ParallelCommandGroup(
                 DualShooterPID(shooter1, shooter2) { DualShootSpeed(Constants.shooterRadPerS, Constants.shooterAdjustRadPerS) },
                 ShootBallMotor(shooter1, shooter2, gate, indexer),
@@ -177,34 +177,46 @@ class RobotContainer {
         drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)                         
         Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce ( visionLineupToBall(primaryController) )
         JoystickButton(primaryController, kLeftBumper.value).whenHeld(visionLineupToHighGoal(primaryController))
-        Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(setManualShootingPower(primaryController))
+        Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(fixedSpeedShooter())
         JoystickButton(primaryController, kRightBumper.value).whenHeld(shootVisually(primaryController))
-        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticDown())
-        JoystickButton(primaryController, kY.value).whenHeld(setIntakePnemuaticUp())
-        JoystickButton(primaryController, kB.value).whenHeld(runIntakeForward())
+
+        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticUp())
+        JoystickButton(primaryController, kB.value).whenHeld(setIntakePnemuaticDown())
+
         JoystickButton(primaryController, kX.value).whenHeld(runGateForward())
+        JoystickButton(primaryController, kY.value).whenHeld(runIntakeForward())
+
         turnToAngleOnDpad(primaryController)
 
         // SECONDARY DRIVER
 
-        // LT - Climber All the Way Down
-        // RT - Climber All the Way Up
+        // LT - Manually run climber up
+        // RT - Manually run climber down
         // LB - Auto Climb
         // RB - Run Intake+Indexer+Gate Until Color
         // A - Climber Pneumatics Forward
         // B - Reverse Intake+Indexer+Gate
         // X - Climber Pneumatics Backward
         // Y - Direct Shooter
+
+        Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runIntakeIndexerGateUntilColorSensor())
+        JoystickButton(secondaryController, kRightBumper.value).whenHeld(reverseIntakeIndexerGate())
+
         Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
-        Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runWinchDown(secondaryController))
-        JoystickButton(secondaryController, kLeftBumper.value).whenHeld(autoClimb())
-        POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
-        POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
-        POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
-        JoystickButton(secondaryController, kY.value).whileHeld(directShooter())
-        JoystickButton(secondaryController, kB.value).whileHeld(reverseIntakeIndexerGate())
-        JoystickButton(primaryController, kA.value).whenHeld(setClimberPneumaticForward())
-        JoystickButton(secondaryController, kX.value).whenHeld(setClimberPneumaticBackward())
+        JoystickButton(secondaryController, kLeftBumper.value).whenHeld(runWinchDown(secondaryController))
+
+        // POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
+        // POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
+        // POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
+
+        JoystickButton(secondaryController, kLeftStick.value).whenHeld(AutoClimb(winch, climbPneumatics))
+
+        JoystickButton(secondaryController, kY.value).whileHeld(runGateBackward())
+        JoystickButton(secondaryController, kX.value).whileHeld(reverseIntakeIndexerGate())
+
+        JoystickButton(secondaryController, kA.value).whenHeld(setClimberPneumaticForward())
+        JoystickButton(secondaryController, kB.value).whenHeld(setClimberPneumaticBackward())
+
         POVButton(secondaryController, 90).whenHeld(setIntakePnemuaticUp())
         POVButton(secondaryController, 270).whenHeld(setIntakePnemuaticDown())
     }
