@@ -229,8 +229,13 @@ class RobotContainer {
         POVButton(secondaryController, 180).whenHeld(setClimberPneumaticBackward())
         
         
-        POVButton(secondaryController, 90).whenHeld(cameraSelection.setString(Constants.highGoalName))
-        POVButton(secondaryController, 270).whenHeld(cameraSelection.setString(Constant.lowGoalName))
+        if (POVButton(secondaryController, 90).get()) {
+            cameraSelection.setString(Constants.highGoalName)
+        }
+        if (POVButton(secondaryController, 270).get()){
+            cameraSelection.setString(Constants.ballVisionName)
+        }
+        
 
 
     }

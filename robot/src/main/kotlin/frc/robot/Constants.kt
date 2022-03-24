@@ -34,7 +34,7 @@ class Constants {
 
         // camera names
         val highGoalName = ""
-        val lowGoalName = ""
+        val ballVisionName = ""
 
         val refreshInterval = 0.02
 
