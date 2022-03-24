@@ -103,11 +103,7 @@ fun ClimbToNext(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
 // Automatic climbing sequence.
 // This should be started with the climber raised over the bar.
 fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
-    if (!climber.atLower()){
-        SmartDashboard.putString("Elevator Warning", "Elevator is not lowered.")
-        return SequentialCommandGroup(WaitCommand(0.5))
-    } else{
-        return SequentialCommandGroup(
+    return SequentialCommandGroup(
         // Lower climber to bottom, lifting the robot
         WinchPIDCommand(climber) { Constants.elevatorMinPos },
         // Move pneumatics forward to grab bar
@@ -116,6 +112,4 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
         ClimbToNext(climber, solenoid),
         ClimbToNext(climber, solenoid)
     )
-    }
-    
 }
