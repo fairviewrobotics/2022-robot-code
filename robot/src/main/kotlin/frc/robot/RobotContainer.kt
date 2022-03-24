@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.PneumaticsModuleType
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
 import edu.wpi.first.wpilibj.DigitalInput
+import edu.wpi.first.networktables.NetworkTableInstance
 
 import com.revrobotics.*
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
@@ -70,6 +71,11 @@ class RobotContainer {
 
     // auto command chooser
     var autoCommandChooser: SendableChooser<Command> = SendableChooser()
+
+    // camera stuff
+    // TODO: right place?
+    val ntInst = NetworkTableInstance.getDefault()
+    val cameraSelection = ntInst.getTable("").getEntry("CameraSelection") // todo: fill table name
 
     init {
         configureButtonBindings()
@@ -221,6 +227,10 @@ class RobotContainer {
 
         POVButton(secondaryController, 0).whenHeld(setClimberPneumaticForward())
         POVButton(secondaryController, 180).whenHeld(setClimberPneumaticBackward())
+        
+        
+        POVButton(secondaryController, 90).whenHeld(cameraSelection.setString(Constants.highGoalName))
+        POVButton(secondaryController, 270).whenHeld(cameraSelection.setString(Constant.lowGoalName))
 
 
     }

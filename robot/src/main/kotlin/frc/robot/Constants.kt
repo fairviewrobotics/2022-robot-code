@@ -32,6 +32,10 @@ class Constants {
         val indexerID = 7
         val gateID = 8
 
+        // camera names
+        val highGoalName = ""
+        val lowGoalName = ""
+
         val refreshInterval = 0.02
 
         private val constants = mutableMapOf<String, Double>()
