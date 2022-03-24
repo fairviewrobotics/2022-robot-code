@@ -189,20 +189,27 @@ class TurnToFixedHighGoal(val drivetrain: DrivetrainSubsystem): CommandBase() {
  * Returns Pair(speed, lower adjust).
  */
 fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSpeed {
-    /* Data calibrated at 1619:
-    // Clamp distance to range that we collected data for
+    // Data calibrated at 1619:
+    /*// Clamp distance to range that we collected data for
     val dist = clamp(distance_to_target_center, 2.5, 4.0)
     // These are just curves fit to the empirical data from 3/12
     val speed = 557.0 + -202.0 * dist + 50.6 * dist.pow(2.0)
     val adjust = -480.0 + 317.0 * dist + -76.5 * dist.pow(2.0)
 
-    return DualShootSpeed(max(speed, 570.0), min(adjust, -speed))
-     */
+    return DualShootSpeed(max(speed, 570.0), min(adjust, -speed))*/
+
 
     // Data calibrated at ssd on 3/18:
-    val dist = clamp(distance_to_target_center, 2.4, 4.48)
+    /*val dist = clamp(distance_to_target_center, 2.4, 4.48)
     val speed = 812 + -343*dist + 60.7 * dist.pow(2.0)
     val adjust = -290 + 163*dist + -26.7 * dist.pow(2.0)
+
+    return DualShootSpeed(speed, adjust)*/
+
+    // Data calibrated on comp practice field
+    val dist = clamp(distance_to_target_center, 2.7, 4.15)
+    val speed = 624.0 + -219.0 * dist + 43.7 * dist.pow(2.0)
+    val adjust = -586.0 + 321 * dist - 52.4 * dist.pow(2.0)
 
     return DualShootSpeed(speed, adjust)
 }
