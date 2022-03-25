@@ -275,7 +275,7 @@ fun ShootVision(
         // spin up shooter while turning to target
         TurnToHighGoal(drivetrain).raceWith(
             ShooterSpinUpVision(shooter1, shooter2)
-        ),
+        ).withTimeout(2.0),
         // maintain shooter speed and shoot
         ShootBallMotor(shooter1, shooter2, gate, indexer, endAfterOneBall).raceWith(
             ParallelCommandGroup(

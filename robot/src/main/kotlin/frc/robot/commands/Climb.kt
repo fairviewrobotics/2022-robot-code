@@ -1,13 +1,10 @@
 package frc.robot.commands
 
 import com.revrobotics.CANSparkMax
-import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.CommandBase
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
-import edu.wpi.first.wpilibj2.command.WaitCommand
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value
 import com.revrobotics.SparkMaxPIDController.AccelStrategy
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import edu.wpi.first.wpilibj2.command.*
 import frc.robot.subsystems.WinchSubsystem
 import frc.robot.Constants
 import frc.robot.subsystems.SolenoidSubsystem
@@ -107,9 +104,12 @@ fun AutoClimb(climber: WinchSubsystem, solenoid: SolenoidSubsystem): Command {
         // Lower climber to bottom, lifting the robot
         WinchPIDCommand(climber) { Constants.elevatorMinPos },
         // Move pneumatics forward to grab bar
-        PneumaticCommand(solenoid, Value.kForward).withTimeout(2.0),
+        ParallelCommandGroup(
+            WinchPIDCommand(climber) { Constants.elevatorMinPos },
+            PneumaticCommand(solenoid, Value.kForward).withTimeout(10.0)
+        ),
 
-        ClimbToNext(climber, solenoid),
-        ClimbToNext(climber, solenoid)
+        //ClimbToNext(climber, solenoid),
+        //ClimbToNext(climber, solenoid)
     )
 }
