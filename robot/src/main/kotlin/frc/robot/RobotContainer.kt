@@ -97,7 +97,7 @@ class RobotContainer {
         val runIndexerForward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
         val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
 
-        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -5.0 }) }
+        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -8.0 }) }
         val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 5.0 }) }
         val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
         val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
@@ -262,6 +262,46 @@ class RobotContainer {
                 ).withTimeout(5.0),
                 // shoot at default distance (just in case vision did not work)
                 ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(4.0),
+            )
+        )
+
+        autoCommandChooser.setDefaultOption("Static shoot + backup + vision shoot [10pt]",
+            SequentialCommandGroup(
+                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
+                DrivetrainPIDCommand(drivetrain) {
+                    DifferentialDriveWheelSpeeds(-1.0 * Constants.kDrivetrainFineForwardSpeed, -1.0 * Constants.kDrivetrainFineForwardSpeed)
+                }.withTimeout(1.0),
+                ShootBallMotor(shooter1, shooter2, gate, indexer, true).raceWith(
+                    ParallelCommandGroup(
+                        MaintainAngle(drivetrain),
+                        DualShooterPID(shooter1, shooter2, { DualShootSpeed(350.0, -100.0) })
+                    )
+                ).withTimeout(5.0),
+                ParallelCommandGroup(
+                    DrivetrainPIDCommand(drivetrain) {
+                        DifferentialDriveWheelSpeeds(-2.0 * Constants.kDrivetrainFineForwardSpeed, -2.0 * Constants.kDrivetrainFineForwardSpeed)
+                    },
+                    ParallelCommandGroup(
+                        FixedBallMotorSpeed(intake, { Constants.intakeSpeed} ),
+                        FixedBallMotorSpeed(indexer, { Constants.indexerSpeed }),
+                        GateSensored(gate, { Constants.gateSpeed }, colorSensor)
+                    )
+                ).withTimeout(1.5),
+
+                DrivetrainPIDCommand(drivetrain) {
+                    DifferentialDriveWheelSpeeds(2.0 * Constants.kDrivetrainFineForwardSpeed, 2.0 * Constants.kDrivetrainFineForwardSpeed)
+                }.withTimeout(1.0),
+                ParallelCommandGroup(
+                    TurnToHighGoal(drivetrain),
+                    ShooterSpinUpVision(shooter1, shooter2)
+                ).withTimeout(2.0),
+                ParallelCommandGroup(
+                    ShootBallMotor(shooter1, shooter2, gate, indexer),
+                    MaintainAngle(drivetrain),
+                    ShooterFixedVision(shooter1, shooter2),
+                ).withTimeout(4.0),
+                // shoot at default distance (just in case vision did not work)
+                ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(1.0),
             )
         )
 
