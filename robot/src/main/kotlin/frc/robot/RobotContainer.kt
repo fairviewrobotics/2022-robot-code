@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
@@ -96,8 +97,8 @@ class RobotContainer {
         val runIndexerForward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
         val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
 
-        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -3.0 }) }
-        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 3.0 }) }
+        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -5.0 }) }
+        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 5.0 }) }
         val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
         val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
         val runWinchHalfway = { WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 }) }
@@ -210,6 +211,7 @@ class RobotContainer {
         //POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
 
         JoystickButton(secondaryController, kY.value).whenHeld(setIntakePnemuaticUp())
+        JoystickButton(secondaryController, kX.value).whenHeld(fixedSpeedShooter())
         JoystickButton(secondaryController, kA.value).whenHeld(setIntakePnemuaticDown())
         JoystickButton(secondaryController, kB.value).whenHeld(runGateBackward())
 
@@ -235,16 +237,35 @@ class RobotContainer {
         // Shoot based on vision [4pt] then drive backwards to clear tarmac [2pt]
         autoCommandChooser.addOption("Shoot Vision + Drive forward [6pt]",
             SequentialCommandGroup(
-                // shoot based on vision
-                ShootVision(drivetrain, shooter1, shooter2, gate, indexer, primaryController, true).withTimeout(8.0),
-                // shoot at default distance (just in case vision did not work)
-                ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(3.0),
-                // drive off tarmac
+                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
+                ParallelCommandGroup(
+                    DrivetrainPIDCommand(drivetrain) {
+                        DifferentialDriveWheelSpeeds(-2.0 * Constants.kDrivetrainFineForwardSpeed, -2.0 * Constants.kDrivetrainFineForwardSpeed)
+                    },
+                    ParallelCommandGroup(
+                        FixedBallMotorSpeed(intake, { Constants.intakeSpeed} ),
+                        FixedBallMotorSpeed(indexer, { Constants.indexerSpeed }),
+                        GateSensored(gate, { Constants.gateSpeed }, colorSensor)
+                    )
+                ).withTimeout(2.0),
                 DrivetrainPIDCommand(drivetrain) {
-                    DifferentialDriveWheelSpeeds(Constants.kDrivetrainFineForwardSpeed, Constants.kDrivetrainFineForwardSpeed)
-                }.withTimeout(1.5)
+                    DifferentialDriveWheelSpeeds(2.0 * Constants.kDrivetrainFineForwardSpeed, 2.0 * Constants.kDrivetrainFineForwardSpeed)
+                }.withTimeout(1.0),
+                ParallelCommandGroup(
+                    TurnToHighGoal(drivetrain),
+                    ShooterSpinUpVision(shooter1, shooter2)
+                ).withTimeout(3.0),
+                ParallelCommandGroup(
+                    ShootBallMotor(shooter1, shooter2, gate, indexer),
+                    MaintainAngle(drivetrain),
+                    ShooterFixedVision(shooter1, shooter2),
+                ).withTimeout(5.0),
+                // shoot at default distance (just in case vision did not work)
+                ShootDefaultDistance(shooter1, shooter2, gate, indexer, true).withTimeout(4.0),
             )
         )
+
+        SmartDashboard.putData("Auto Mode", autoCommandChooser)
     }
 
 

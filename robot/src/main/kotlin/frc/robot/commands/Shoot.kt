@@ -209,7 +209,7 @@ fun get_shoot_speed_for_distance(distance_to_target_center: Double): DualShootSp
     // Data calibrated on comp practice field
     val dist = clamp(distance_to_target_center, 2.7, 4.15)
     val speed = 624.0 + -219.0 * dist + 43.7 * dist.pow(2.0)
-    val adjust = -586.0 + 321 * dist - 52.4 * dist.pow(2.0)
+    val adjust = -586.0 + 321.0 * dist - 52.4 * dist.pow(2.0)
 
     return DualShootSpeed(speed, adjust)
 }
