@@ -119,8 +119,8 @@ class Constants {
         val elevatorMaxVel get() = generateConstantGetter<Double>("elevatorMaxVel", 100.0)()
 
         // max elevator current and voltage
-        val elevatorMaxCurrent get() = generateConstantGetter<Double>("elevatorMaxCurrent", 10.0)()
-        val elevatorMaxVoltage = 5.0
+        val elevatorMaxCurrent get() = 40.0
+        val elevatorMaxVoltage = 8.0
 
         // max and min elevator position. These are where we run the elevator to climb
         val elevatorMaxPos get() = generateConstantGetter<Double>("elevatorMaxPos", 200.0)()
