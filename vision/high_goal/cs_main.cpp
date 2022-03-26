@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <utility>
 #include <networktables/NetworkTableInstance.h>
 #include <cameraserver/CameraServer.h>
 #include <opencv2/core.hpp>
@@ -146,6 +147,23 @@ std::optional<VisionConfig> read_config_vision_config(const wpi::json& config) {
   return vs;
 }
 
+std::optional<CameraConfig> read_config_camera(const wpi::json& cam_json) {
+  CameraConfig cam_config;
+  try {
+    cam_config.path = cam_json.at("path").get<std::string>();
+  } catch (const wpi::json::exception& e) {
+    config_error() << "expected cam_json path: " << e.what() << "\n";
+    return {};
+  }
+
+  if(cam_json.count("stream") != 0) {
+    cam_config.stream_config = cam_json.at("stream");
+  }
+  cam_config.config = cam_json;
+
+  return cam_config;
+}
+
 class Vision {
   int team;
   CameraFOV camera_fov{};
@@ -159,12 +177,17 @@ class Vision {
   nt::NetworkTableEntry center_distance;
   frc::CameraServer *cs;
   cs::UsbCamera camera;
-  cs::CvSink cvSink;
-  cs::CvSource cvSource;
-  cv::Mat camera_mat;
+
+  cs::CvSink cvSink0;
+  cs::CvSource cvSource0;
+  cv::Mat camera_mat0;
+
+  cs::CvSink cvSink1;
+  cs::CvSource cvSource1;
+  cv::Mat camera_mat1;
   
   // Read and parse the config file from disk
-  std::optional<CameraConfig> read_config() {
+  std::optional<std::pair<CameraConfig, CameraConfig>> read_config() {
     std::error_code ec;
     wpi::raw_fd_istream is(config_file, ec);
     if(ec) {
@@ -216,29 +239,22 @@ class Vision {
       return {};
     }
     
-    CameraConfig cam_config;
-    auto cam_json = j.at("camera");
-    try {
-      cam_config.path = cam_json.at("path").get<std::string>();
-    } catch (const wpi::json::exception& e) {
-      config_error() << "expected cam_json path: " << e.what() << "\n";
+    auto cam_config0 = read_config_camera(j.at("camera"));
+    auto cam_config1 = read_config_camera(j.at("ball_camera"));
+
+    if(!cam_config0 || !cam_config1) {
       return {};
     }
     
-    if(cam_json.count("stream") != 0) {
-      cam_config.stream_config = cam_json.at("stream");
-    }
-    cam_config.config = cam_json;
-    
-    return cam_config;
+    return std::pair(*cam_config0, *cam_config1);
   }
 
 public:
   Vision() {
     team = 2036;
     
-    auto cam_config = read_config();
-    if(!cam_config) {
+    auto cams_config = read_config();
+    if(!cams_config) {
       wpi::errs() << "Error reading config, exiting\n";
       exit(1);
     }
@@ -261,26 +277,34 @@ public:
     wpi::outs() << "Starting CameraServer";
     cs = frc::CameraServer::GetInstance();
 
+    auto &cam0 = cams_config->first;
+    auto &cam1 = cams_config->second;
+
     // open camera and set appropriate mode
-    wpi::outs() << "Opening camera " << cam_config->path << "\n";
-    camera = cs->StartAutomaticCapture("High Goal Vision", cam_config->path);
-    camera.SetConfigJson(cam_config->config);
+    wpi::outs() << "Opening camera " << cam0.path << "\n";
+    camera = cs->StartAutomaticCapture("High Goal Vision", cam0.path);
+    camera.SetConfigJson(cam0.config);
+
+    wpi::outs() << "Opening camera " << cam1.path << "\n";
+    auto camera1 = cs->StartAutomaticCapture("Ball Vision", cam1.path);
+    camera1.SetConfigJson(cam1.config);
 
     // get cv sink for camera (so that we can get cv::Mat from camera)
-    cvSink = cs->GetVideo(camera);
-    cvSource = cs->PutVideo("High Goal Output", 480, 640);
+    cvSink0 = cs->GetVideo(camera);
+    cvSource0 = cs->PutVideo("High Goal Output", 640, 480);
+
+    cvSink1 = cs->GetVideo(camera1);
+    cvSource1 = cs->PutVideo("Ball Vision Rotated", 480, 640);
   }
 
   // Get an image from the camera, process it, and write vision results to network tables
   void run() {
-    if(!cvSink.GrabFrame(camera_mat)) {
-      wpi::errs() << "Couldn't get frame from camera\n";
+    if(!cvSink0.GrabFrame(camera_mat0)) {
+      wpi::errs() << "Couldn't get frame from high goal camera\n";
       return;
     }
-    cv::Mat rotated;
-    cv::rotate(camera_mat, rotated, cv::ROTATE_90_COUNTERCLOCKWISE);
-
-    auto target = find_target_angles(vision_config, camera_fov, rotated);
+    
+    auto target = find_target_angles(vision_config, camera_fov, camera_mat0);
     if(target) {
       target_found.SetBoolean(true);
       yaw.SetDouble(target->yaw);
@@ -291,7 +315,16 @@ public:
     } else {
       target_found.SetBoolean(false);
     }
-    cvSource.PutFrame(rotated);
+    cvSource0.PutFrame(camera_mat0);
+
+    // get and stream ball vision
+    if(!cvSink1.GrabFrame(camera_mat1)) {
+      wpi::errs() << "Couldn't get frame from ball vision camera\n";
+      return;
+    }
+    cv::Mat rotated1;
+    cv::rotate(camera_mat1, rotated1, cv::ROTATE_90_COUNTERCLOCKWISE);
+    cvSource1.PutFrame(rotated1);
   }
 };
 
