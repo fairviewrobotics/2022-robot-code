@@ -131,10 +131,7 @@ class RobotContainer {
         }
 
         val setManualShootingPower = { controller: XboxController ->
-            ParallelCommandGroup(
-                FixedShooterSpeed(shooter1, { controller.rightTriggerAxis }),
-                FixedShooterSpeed(shooter2, { controller.rightTriggerAxis })
-            )
+                DualShooterPID(shooter1, shooter2) { DualShootSpeed(Constants.shooterRadPerS, Constants.shooterAdjustRadPerS) }
         }
 
         val turnToAngleOnDpad = { controller: XboxController ->
@@ -211,7 +208,7 @@ class RobotContainer {
         //POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
 
         JoystickButton(secondaryController, kY.value).whenHeld(setIntakePnemuaticUp())
-        JoystickButton(secondaryController, kX.value).whenHeld(fixedSpeedShooter())
+        JoystickButton(secondaryController, kX.value).whenHeld(setManualShootingPower(secondaryController))
         JoystickButton(secondaryController, kA.value).whenHeld(setIntakePnemuaticDown())
         JoystickButton(secondaryController, kB.value).whenHeld(runGateBackward())
 
