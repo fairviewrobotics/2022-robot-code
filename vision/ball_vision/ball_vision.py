@@ -56,6 +56,7 @@ class Tester:
         self.fps_entry = self.table.getEntry("fps")
         self.angle_entry = self.table.getEntry("targetAngle")
         self.found_target_entry = self.table.getEntry("foundTarget")
+        self.distance_entry = self.table.getEntry("distanceToBall")
 
         # set up socket for streaming
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,6 +70,12 @@ class Tester:
         self.conn = None
         t = Thread(target=lambda: self.accept_client())
         t.start()
+
+        # camera_to_ball_distance_vert = distance between the camera and ball (units_unknown) measured using tape measurer 
+        self.camera_to_ball_distance_vert = 0
+
+        # camera_angle = angle btw (grav vector rotated 90deg) and camera boresight (measured with iphone) (radians)
+        self.camera_angle = 0
 
 
     def check_box(self, box):
@@ -130,13 +137,23 @@ class Tester:
                     self.angle_entry.setNumber(0)
                     self.found_target_entry.setBoolean(False)
                 else:
-                    center = (best_box[2] + best_box[0]) / 2
-                    offset = (center - 0.5)
-                    focalLen = 1.0 / (2.0 * math.tan(math.radians(80) / 2.0))
-                    angle = math.atan(offset / focalLen)
-                    self.angle_entry.setNumber(angle)
+                    alpha = 80 # deg, half the camera's field of view
+                    focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+
+                    center = (best_box[2] + best_box[0]) / 2 # screen center x as a proportion
+                    offset = (center - 0.5) # units in percentage of image, distance to center
+                    target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
+                    self.angle_entry.setNumber(target_yaw)
                     self.found_target_entry.setBoolean(True)
-                    print(math.degrees(angle))
+                    print('Yaw:', math.degrees(target_yaw))
+
+                    center = (best_box[3] + best_box[1]) / 2 # screen center y as a proportion
+                    offset = (center - 0.5) # units in percentage of image, distance to center
+                    focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+                    target_pitch = math.atan(offset / focalLen) # plate scale
+                    distance = self.get_distance_to_target(target_pitch)
+                    self.distance_entry.setNumber(distance)
+                    print('Pitch:', math.degrees(target_pitch))
                 self.ntinst.flush()
 
                 # # stream output to socket
@@ -155,6 +172,15 @@ class Tester:
         _, height, width, _ = self.interpreter.get_input_details()[0]['shape']
         return width, height
 
+
+# double get_distance_to_target(const TargetAngle& target, double target_height, double camera_angle) {
+#   return target_height / tan(target.pitch + camera_angle);
+# }
+    def get_distance_to_target(self, target_pitch):
+        # y-axis = gravity vector 
+        # x-axis = vector normal to gravity vector 
+        # target_pitch = theta_x
+        return self.camera_to_ball_distance_vert / math.tan(target_pitch + self.camera_angle)
 
     def set_input(self, frame):
         """Copies a resized and properly zero-padded image to the input tensor.
