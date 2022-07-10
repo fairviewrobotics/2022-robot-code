@@ -76,15 +76,17 @@ def find_targets(config: dict,
                  image: np.ndarray,
                  score_thresh: float,
                  image_size: float,
-                 size_relative_thresh: float) -> List[Tuple[ndarray, Rect]]:
+                 size_relative_thresh: float) -> List[Tuple[np.ndarray, Rect]]:
     """
-    Return a list of target rectangles given an image and some scoring parameters.
+    Return a list of targets given an image and some scoring parameters.
 
     :param config: the configuration parameters for the filtering and camera
     :param image: the image to locate targets within
     :param score_thresh: the minimum score a target must exceed to be returned
     :param image_size: the size of the image as its larger dimension
     :param size_relative_thresh: a proportion of image_size. See target_scoring.target_size_score
+
+    :return: a list of targets as tuples of their contour and rectangle
     """
     contours = get_filtered_contours(config, image)
     targets = []
@@ -98,11 +100,12 @@ def find_targets(config: dict,
 
 def find_highest_target(center_y: float, targets: List[Tuple[np.ndarray, Rect]]) -> Rect:
     """
-    Get the highest point from a list of target contours.
+    Get the highest target from a list of targets.
 
     :param center_y: the y value of the center of the image
     :param targets: a list of targets, each represented with a tuple containing its contour and bounding rect
-    :return: a numpy array containing the highest point (or None if no targets are passed)
+
+    :return: a rectangle around the target containing the highest point (or None if no targets are passed)
     """
     absolute_highest = None
     highest_target = None

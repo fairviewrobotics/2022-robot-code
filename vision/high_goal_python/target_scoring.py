@@ -30,8 +30,8 @@ def area_coverage_score(rect: Rect, contour: np.ndarray) -> float:
 
 def aspect_ratio_score(rect: Rect) -> float:
     """
-    Score a target based on its aspect ratio. Aspect ratios should be close to 5"/2" = 2.5. This is based on the
-    dimensions of the retro-reflective tape on the upper hub.
+    Score a target based on its aspect ratio. Aspect ratios should be close to 5"/2" = 2.5. These measurements are
+    based on the dimensions of the retro-reflective tape on the upper hub.
 
     :param rect: the minimum bounding box around the target
     :return: the score of a target based on its aspect ratio
@@ -55,7 +55,8 @@ def target_angle_score(rect: Rect) -> float:
 
 def target_size_score(rect: Rect, image_size: float, relative_thresh: float) -> float:
     """
-    Score a target based on its relative size in the image.
+    Score a target based on its relative size in the image. If a target is too small based on the passed threshold,
+    then it receives a score of 0.0; otherwise, it receives a score of 1.0.
 
     :param rect: the minimum bounding box around the target
     :param image_size: the size of the image as its larger dimension

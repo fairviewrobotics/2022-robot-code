@@ -4,7 +4,7 @@ import numpy as np
 class Rect:
     def __init__(self, box_points: np.ndarray):
         """
-        Represents a rotated rectangle based.
+        Represents a rotated rectangle.
 
         :param box_points: a numpy array of clockwise-ordered points (bottom right, bottom left, top left, top right)
         """
