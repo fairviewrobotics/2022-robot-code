@@ -7,3 +7,4 @@ simgui.json
 .DS_Store
 .vscode/
 lib
+./vision/high_goal_python/__pycache__
