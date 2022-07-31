@@ -70,9 +70,9 @@ class Constants {
         val kColorSensorProximityThreshold get() = generateConstantGetter<Double>("kColorSensorProximityThreshold", 100.0)()
 
         // these are used for linear drivetrain velocity control
-        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 13.5)()
-        val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", .487)()
+        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 0.514)()
+        val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.1285)()
 
         // values used for drivetrain commands
         val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 15.0)()
