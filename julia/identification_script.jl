@@ -26,15 +26,3 @@ step_plot = plot!(step(P_cl))
 nyquist_plot = plot(nyquistplot([P, P_cl], ylims=(-1,1), xlims=(-1.5,1.5)))
 savefig(step_plot,"./julia/figs/step.png")
 savefig(nyquist_plot,"./julia/figs/nyquist.png")
-
-
-
-
-
-
-# ζ = 0.5 # Desired damping
-
-# ws = logspace(-1,2,8) # A vector of closed-loop bandwidths
-# kp = 2*ζ*ws-1 # Simple pole placement with PI given the closed-loop bandwidth, the poles are placed in a butterworth pattern
-# ki = ws.^2
-# pidplots(P,:nyquist,:gof;kps=kp,kis=ki, ω= logspace(-2,2,500)) # Request Nyquist and Gang-of-four plots (more plots are available, see ?pidplots )
