@@ -1,7 +1,6 @@
 import collections
 import struct
 import cv2
-import socket
 import pickle
 import math
 import numpy as np
@@ -9,6 +8,7 @@ import tflite_runtime.interpreter as tflite
 from threading import Thread
 
 from networktables import NetworkTablesInstance
+from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
 
 
 
@@ -28,7 +28,7 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
 
 
 class Tester:
-    def __init__(self):
+    def __init__(self, config_parser):
         print("Loading model...")
         try:
             model_path = "output_tflite_graph_edgetpu.tflite"
@@ -58,18 +58,17 @@ class Tester:
         self.found_target_entry = self.table.getEntry("foundTarget")
         self.distance_entry = self.table.getEntry("distanceToBall")
 
-        # set up socket for streaming
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        ip = "10.20.36.6"
-        port = 6666
-        self.sock.bind((ip, port))
-        self.sock.listen(10)
-        print("Awaiting connection...")
-
-        # set up thread for accepting clients
-        self.conn = None
-        t = Thread(target=lambda: self.accept_client())
-        t.start()
+        # set up camera server
+        print("Satring camera server")
+        cs = CameraServer.getInstance()
+        camera_config = config_parser.cameras[0]
+        camera = cs.startAutomaticCapture(name=camera_config["name"], path=camera_config["path"])
+        WIDTH, HEIGHT = camera_config["width"], camera_config["height"]
+        camera.setResolution(WIDTH, HEIGHT)
+        self.cvSink = cs.getVideo()
+        self.img = np.zeros(shape=(HEIGHT, WIDTH, 3), dtype=np.uint8)
+        self.output = cs.putVideo("Axon", WIDTH, HEIGHT)
+        self.frames = 0
 
         # camera_to_ball_distance_vert = distance between the camera and ball (units_unknown) measured using tape measurer 
         self.camera_to_ball_distance_vert = 0
@@ -77,29 +76,19 @@ class Tester:
         # camera_angle = angle btw (grav vector rotated 90deg) and camera boresight (measured with iphone) (radians)
         self.camera_angle = 0
 
-
     def check_box(self, box):
         width = box[2] - box[0]
         height = box[3] - box[1]
         return height != 0 and abs(1 - width / height) <= 0.3
 
-
     def score_box(self, box):
         # score boxes by their width
         return box[2] - box[0]
 
-
-    def accept_client(self):
-        self.conn, addr = self.sock.accept()
-        print(f"Connected to client: ({self.conn}, {addr})")
-
-
     def run(self):
-        cap = cv2.VideoCapture(0)
-
         while True:
-            ret, frame = cap.read()
-            if ret == True:
+            ret, frame = self.cvSink.grabFrame(self.img)
+            if ret is True:
                 scale = self.set_input(frame)
                 self.interpreter.invoke()
                 boxes, class_ids, scores, _, _ = self.get_output(scale)
@@ -119,7 +108,6 @@ class Tester:
                             best_box_score = score
                             best_box = box
 
-                        
                         if np.isnan(class_id):
                             continue
 
@@ -129,8 +117,9 @@ class Tester:
                         
                         color = (0, 0, 255)
 
-                        resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width,
-                                                        height, color)
+                        resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width, height, color)
+
+                self.output.putFrame(resized)
                 
                 # write result to network tables
                 if best_box is None:
@@ -164,7 +153,8 @@ class Tester:
                 # except Exception as e:
                 #     print(e)
             else:
-                 break
+                print("Image failed")
+                continue
 
     
     def input_size(self):
@@ -244,5 +234,7 @@ class Tester:
 
 
 if __name__ == "__main__":
-    tester = Tester()
+    config_file = "vision-config.json"
+    config_parser = ConfigParser(config_file)
+    tester = Tester(config_parser)
     tester.run()
