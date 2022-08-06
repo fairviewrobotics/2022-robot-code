@@ -19,8 +19,8 @@ end
 
 P_cl, P, kp, ki = get_closed_loop();
 
-print("Closed-Loop Proportional Gain Kp = " + kp)
-print("Closed-Loop Integral Gain Ki = " + ki)
+print("Closed-Loop Proportional Gain Kp = "); print(kp);
+print("Closed-Loop Integral Gain Ki = "); print(ki);
 
 step_plot = plot!(step(P_cl))
 nyquist_plot = plot(nyquistplot([P, P_cl], ylims=(-1,1), xlims=(-1.5,1.5)))
