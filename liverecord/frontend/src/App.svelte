@@ -1,20 +1,15 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import Counter from './lib/Counter.svelte'
+  import { io } from "socket.io-client";
 
-  let count = "Loading...";
-  fetch("http://localhost:5000", {
-    headers: [
-      ["Access-Control-Allow-Origin", "http://localhost:5000"]
-    ]
-  }).then((val) => {
-    val.text().then((text) => {
-      count = text
-    })
+  let text = "Loading..."
+
+  const socket = io("http://localhost:5000")
+  socket.on("Testing", (args) => {
+    text = "SOMETHING HAPPENED!"
   })
 </script>
 
-<h1>{count}!</h1>
+<h1>{text}</h1>
 
 <style>
   .logo {
