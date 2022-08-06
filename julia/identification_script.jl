@@ -5,11 +5,11 @@ using LinearAlgebra  # for identity matrix I
 
 function get_closed_loop(k=20.2, T=1/20.2, ωp=20.1, phasemargin=60.1)
     # create a generatic PI controller that uses the open-loop response of a transfer function to
-    # calculate the ideal frequency response
+    # calculate the ideal frequency response for a first order transfer function response
 
     P = tf(1,[T,1]); # create a representation of the first order transfer function
 
-    C, kp, ki = loopshapingPI(P,ωp,phasemargin=phasemargin);
+    kp, ki, C = loopshapingPI(P,ωp,phasemargin=phasemargin);
 
     P_cl = feedback(tf(P)*tf(C)); # build closed-loop system
 
@@ -17,10 +17,10 @@ function get_closed_loop(k=20.2, T=1/20.2, ωp=20.1, phasemargin=60.1)
 
 end
 
-P_cl, P = get_closed_loop();
+P_cl, P, kp, ki = get_closed_loop();
 
-print("Closed-Loop Transfer Function")
-print(P_cl);
+print("Closed-Loop Proportional Gain Kp = " + kp)
+print("Closed-Loop Integral Gain Ki = " + Ki)
 
 step_plot = plot!(step(P_cl))
 nyquist_plot = plot(nyquistplot([P, P_cl], ylims=(-1,1), xlims=(-1.5,1.5)))
