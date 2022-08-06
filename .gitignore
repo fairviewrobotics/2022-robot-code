@@ -8,3 +8,6 @@ simgui.json
 .vscode/
 lib
 ./vision/high_goal_python/__pycache__
+
+# Portable Network Graphics
+*.png
