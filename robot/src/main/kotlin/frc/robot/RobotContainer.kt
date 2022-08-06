@@ -47,13 +47,13 @@ class RobotContainer {
     val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
 
     // climber
-    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
+//    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
+//    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
 
-    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second) 
-    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
-    val climbPneumatics = SolenoidSubsystem(climbSolenoid)
-    val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
+//    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second)
+//    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
+//    val climbPneumatics = SolenoidSubsystem(climbSolenoid)
+//    val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
 
     // shooter
 
@@ -83,12 +83,12 @@ class RobotContainer {
     private fun configureButtonBindings() {
         // EVERY OTHER CONTROL SCHEME IS DISHONEST.
 
-        climbPneumatics.set(DoubleSolenoid.Value.kReverse)
-        intakePneumatics.set(DoubleSolenoid.Value.kReverse)
+//        climbPneumatics.set(DoubleSolenoid.Value.kReverse)
+//        intakePneumatics.set(DoubleSolenoid.Value.kReverse)
 
         // Commands
         val shootVisually = { controller: XboxController -> ShootVision(drivetrain, shooter1, shooter2, gate, indexer, controller) }
-        val autoClimb = { AutoClimb(winch, climbPneumatics) }
+//        val autoClimb = { AutoClimb(winch, climbPneumatics) }
         
         val runGateForward = { FixedBallMotorSpeed(gate, { Constants.gateSpeed}) }
         val runGateBackward = { FixedBallMotorSpeed(gate, { -Constants.gateSpeed}) }
@@ -97,16 +97,16 @@ class RobotContainer {
         val runIndexerForward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
         val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
 
-        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -8.0 }) }
-        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 5.0 }) }
-        val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
-        val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
-        val runWinchHalfway = { WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 }) }
+//        val runWinchDown = { controller: XboxController -> FixedWinchVoltage(winch, { -8.0 }) }
+//        val runWinchUp = { controller: XboxController -> FixedWinchVoltage(winch, { 5.0 }) }
+//        val runWinchAllTheWayUp = { WinchPIDCommand(winch, { Constants.elevatorMaxPos }) }
+//        val runWinchAllTheWayDown = { WinchPIDCommand(winch, { Constants.elevatorMinPos }) }
+//        val runWinchHalfway = { WinchPIDCommand(winch, { Constants.elevatorMaxPos * 0.5 }) }
         
-        val setIntakePnemuaticUp = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse) }
-        val setIntakePnemuaticDown = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward) }
-        val setClimberPneumaticForward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward) }
-        val setClimberPneumaticBackward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse) }
+//        val setIntakePnemuaticUp = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse) }
+//        val setIntakePnemuaticDown = { PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward) }
+//        val setClimberPneumaticForward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kForward) }
+//        val setClimberPneumaticBackward = { PneumaticCommand(climbPneumatics, DoubleSolenoid.Value.kReverse) }
         
         val runIntakeIndexerGateUntilColorSensor = {
             ParallelCommandGroup(
@@ -178,8 +178,8 @@ class RobotContainer {
         Trigger { primaryController.rightTriggerAxis > 0.2 }.whileActiveOnce(fixedSpeedShooter())
         JoystickButton(primaryController, kRightBumper.value).whenHeld(shootVisually(primaryController))
 
-        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticUp())
-        JoystickButton(primaryController, kB.value).whenHeld(setIntakePnemuaticDown())
+//        JoystickButton(primaryController, kA.value).whenHeld(setIntakePnemuaticUp())
+//        JoystickButton(primaryController, kB.value).whenHeld(setIntakePnemuaticDown())
 
         JoystickButton(primaryController, kX.value).whenHeld(runGateForward())
         JoystickButton(primaryController, kY.value).whenHeld(runIntakeForward())
@@ -200,26 +200,26 @@ class RobotContainer {
         Trigger({ secondaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(runIntakeIndexerGateUntilColorSensor())
         JoystickButton(secondaryController, kRightBumper.value).whenHeld(reverseIntakeIndexerGate())
 
-        Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
-        JoystickButton(secondaryController, kLeftBumper.value).whenHeld(runWinchDown(secondaryController))
+//        Trigger({ secondaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(runWinchUp(secondaryController))
+//        JoystickButton(secondaryController, kLeftBumper.value).whenHeld(runWinchDown(secondaryController))
 
         //POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
         //POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
         //POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
 
-        JoystickButton(secondaryController, kY.value).whenHeld(setIntakePnemuaticUp())
+//        JoystickButton(secondaryController, kY.value).whenHeld(setIntakePnemuaticUp())
         JoystickButton(secondaryController, kX.value).whenHeld(setManualShootingPower(secondaryController))
-        JoystickButton(secondaryController, kA.value).whenHeld(setIntakePnemuaticDown())
+//        JoystickButton(secondaryController, kA.value).whenHeld(setIntakePnemuaticDown())
         JoystickButton(secondaryController, kB.value).whenHeld(runGateBackward())
 
         // POVButton(secondaryController, 0).whenHeld(runWinchAllTheWayUp())
         // POVButton(secondaryController, 180).whenHeld(runWinchAllTheWayDown())
         // POVButton(secondaryController, 135).whenHeld(runWinchHalfway())
 
-        JoystickButton(secondaryController, kLeftStick.value).whenHeld(AutoClimb(winch, climbPneumatics))
+//        JoystickButton(secondaryController, kLeftStick.value).whenHeld(AutoClimb(winch, climbPneumatics))
 
-        POVButton(secondaryController, 0).whenHeld(setClimberPneumaticForward())
-        POVButton(secondaryController, 180).whenHeld(setClimberPneumaticBackward())
+//        POVButton(secondaryController, 0).whenHeld(setClimberPneumaticForward())
+//        POVButton(secondaryController, 180).whenHeld(setClimberPneumaticBackward())
 
 
     }
@@ -234,7 +234,7 @@ class RobotContainer {
         // Shoot based on vision [4pt] then drive backwards to clear tarmac [2pt]
         autoCommandChooser.addOption("Shoot Vision + Drive forward [6pt]",
             SequentialCommandGroup(
-                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
+//                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
                 ParallelCommandGroup(
                     DrivetrainPIDCommand(drivetrain) {
                         DifferentialDriveWheelSpeeds(-2.0 * Constants.kDrivetrainFineForwardSpeed, -2.0 * Constants.kDrivetrainFineForwardSpeed)
@@ -264,7 +264,7 @@ class RobotContainer {
 
         autoCommandChooser.setDefaultOption("Static shoot + backup + vision shoot [10pt]",
             SequentialCommandGroup(
-                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
+//                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward).withTimeout(0.1),
                 DrivetrainPIDCommand(drivetrain) {
                     DifferentialDriveWheelSpeeds(-1.0 * Constants.kDrivetrainFineForwardSpeed, -1.0 * Constants.kDrivetrainFineForwardSpeed)
                 }.withTimeout(1.0),
