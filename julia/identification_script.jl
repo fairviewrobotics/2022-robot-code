@@ -17,7 +17,10 @@ function get_closed_loop(k=20.2, T=1/20.2, ωp=20.1, phasemargin=60.1)
 
 end
 
-P_cl, P, kp, ki = get_closed_loop();
+k = 20; # DC gain of the response
+L = 1/k; # phase lag of the response
+
+P_cl, P, kp, ki = get_closed_loop(k, L);
 
 print("Closed-Loop Proportional Gain Kp = "); println(kp);
 print("Closed-Loop Integral Gain Ki = "); println(ki);
