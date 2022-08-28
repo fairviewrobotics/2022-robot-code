@@ -113,6 +113,7 @@ if __name__ == "__main__":
         data = file.read().replace('\n', '')
 
     instance = VisionInstance(data)
+    # MARK: Layers are added here
     layers = [
         ShowGrayscale(instance)
     ]
