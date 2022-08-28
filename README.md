@@ -1,17 +1,14 @@
 Welcome to the 2036 code repo!
 
 # Development values
---- 
 - *High-Octane*: Good code is fast to onboard to, fast to add to, and fast to build and deploy.
 - *Modular*: Not just good code, but good software is extendable and configurable.
 - *Robust*: Good code stands up to any obstacle it faces.
 
 # robot/
----
 This directory contains all of the WPILib code that runs on the roboRIO. It is a standard Kotlin project, and can be built and deployed using Gradle.
 
 # vision/
----
 
 ## JSON configuration
 The configuration for cameras is done through JSON. Do not modify the config.robot.json; this is the config that is used on the RaspberryPi on the robot for production code.

@@ -79,6 +79,9 @@ class VisionLayer():
         "If debug is enabled, then this also runs every frame."
         pass
 
+    def stream(self):
+        "If stream is enabled, then this runs every frame and returns a frame to display on the web client."
+        pass
     def end(self):
         "Run when vision process is terminated."
         pass
