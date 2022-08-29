@@ -3,7 +3,6 @@ import json
 import sys
 import numpy as np
 import cv2 as cv
-from BallVision import BallVision
 
 class VisionInstance():
     cameraSources = {}
@@ -90,7 +89,7 @@ class VisionLayer():
     def end(self):
         "Run when vision process is terminated."
         pass
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='2036 vision process.')
     parser.add_argument('config', metavar='config', type=str, help='file to parse for config')
@@ -107,11 +106,10 @@ if __name__ == "__main__":
 
     instance = VisionInstance(data)
 
-    layers = [
-        ShowGrayscale(instance)
-    ]
+    layers = []
 
     if sys.platform.startswith('linux'):
+        from BallVision import BallVision
         instance.log("Detected Linux system. Adding layers that only work with Linux (tflite_runtime dependent)...")
         layers.append(BallVision(instance))
         

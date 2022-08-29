@@ -8,3 +8,4 @@ simgui.json
 .vscode/
 lib
 ./vision/high_goal_python/__pycache__
+**/__pycache__
