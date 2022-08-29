@@ -6,7 +6,7 @@ These programs were originally written in C++ and have been rewritten in Python.
 - Numpy
 - OpenCV 3+
 
-## high_goal module
+## HighGoal module
 This module contains methods for getting target information such as angles and distance.
 It uses the scoring methods from the __target_scoring__ module to select the most viable
 targets, and the pipeline methods from the __pipeline__ module to find potential target contours

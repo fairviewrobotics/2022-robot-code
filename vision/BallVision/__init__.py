@@ -1,15 +1,10 @@
 import collections
-import struct
 import cv2
-import pickle
 import math
 import numpy as np
 import tflite_runtime.interpreter as tflite
-from threading import Thread
-
 from networktables import NetworkTablesInstance
-from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
-
+from .. import VisionLayer
 
 
 class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
@@ -27,16 +22,16 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
                     ymax=sy * self.ymax)
 
 
-class Tester:
-    def __init__(self, config_parser):
-        print("Loading model...")
+class BallVision(VisionLayer):
+    def __init__(self, visionInstance):
+        super().__init__(visionInstance)
+        self.visionInstance.log("Loading tflite model for ball vision...")
         try:
             model_path = "output_tflite_graph_edgetpu.tflite"
             self.interpreter = tflite.Interpreter(model_path, experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
         except Exception as e:
-            print(e)
-            print("Failed to create Interpreter with Coral, switching to unoptimized")
+            self.visionInstance.log("Failed to create Coral interpreter, switching to unoptimized for ball vision")
             model_path = "output_tflite_graph.tflite"
             self.interpreter = tflite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
@@ -47,7 +42,7 @@ class Tester:
         self.temp_entry = []
 
         # set up network tables
-        print("Setting up network tables...")
+        self.visionInstance.log("Getting networktables instance for ball vision")
         self.ntinst = NetworkTablesInstance.getDefault()
         self.ntinst.startClientTeam(2036)
         self.ntinst.startDSClient()
@@ -57,18 +52,6 @@ class Tester:
         self.angle_entry = self.table.getEntry("targetAngle")
         self.found_target_entry = self.table.getEntry("foundTarget")
         self.distance_entry = self.table.getEntry("distanceToBall")
-
-        # set up camera server
-        print("Satring camera server")
-        cs = CameraServer.getInstance()
-        camera_config = config_parser.cameras[0]
-        camera = cs.startAutomaticCapture(name=camera_config["name"], path=camera_config["path"])
-        WIDTH, HEIGHT = camera_config["width"], camera_config["height"]
-        camera.setResolution(WIDTH, HEIGHT)
-        self.cvSink = cs.getVideo()
-        self.img = np.zeros(shape=(HEIGHT, WIDTH, 3), dtype=np.uint8)
-        self.output = cs.putVideo("Axon", WIDTH, HEIGHT)
-        self.frames = 0
 
         # camera_to_ball_distance_vert = distance between the camera and ball (units_unknown) measured using tape measurer 
         self.camera_to_ball_distance_vert = 0
@@ -86,77 +69,65 @@ class Tester:
         return box[2] - box[0]
 
     def run(self):
-        while True:
-            ret, frame = self.cvSink.grabFrame(self.img)
-            if ret is True:
-                scale = self.set_input(frame)
-                self.interpreter.invoke()
-                boxes, class_ids, scores, _, _ = self.get_output(scale)
-                width, height = self.input_size()
-                resized = cv2.resize(frame, (width, height))
+        super().run()
+        
+        frame = self.visionInstance.get("ballvision")
+        
+        scale = self.set_input(frame)
+        self.interpreter.invoke()
+        boxes, class_ids, scores, _, _ = self.get_output(scale)
+        width, height = self.input_size()
+        resized = cv2.resize(frame, (width, height))
 
-                best_box = None
-                best_box_score = 0
-                best_box_label = ""
+        best_box = None
+        best_box_score = 0
 
-                for i, box in enumerate(boxes):
-                    if scores[i] > 0.4 and self.check_box(box):
-                        class_id = class_ids[i]
+        for i, box in enumerate(boxes):
+            if scores[i] > 0.4 and self.check_box(box):
+                class_id = class_ids[i]
 
-                        score = self.score_box(box)
-                        if score > best_box_score:
-                            best_box_score = score
-                            best_box = box
+                score = self.score_box(box)
+                if score > best_box_score:
+                    best_box_score = score
+                    best_box = box
 
-                        if np.isnan(class_id):
-                            continue
+                if np.isnan(class_id):
+                    continue
 
-                        class_id = int(class_id)
-                        if class_id not in range(len(self.labels)):
-                            continue
-                        
-                        color = (0, 0, 255)
-
-                        resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width, height, color)
-
-                self.output.putFrame(resized)
+                class_id = int(class_id)
+                if class_id not in range(len(self.labels)):
+                    continue
                 
-                # write result to network tables
-                if best_box is None:
-                    self.angle_entry.setNumber(0)
-                    self.found_target_entry.setBoolean(False)
-                else:
-                    alpha = 80 # deg, half the camera's field of view
-                    focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+                color = (0, 0, 255)
 
-                    center = (best_box[2] + best_box[0]) / 2 # screen center x as a proportion
-                    offset = (center - 0.5) # units in percentage of image, distance to center
-                    target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
-                    self.angle_entry.setNumber(target_yaw)
-                    self.found_target_entry.setBoolean(True)
-                    print('Yaw:', math.degrees(target_yaw))
+                resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width, height, color)
 
-                    center = (best_box[3] + best_box[1]) / 2 # screen center y as a proportion
-                    offset = (center - 0.5) # units in percentage of image, distance to center
-                    focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
-                    target_pitch = math.atan(offset / focalLen) # plate scale
-                    distance = self.get_distance_to_target(target_pitch)
-                    self.distance_entry.setNumber(distance)
-                    print('Pitch:', math.degrees(target_pitch))
-                self.ntinst.flush()
+        self.output.putFrame(resized)
+        
+        # write result to network tables
+        if best_box is None:
+            self.angle_entry.setNumber(0)
+            self.found_target_entry.setBoolean(False)
+        else:
+            alpha = 80 # deg, half the camera's field of view
+            focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
 
-                # # stream output to socket
-                # try:
-                #     data = pickle.dumps(resized)
-                #     message_size = struct.pack("L", len(data))
-                #     self.conn.sendall(message_size + data)
-                # except Exception as e:
-                #     print(e)
-            else:
-                print("Image failed")
-                continue
+            center = (best_box[2] + best_box[0]) / 2 # screen center x as a proportion
+            offset = (center - 0.5) # units in percentage of image, distance to center
+            target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
+            self.angle_entry.setNumber(target_yaw)
+            self.found_target_entry.setBoolean(True)
+            super().log('Yaw:', math.degrees(target_yaw))
 
-    
+            center = (best_box[3] + best_box[1]) / 2 # screen center y as a proportion
+            offset = (center - 0.5) # units in percentage of image, distance to center
+            focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+            target_pitch = math.atan(offset / focalLen) # plate scale
+            distance = self.get_distance_to_target(target_pitch)
+            self.distance_entry.setNumber(distance)
+            super().log('Pitch:', math.degrees(target_pitch))
+        self.ntinst.flush()
+
     def input_size(self):
         """Returns input image size as (width, height) tuple."""
         _, height, width, _ = self.interpreter.get_input_details()[0]['shape']
@@ -231,10 +202,3 @@ class Tester:
         # Draw label text
         cv2.putText(frame, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
         return frame
-
-
-if __name__ == "__main__":
-    config_file = "vision-config.json"
-    config_parser = ConfigParser(config_file)
-    tester = Tester(config_parser)
-    tester.run()

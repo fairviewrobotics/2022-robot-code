@@ -3,6 +3,7 @@ import json
 import sys
 import numpy as np
 import cv2 as cv
+from BallVision import BallVision
 
 class VisionInstance():
     cameraSources = {}
@@ -71,6 +72,9 @@ class VisionLayer():
     def __init__(self, visionInstance: VisionInstance):
         self.visionInstance = visionInstance
 
+    def log(self, str: str):
+        self.visionInstance.log(f"{type(self).__name__} | {str}")
+
     def run(self):
         "Run every frame."
         pass
@@ -82,25 +86,11 @@ class VisionLayer():
     def stream(self):
         "If stream is enabled, then this runs every frame and returns a frame to display on the web client."
         pass
+
     def end(self):
         "Run when vision process is terminated."
         pass
-
-class ShowGrayscale(VisionLayer):
-    def __init__(self, visionInstance: VisionInstance):
-        super().__init__(visionInstance)
     
-    def run(self):
-        super().run()
-        self.frame = self.visionInstance.get("BigWanda")
-
-    def debug(self):
-        super().debug()
-        cv.imshow("frame", cv.cvtColor(self.frame, cv.COLOR_BGR2GRAY))
-
-    def end(self):
-        super().end()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='2036 vision process.')
     parser.add_argument('config', metavar='config', type=str, help='file to parse for config')
@@ -116,11 +106,15 @@ if __name__ == "__main__":
         data = file.read().replace('\n', '')
 
     instance = VisionInstance(data)
-    # MARK: Layers are added here
+
     layers = [
         ShowGrayscale(instance)
     ]
 
+    if sys.platform.startswith('linux'):
+        instance.log("Detected Linux system. Adding layers that only work with Linux (tflite_runtime dependent)...")
+        layers.append(BallVision(instance))
+        
     while True:
         for layer in layers:
             layer.run()
