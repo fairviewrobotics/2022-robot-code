@@ -1,45 +1,45 @@
-# 2022 Robot Code
+Welcome to the 2036 code repo!
 
-Code for FRC 2036 Black Knights' 2022 Rapid React robot.
+# Development values
+- *High-Octane*: Good code is fast to onboard to, fast to add to, and fast to build and deploy.
+- *Modular*: Not just good code, but good software is extendable and configurable.
+- *Robust*: Good code stands up to any obstacle it faces.
 
-## Environment
-This project is most compatible with Java 11, which is
-not the most recent version of Java. 
+# Poetry
+Poetry is a dependency management tool for Python. What makes this a great alternative to pip is that it almost ensures fully reproducible builds and development environments on Windows, MacOS, Linux, and the robot Raspberry Pi. Follow the installation instructions in its [documentation](https://python-poetry.org/docs/). Then, for any project that uses poetry, run `poetry install` to create a virtualenv, and run `poetry env` to boot into that virtualenv. Then run whatever python command you normally use to run the project!
 
-It is 
-recommended to use [jEnv](https://github.com/jenv/jenv)
-to switch between Java versions on Mac OS and Linux.
-I followed [these](https://chamikakasun.medium.com/how-to-manage-multiple-java-version-in-macos-e5421345f6d0)
-instructions to set up jEnv on macOS Big Sur.
+# robot/
+This directory contains all of the WPILib code that runs on the roboRIO. It is a standard Kotlin project, and can be built and deployed using Gradle.
 
-## Installing the JVM (Ubuntu/Debian based systems)
--	`sudo apt install -y openjdk-11-jdk` - install the JVM
--	`echo export JAVA_HOME=/usr/lib/jvm/java-1.11.0-openjdk-amd64 >> ~/.bashrc` - Make sure Gradle knows where your Java installation is
--	`source ~/.bashrc` - Update your terminal
+# vision/
 
-## Installing the JVM (Windows 10/11)
+## tflite-runtime, Poetry, and you
+BallVision needs a specific library called tflite-runtime which a) does not work with Poetry and b) only works on Linux. When you need to use this system, install `tflite-runtime` by running `python3 -m pip install tflite-runtime`. I've added nessecary code that only adds this layer if its running on a linux system.
 
-Note: You must create an Oracle account in order to download Java.
+(sidenote: do not let whoever tooled ballvision write any code for the team again)
 
--	Go to the Java 11 download page [here](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)
--	Install the file once it has finished downloading and restart your computer
--	Download the file marked as the Windows x64 Installer for the JAVA SE Development Kit 10.11.11
+## JSON configuration
+The configuration for cameras is done through JSON. Do not modify the config.robot.json; this is the config that is used on the RaspberryPi on the robot for production code.
+Instead, write your own config file (perhaps named config.development.json) and pass it into the script.
 
-## Building
+Here is the format that VisionInstance expects:
 
-This project uses gradle as its build system. The GradleRIO plugin provides a wide number of FRC specific gradle commands (see [here](https://github.com/wpilibsuite/GradleRIO) for details).
-
-The major commands are:
--	`./gradlew build` - build the project
--	`./gradlew deploy` - deploy code to the robot (or `./gradlew build deploy` to do both)
--	`./gradlew riolog` - display the rio log output
-
-Deploying and displaying the log require your computer to be connected to the robot (tethered over ethernet or connected to the robot's radio).
-
-Passing the `--offline` flag to gradle will prevent it from trying to update and/or download dependencies, which can be useful at competition.
-
-It is **highly recommended** to use intellij when working on the code. VSCode, though it is the officially supported editor, provides *very* limited code completion. Intellij provides excellent code completion, especially for kotlin.
-
-## FRC Documentation
-The documentation for the FRC Control System can be found [here](https://docs.wpilib.org/en/latest/). These are very useful to refer to.
-
+```
+{
+    "team": This must be the team number (2036). Right now this is not needed but may be used later down the line for network verification/identification.
+    "cameras": [
+        This is the array of camera instances.
+        {
+            "name": Give the camera a name. THIS IS HOW YOU'LL IDENTIFY AND GET A CAMERA'S FRAMES IN CODE!
+            "id": The id of the camera. Can either be identified through an index (for windows) or through a device path. (for linux, macos(?), and robotpi)
+            "props": [
+                This is an array of properties that will be set when the VisionInstance first runs.
+                {
+                    "key": What property you want to set. You can find the available ones to tune [here](https://docs.opencv.org/4.6.0/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d).
+                    "value": What value you want to set the property to.
+                }
+            ]
+        }
+    ] 
+}
+```
