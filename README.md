@@ -33,7 +33,7 @@ Here is the format that VisionInstance expects:
             "props": [
                 This is an array of properties that will be set when the VisionInstance first runs.
                 {
-                    "key": What property you want to set. You can find the available ones to tune [here](https://docs.opencv.org/4.6.0/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d).
+                    "key": What property you want to set. You can find the available ones to tune here: https://docs.opencv.org/4.6.0/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d.
                     "value": What value you want to set the property to.
                 }
             ]
@@ -41,3 +41,11 @@ Here is the format that VisionInstance expects:
     ] 
 }
 ```
+
+# liverecord/
+This is the code for the viewing of LiveRecords - graph (cartesian) data from the robot.
+
+The protocol is as follows:
+* There exists a NetworkTables table called `liverecord`.
+* The keys of entries of `liverecord` are the data it is collecting, for example `piddata` or `encoderposition`.
+* The values of entries of `liverecord` are csv values containing the x data and y data, for example `2.5,3.6` or `20,19.7`. As of right now liverecord **only supports 2d data**.
