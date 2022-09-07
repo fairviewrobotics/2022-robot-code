@@ -45,6 +45,9 @@
 # BlueJ files
 *.ctxt
 
+#IntelliJ Project Files
+.idea
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
