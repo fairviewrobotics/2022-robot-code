@@ -28,6 +28,12 @@ import frc.robot.subsystems.*
 import frc.robot.commands.*
 import java.lang.Math.PI
 
+fun newLiveRecord(name: String): NetworkTableEntry {
+    val ntInst = NetworkTableInstance.getDefault()
+    val table = ntInst.getTable("liverecord")
+    val key = table.getEntry(name)
+    return key
+}
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the [Robot]

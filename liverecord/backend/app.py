@@ -1,3 +1,4 @@
+from random import random
 from typing import Dict, List
 from flask import Flask
 from flask_cors import CORS
@@ -20,6 +21,7 @@ CORS(app)
 
 
 def entryListener(source, key, value: str, isNew):
+    print("RUNNING")
     print(f"{key} | {value}")
     newRecord = value.split(",")
 
