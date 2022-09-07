@@ -6,7 +6,7 @@ Welcome to the 2036 code repo!
 - *Robust*: Good code stands up to any obstacle it faces.
 
 # Poetry
-Poetry is a dependency management tool for Python. What makes this a great alternative to pip is that it almost ensures fully reproducible builds and development environments on Windows, MacOS, Linux, and the robot Raspberry Pi. Follow the installation instructions in its [documentation](https://python-poetry.org/docs/). Then, for any project that uses poetry, run `poetry install` to create a virtualenv, and run `poetry env` to boot into that virtualenv. Then run whatever python command you normally use to run the project!
+Poetry is a dependency management tool for Python. What makes this a great alternative to pip is that it almost ensures fully reproducible builds and development environments on Windows, MacOS, Linux, and the robot Raspberry Pi. Follow the installation instructions in its [documentation](https://python-poetry.org/docs/). Then, for any project that uses poetry, run `poetry install` to create a virtualenv, and run `poetry shell` to boot into that virtualenv. Then run whatever python command you normally use to run the project!
 
 # robot/
 This directory contains all of the WPILib code that runs on the roboRIO. It is a standard Kotlin project, and can be built and deployed using Gradle.
@@ -15,8 +15,6 @@ This directory contains all of the WPILib code that runs on the roboRIO. It is a
 
 ## tflite-runtime, Poetry, and you
 BallVision needs a specific library called tflite-runtime which a) does not work with Poetry and b) only works on Linux. When you need to use this system, install `tflite-runtime` by running `python3 -m pip install tflite-runtime`. I've added nessecary code that only adds this layer if its running on a linux system.
-
-(sidenote: do not let whoever tooled ballvision write any code for the team again)
 
 ## JSON configuration
 The configuration for cameras is done through JSON. Do not modify the config.robot.json; this is the config that is used on the RaspberryPi on the robot for production code.
