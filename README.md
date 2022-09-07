@@ -49,3 +49,10 @@ The protocol is as follows:
 * There exists a NetworkTables table called `liverecord`.
 * The keys of entries of `liverecord` are the data it is collecting, for example `piddata` or `encoderposition`.
 * The values of entries of `liverecord` are csv values containing the x data and y data, for example `2.5,3.6` or `20,19.7`. As of right now liverecord **only supports 2d data**.
+
+There is a weird issue with node_modules not being ignored by git, always make sure you do not commit that directory when working with this module!
+
+The backend of liverecord uses Flasks, which recieves the NetworkTables values and sends them to the frontend using SocketIO. The frontend uses Svelte, HighCharts, and SocketIO for rendering and recieving data respectively.
+
+# pid-solver/
+This is the code for PID solving. Pranav or Elena, write some docs!!!!!
