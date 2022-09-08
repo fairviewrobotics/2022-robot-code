@@ -106,7 +106,8 @@ if __name__ == "__main__":
 
     instance = VisionInstance(data)
 
-    layers = []
+    layers = [
+    ]
 
     if sys.platform.startswith('linux'):
         from BallVision import BallVision

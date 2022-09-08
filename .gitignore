@@ -9,3 +9,5 @@ simgui.json
 lib
 ./vision/high_goal_python/__pycache__
 **/__pycache__
+./liverecord/frontend/node_modules/
+node_modules

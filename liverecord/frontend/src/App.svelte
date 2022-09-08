@@ -1,30 +1,57 @@
 <script lang="ts">
   import { io } from "socket.io-client";
+import highcharts from "./highcharts";
 
-  let text = "Loading..."
-  let count = 0
+  let state: { [index: string]: Array<Array<number>> } = {}
   
+  function computeChartConfigs(chartDatas: { [index: string]: Array<Array<number>> }) {
+    let configs = []
+    for (const chart of Object.entries(chartDatas)) {
+      configs.push({
+        chart: {
+          type: 'spline'
+        },
+        title: {
+          text: chart[0]
+        },
+        xAxis: {
+          title: {
+            text: 'X'
+          }
+        },
+        yAxis: {
+          title: {
+            text: 'Y'
+          }
+        },
+        series: [
+          {
+            name: chart[0],
+            data: chart[1]
+          }
+        ]
+      })
+    }
+    return configs
+  }
+
+  $: chartConfigs = computeChartConfigs(state)
+  $: {
+    console.log("Something is being modified.")
+  }
   const socket = io("http://localhost:5000")
-  socket.on("Testing", (args) => {
-    text = "SOMETHING HAPPENED!"
+  socket.on("fullPayload", (args) => {
+    state = args
+  })
+
+  socket.on("newValue", (args) => {
+    const toModify = state
+    toModify[args["key"]].push(args["value"])
+    state = toModify
   })
 </script>
 
-<h1>{text}</h1>
-<button on:click={() => { count = count + 1}}>{count}</button>
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
+
+{#each chartConfigs as config}
+  <div class="chart" use:highcharts={config}></div>  
+{/each}

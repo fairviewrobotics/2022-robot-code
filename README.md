@@ -6,7 +6,7 @@ Welcome to the 2036 code repo!
 - *Robust*: Good code stands up to any obstacle it faces.
 
 # Poetry
-Poetry is a dependency management tool for Python. What makes this a great alternative to pip is that it almost ensures fully reproducible builds and development environments on Windows, MacOS, Linux, and the robot Raspberry Pi. Follow the installation instructions in its [documentation](https://python-poetry.org/docs/). Then, for any project that uses poetry, run `poetry install` to create a virtualenv, and run `poetry env` to boot into that virtualenv. Then run whatever python command you normally use to run the project!
+Poetry is a dependency management tool for Python. What makes this a great alternative to pip is that it almost ensures fully reproducible builds and development environments on Windows, MacOS, Linux, and the robot Raspberry Pi. Follow the installation instructions in its [documentation](https://python-poetry.org/docs/). Then, for any project that uses poetry, run `poetry install` to create a virtualenv, and run `poetry shell` to boot into that virtualenv. Then run whatever python command you normally use to run the project!
 
 # robot/
 This directory contains all of the WPILib code that runs on the roboRIO. It is a standard Kotlin project, and can be built and deployed using Gradle.
@@ -15,8 +15,6 @@ This directory contains all of the WPILib code that runs on the roboRIO. It is a
 
 ## tflite-runtime, Poetry, and you
 BallVision needs a specific library called tflite-runtime which a) does not work with Poetry and b) only works on Linux. When you need to use this system, install `tflite-runtime` by running `python3 -m pip install tflite-runtime`. I've added nessecary code that only adds this layer if its running on a linux system.
-
-(sidenote: do not let whoever tooled ballvision write any code for the team again)
 
 ## JSON configuration
 The configuration for cameras is done through JSON. Do not modify the config.robot.json; this is the config that is used on the RaspberryPi on the robot for production code.
@@ -35,7 +33,7 @@ Here is the format that VisionInstance expects:
             "props": [
                 This is an array of properties that will be set when the VisionInstance first runs.
                 {
-                    "key": What property you want to set. You can find the available ones to tune [here](https://docs.opencv.org/4.6.0/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d).
+                    "key": What property you want to set. You can find the available ones to tune here: https://docs.opencv.org/4.6.0/d4/d15/group__videoio__flags__base.html#gaeb8dd9c89c10a5c63c139bf7c4f5704d.
                     "value": What value you want to set the property to.
                 }
             ]
@@ -43,3 +41,18 @@ Here is the format that VisionInstance expects:
     ] 
 }
 ```
+
+# liverecord/
+This is the code for the viewing of LiveRecords - graph (cartesian) data from the robot.
+
+The protocol is as follows:
+* There exists a NetworkTables table called `liverecord`.
+* The keys of entries of `liverecord` are the data it is collecting, for example `piddata` or `encoderposition`.
+* The values of entries of `liverecord` are csv values containing the x data and y data, for example `2.5,3.6` or `20,19.7`. As of right now liverecord **only supports 2d data**.
+
+There is a weird issue with node_modules not being ignored by git, always make sure you do not commit that directory when working with this module!
+
+The backend of liverecord uses Flasks, which recieves the NetworkTables values and sends them to the frontend using SocketIO. The frontend uses Svelte, HighCharts, and SocketIO for rendering and recieving data respectively.
+
+# pid-solver/
+This is the code for PID solving. Pranav or Elena, write some docs!!!!!
