@@ -2,9 +2,11 @@ import collections
 import cv2
 import math
 import numpy as np
-import tflite_runtime.interpreter as tflite
+import tensorflow as tf
 from networktables import NetworkTablesInstance
-from .. import VisionLayer
+import sys
+sys.path.append("..")
+from common import VisionLayer
 
 
 class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
@@ -23,17 +25,18 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
 
 
 class BallVision(VisionLayer):
+
     def __init__(self, visionInstance):
         super().__init__(visionInstance)
         self.visionInstance.log("Loading tflite model for ball vision...")
         try:
             model_path = "output_tflite_graph_edgetpu.tflite"
-            self.interpreter = tflite.Interpreter(model_path, experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
+            self.interpreter = tf.lite.Interpreter(model_path, experimental_delegates=[tf.lite.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
         except Exception as e:
             self.visionInstance.log("Failed to create Coral interpreter, switching to unoptimized for ball vision")
-            model_path = "output_tflite_graph.tflite"
-            self.interpreter = tflite.Interpreter(model_path)
+            model_path = "BallVision/output_tflite_graph.tflite"
+            self.interpreter = tf.lite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
 
         self.interpreter.allocate_tensors()
@@ -71,7 +74,7 @@ class BallVision(VisionLayer):
     def run(self):
         super().run()
         
-        frame = self.visionInstance.get("ballvision")
+        frame = self.visionInstance.get("BigWanda")
         
         scale = self.set_input(frame)
         self.interpreter.invoke()
@@ -102,8 +105,9 @@ class BallVision(VisionLayer):
 
                 resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width, height, color)
 
-        self.output.putFrame(resized)
-        
+        # self.output.putFrame(resized)
+        self.debugOutput = resized
+
         # write result to network tables
         if best_box is None:
             self.angle_entry.setNumber(0)
@@ -117,7 +121,7 @@ class BallVision(VisionLayer):
             target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
             self.angle_entry.setNumber(target_yaw)
             self.found_target_entry.setBoolean(True)
-            super().log('Yaw:', math.degrees(target_yaw))
+            super().log('Yaw: ' + str(math.degrees(target_yaw)))
 
             center = (best_box[3] + best_box[1]) / 2 # screen center y as a proportion
             offset = (center - 0.5) # units in percentage of image, distance to center
@@ -125,8 +129,15 @@ class BallVision(VisionLayer):
             target_pitch = math.atan(offset / focalLen) # plate scale
             distance = self.get_distance_to_target(target_pitch)
             self.distance_entry.setNumber(distance)
-            super().log('Pitch:', math.degrees(target_pitch))
+            super().log('Pitch:' + str(math.degrees(target_pitch)))
+            super().log('Distance: ' + str(distance))
         self.ntinst.flush()
+
+    def debug(self):
+        super().debug()
+
+        cv2.imshow("frame", self.debugOutput)
+        cv2.waitKey(1)
 
     def input_size(self):
         """Returns input image size as (width, height) tuple."""
