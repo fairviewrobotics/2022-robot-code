@@ -6,7 +6,7 @@ mode = "BOTH"
 
 parser = argparse.ArgumentParser(description='Find PID values')
 parser.add_argument('filename', metavar='filename', type=str, nargs=1, help='File that will be parsed')
-parser.add_argument('mode', metavar='mode', choices = ["ZN", "CC", "BOTH"], default = "BOTH", nargs=1, help='Type of pid tuning method that will be used')
+parser.add_argument('mode', metavar='mode', choices = ["ZN", "CC", "BOTH"], default = "BOTH", nargs=1, help='Type of pid tuning method that will be used (Acceptable arguments: BOTH, ZN, CC)')
 args = parser.parse_args()
 
 if (len(sys.argv) < 2):
@@ -23,7 +23,7 @@ if not exists(filename):
     sys.exit()
 
 if (mode != "BOTH" and mode != "ZN" and mode != "CC"):
-    print("Please pass in a valid method:\n ZN for Ziegler Nichol's Open Loop Method \n CC for the Cohen-Coon Open Loop Method \n BOTH for both of them")
+    print("Please pass in a valid method:\n ZN for Ziegler Nichols Open Loop Method \n CC for the Cohen-Coon Open Loop Method \n BOTH for both of them")
     sys.exit()
 
 c = 2

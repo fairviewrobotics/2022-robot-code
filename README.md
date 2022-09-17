@@ -55,4 +55,24 @@ There is a weird issue with node_modules not being ignored by git, always make s
 The backend of liverecord uses Flasks, which recieves the NetworkTables values and sends them to the frontend using SocketIO. The frontend uses Svelte, HighCharts, and SocketIO for rendering and recieving data respectively.
 
 # pid-solver/
-This is the code for PID solving. Pranav or Elena, write some docs!!!!!
+This is the code for PID solving. It will output values needed for the Cohen-Coon Open Loop and Ziegler Nichols Open Loop tuning methods. 
+
+It takes a csv file containing columns for time, observed velocity, and the set velocity (in order from left to right), ignoring the first row containing headers. 
+
+Run pid.py and specify the flag "--help" for more information on the arguments it accepts.
+
+Here is a sample CSV that the code would accept. 
+
+```
+time, observed_velocity, set_velocity
+0, 0, 2.5
+1, 0, 2.5
+2, 1.1, 2.5
+3, 2, 2.5
+4, 2.3, 2.5
+5, 2.5, 2.5
+```
+
+Example way to output PID values for both of the methods: ```python3 pid.py filename.csv BOTH```
+Example way to output PID values for the Ziegler Nichols Method: ```python3 pid.py filename.csv ZN```
+Example way to output PID values for the Cohen-Coon Method: ```python3 pid.py filename.csv CC```
