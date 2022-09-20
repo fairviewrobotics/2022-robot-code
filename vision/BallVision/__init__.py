@@ -3,7 +3,8 @@ import cv2
 import math
 import numpy as np
 import tensorflow as tf
-from networktables import NetworkTablesInstance
+import json
+from networktables import NetworkTables
 import sys
 sys.path.append("..")
 from common import VisionLayer
@@ -25,7 +26,6 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
 
 
 class BallVision(VisionLayer):
-
     def __init__(self, visionInstance):
         super().__init__(visionInstance)
         self.visionInstance.log("Loading tflite model for ball vision...")
@@ -46,15 +46,15 @@ class BallVision(VisionLayer):
 
         # set up network tables
         self.visionInstance.log("Getting networktables instance for ball vision")
-        self.ntinst = NetworkTablesInstance.getDefault()
-        self.ntinst.startClientTeam(2036)
-        self.ntinst.startDSClient()
-        self.table = self.ntinst.getTable("ML")
+        NetworkTables.initialize(server="roborio-2036-frc.local")
+        self.table = NetworkTables.getTable("ML")
 
         self.fps_entry = self.table.getEntry("fps")
         self.angle_entry = self.table.getEntry("targetAngle")
         self.found_target_entry = self.table.getEntry("foundTarget")
         self.distance_entry = self.table.getEntry("distanceToBall")
+
+        self.ball_data_entry = self.table.getEntry("ballData")
 
         # camera_to_ball_distance_vert = distance between the camera and ball (units_unknown) measured using tape measurer 
         self.camera_to_ball_distance_vert = 0
@@ -74,7 +74,7 @@ class BallVision(VisionLayer):
     def run(self):
         super().run()
         
-        frame = self.visionInstance.get("BigWanda")
+        frame = self.visionInstance.get("BallVision")
         
         scale = self.set_input(frame)
         self.interpreter.invoke()
@@ -85,14 +85,44 @@ class BallVision(VisionLayer):
         best_box = None
         best_box_score = 0
 
+        ballJSON = {} #json containing data about the balls found
+        counter = 0 #id assigned for each of the balls found
+
         for i, box in enumerate(boxes):
             if scores[i] > 0.4 and self.check_box(box):
                 class_id = class_ids[i]
+
+                oneBallData = {} #contains data for one individual ball found
 
                 score = self.score_box(box)
                 if score > best_box_score:
                     best_box_score = score
                     best_box = box
+                
+                alpha = 80 # deg, half the camera's field of view
+                focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+
+                center = (box[2] + box[0]) / 2 # screen center x as a proportion
+                offset = (center - 0.5) # units in percentage of image, distance to center
+                target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
+                # super().log('Yaw: ' + str(math.degrees(target_yaw)))
+
+                center = (box[3] + box[1]) / 2 # screen center y as a proportion
+                offset = (center - 0.5) # units in percentage of image, distance to center
+                focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
+                target_pitch = math.atan(offset / focalLen) # plate scale
+                distance = self.get_distance_to_target(target_pitch)
+                # super().log('Pitch:' + str(math.degrees(target_pitch)))
+                # super().log('Distance: ' + str(distance))
+
+                oneBallData['target_yaw'] = target_yaw #adds yaw, distance, pitch to the dictionary containing info for one ball
+                oneBallData['distance'] = distance
+                oneBallData['pitch'] = math.degrees(target_pitch)
+
+                ballJSON[counter] = oneBallData #add data for one individual ball to the json
+                ballJSONString = json.dumps(ballJSON) #convert json to string
+                self.log(f"{ballJSONString}")
+                self.ball_data_entry.setString(ballJSONString)
 
                 if np.isnan(class_id):
                     continue
@@ -110,16 +140,19 @@ class BallVision(VisionLayer):
 
         # write result to network tables
         if best_box is None:
-            self.angle_entry.setNumber(0)
+            self.angle_entry.setDouble(0)
             self.found_target_entry.setBoolean(False)
+            self.ball_data_entry.setString("{}")
         else:
+            
+
             alpha = 80 # deg, half the camera's field of view
             focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
 
             center = (best_box[2] + best_box[0]) / 2 # screen center x as a proportion
             offset = (center - 0.5) # units in percentage of image, distance to center
             target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
-            self.angle_entry.setNumber(target_yaw)
+            self.angle_entry.setDouble(target_yaw)
             self.found_target_entry.setBoolean(True)
             super().log('Yaw: ' + str(math.degrees(target_yaw)))
 
@@ -128,10 +161,10 @@ class BallVision(VisionLayer):
             focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
             target_pitch = math.atan(offset / focalLen) # plate scale
             distance = self.get_distance_to_target(target_pitch)
-            self.distance_entry.setNumber(distance)
+            self.distance_entry.setDouble(distance)
             super().log('Pitch:' + str(math.degrees(target_pitch)))
             super().log('Distance: ' + str(distance))
-        self.ntinst.flush()
+
 
     def debug(self):
         super().debug()

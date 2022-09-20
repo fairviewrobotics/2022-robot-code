@@ -2,18 +2,9 @@
     "team": 2036,
     "cameras": [
         {
-            "name": "BigWanda",
-            "id": 0,
-            "props": [
-                {
-                    "key": "CAP_PROP_FRAME_WIDTH",
-                    "value": 100
-                },
-                {
-                    "key": "CAP_PROP_FRAME_HEIGHT",
-                    "value": 100
-                }
-            ]
+            "name": "HighGoal",
+            "id": "/dev/video2",
+            "props": []
         }
     ]
 }

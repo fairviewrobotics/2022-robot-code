@@ -14,7 +14,7 @@ class Rect:
         # calculate center point
         # use built-in sum instead of numpy sum because numpy will add individual point data into a single *value*
         # while build-in sum will add together points as vectors to get a single *point* as the result
-        self.center = sum(self.box_points) / 4  # boxes have 4 corners
+        self.center = sum(self.box_points[0]) / 4  # boxes have 4 corners
 
         # calculate rectangle height, width, area, and rotation angle
         side = self.box_points[1:3]  # second and third points form a vertical side
@@ -27,7 +27,7 @@ class Rect:
 
         bottom_right = self.box_points[0]
         bottom_left = self.box_points[1]
-        self.angle = np.angle(bottom_right - bottom_left, deg=True)
+        self.angle = self.angle_between(bottom_right, bottom_left)
 
         # tall rectangles are considered rotated an additional 90 degrees
         if self.width < self.height:
@@ -40,3 +40,9 @@ class Rect:
     @property
     def center_y(self) -> float:
         return self.center[1]
+
+    def angle_between(self, p1, p2):
+        ang1 = np.arctan2(*p1[::-1])
+        ang2 = np.arctan2(*p2[::-1])
+        return np.rad2deg((ang1 - ang2) % (2 * np.pi))
+

@@ -10,7 +10,6 @@ python = "^3.10"
 numpy = "1.23.2"
 opencv-python = "^4.6.0"
 pynetworktables = "^2021.0.0"
-tflite-runtime = { file = "BallVision/tflite_runtime-2.5.0-cp35-cp35m-linux_x86_64.whl", platform="linux" }
 [tool.poetry.dev-dependencies]
 
 [build-system]
