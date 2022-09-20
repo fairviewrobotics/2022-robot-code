@@ -4,7 +4,7 @@ from math import tan, atan, hypot
 from typing import List
 
 # kernel for morphological transformations
-kernel = np.ones((3, 3), np.uint8)
+kernel = np.ones((5, 5), np.uint8)
 
 
 def get_filtered_contours(config: dict, source_image: np.ndarray) -> List[np.ndarray]:
@@ -21,8 +21,8 @@ def get_filtered_contours(config: dict, source_image: np.ndarray) -> List[np.nda
     vision_config = config['vision_config']
     image = source_image.copy()
 
+  #  image = apply_morph(vision_config, image)
     image = apply_hsv_filter(vision_config, image)
-    image = apply_morph(vision_config, image)
 
     return find_contours(image)
 
@@ -39,8 +39,8 @@ def apply_hsv_filter(config: dict, image: np.ndarray) -> np.ndarray:
     image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     # generate threshold mask
-    hsv_low = (config['hsv_low_h'], config['hsv_low_s'], config['hsv_low_h'])
-    hsv_high = (config['hsv_high_h'], config['hsv_high_s'], config['hsv_high_h'])
+    hsv_low = (config['hsv_low_h'], config['hsv_low_s'], config['hsv_low_v'])
+    hsv_high = (config['hsv_high_h'], config['hsv_high_s'], config['hsv_high_v'])
 
     return cv2.inRange(image, hsv_low, hsv_high)
 
@@ -58,7 +58,7 @@ def apply_morph(config: dict, image: np.ndarray) -> np.ndarray:
     if config['do_dilate']:
         image = cv2.dilate(image, kernel)
     opened = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
-    return cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
+    return opened#cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
 
 
 def find_contours(image: np.ndarray) -> List[np.ndarray]:

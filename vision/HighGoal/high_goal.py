@@ -3,9 +3,9 @@ import math
 import numpy as np
 from typing import List, Tuple
 from numpy import ndarray
-from pipeline import get_filtered_contours
-from target_scoring import check_target
-from rectangle import Rect
+from .pipeline import get_filtered_contours
+from .target_scoring import check_target
+from .rectangle import Rect
 
 
 def get_distance_to_target(target_pitch: float, target_height: float, camera_angle: float) -> float:
@@ -91,10 +91,9 @@ def find_targets(config: dict,
     contours = get_filtered_contours(config, image)
     targets = []
     for contour in contours:
-        rect = Rect(cv2.minAreaRect(contour))
+        rect = Rect(cv2.boxPoints(cv2.minAreaRect(contour)))
         if check_target(rect, contour, score_thresh, image_size, size_relative_thresh):
             targets.append((contour, rect))
-            # TODO: debug draw
     return targets
 
 

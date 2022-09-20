@@ -2,7 +2,7 @@ import cv2
 import math
 import numpy as np
 
-from rectangle import Rect
+from .rectangle import Rect
 
 # number of contours to consider (chosen by size)
 num_contours = 8
@@ -38,7 +38,7 @@ def aspect_ratio_score(rect: Rect) -> float:
     """
     w = rect.width
     h = rect.height
-    aspect = max(w, h) / min(w, h)
+    aspect = min(w, h) / max(w, h)
 
     return max(1.0 - (abs(aspect - 2.6)) ** ScoringExps.ASPECT, 0.0)
 
@@ -48,7 +48,8 @@ def target_angle_score(rect: Rect) -> float:
     Score a target rectangle based on its angle. Target angles are expected to be in [0, 40]U[140, 180] (i.e. within
     40 degrees of horizontal). This returns 1.0 if this is the case and 0.0 otherwise.
     """
-    if (0.0 < rect.angle < 40.0) or (140.0 < rect.angle < 180):
+
+    if (0.0 < (rect.angle + 90)< 40.0) or (140.0 < (rect.angle + 90) < 180):
         return 1.0
     return 0.0
 
@@ -90,7 +91,7 @@ def check_target(rect: Rect,
     """
     return (
         aspect_ratio_score(rect) +
-        area_coverage_score(rect, contour) +
+        area_coverage_score(rect, contour) + 
         target_angle_score(rect) +
         2.0 * target_size_score(rect, image_size, size_relative_thresh)
     ) / 5.0 > score_thresh

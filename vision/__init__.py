@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import cv2 as cv
 from common import VisionInstance
+from HighGoal import HighGoal
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='2036 vision process.')
@@ -21,7 +22,9 @@ if __name__ == "__main__":
 
     instance = VisionInstance(data)
 
+    # MARK: Where to define layers
     layers = [
+        #HighGoal(instance)
     ]
 
     if sys.platform.startswith('linux'):
