@@ -73,6 +73,7 @@ class RobotContainer {
     //val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
     val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
+    val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
 
     // gate color sensor
     val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
@@ -91,7 +92,9 @@ class RobotContainer {
     private fun configureButtonBindings() {
         val runGateForward = { FixedBallMotorSpeed(gate, { Constants.gateSpeed}) }
         val runGateBackward = { FixedBallMotorSpeed(gate, { -Constants.gateSpeed}) }
-        val runIndexerForward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
+        val runIntakeForward = { FixedBallMotorSpeed(intake, { -Constants.intakeSpeed}) }
+        val runIntakeBackward = { FixedBallMotorSpeed(intake, { Constants.intakeSpeed })}
+        val runIndexerForward = { FixedBallMotorSpeed(indexer, { Constants.indexerSpeed}) }
         val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
 
         val turnToAngleOnDpad = { controller: XboxController ->
@@ -113,10 +116,10 @@ class RobotContainer {
         }
         drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)
         turnToAngleOnDpad(primaryController)
-        JoystickButton(primaryController, kA.value).whenHeld(runGateForward())
-        JoystickButton(primaryController, kB.value).whenHeld(runGateBackward())
+        JoystickButton(primaryController, kA.value).whenHeld(runIntakeForward())
+        JoystickButton(primaryController, kB.value).whenHeld(runIntakeBackward())
         JoystickButton(primaryController, kX.value).whenHeld(runIndexerForward())
-        JoystickButton(primaryController, kY.value).whenHeld(runIndexerBackward())
+        JoystickButton(primaryController, kX.value).whenHeld(runIndexerBackward())
         Trigger({ primaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(fixedSpeedShooter())
     }
 

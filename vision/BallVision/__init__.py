@@ -9,6 +9,7 @@ import sys
 sys.path.append("..")
 from common import VisionLayer
 
+SCORE_THRESHOLD = 0.575
 
 class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
     """Bounding box.
@@ -30,12 +31,12 @@ class BallVision(VisionLayer):
         super().__init__(visionInstance)
         self.visionInstance.log("Loading tflite model for ball vision...")
         try:
-            model_path = "output_tflite_graph_edgetpu.tflite"
+            model_path = "BallVision/four/output_tflite_graph_edgetpu.tflite"
             self.interpreter = tf.lite.Interpreter(model_path, experimental_delegates=[tf.lite.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
         except Exception as e:
             self.visionInstance.log("Failed to create Coral interpreter, switching to unoptimized for ball vision")
-            model_path = "BallVision/output_tflite_graph.tflite"
+            model_path = "BallVision/four/output_tflite_graph.tflite"
             self.interpreter = tf.lite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
 
@@ -49,11 +50,6 @@ class BallVision(VisionLayer):
         NetworkTables.initialize(server="roborio-2036-frc.local")
         self.table = NetworkTables.getTable("ML")
 
-        self.fps_entry = self.table.getEntry("fps")
-        self.angle_entry = self.table.getEntry("targetAngle")
-        self.found_target_entry = self.table.getEntry("foundTarget")
-        self.distance_entry = self.table.getEntry("distanceToBall")
-
         self.ball_data_entry = self.table.getEntry("ballData")
 
         # camera_to_ball_distance_vert = distance between the camera and ball (units_unknown) measured using tape measurer 
@@ -66,10 +62,6 @@ class BallVision(VisionLayer):
         width = box[2] - box[0]
         height = box[3] - box[1]
         return height != 0 and abs(1 - width / height) <= 0.3
-
-    def score_box(self, box):
-        # score boxes by their width
-        return box[2] - box[0]
 
     def run(self):
         super().run()
@@ -85,41 +77,34 @@ class BallVision(VisionLayer):
         best_box = None
         best_box_score = 0
 
-        ballJSON = {} #json containing data about the balls found
-        counter = 0 #id assigned for each of the balls found
-
+        ballJSON = [] #json containing data about the balls found
+        self.log(f"{boxes} | {class_ids} | {scores}")
         for i, box in enumerate(boxes):
-            if scores[i] > 0.4 and self.check_box(box):
+            if scores[i] > SCORE_THRESHOLD and self.check_box(box):
                 class_id = class_ids[i]
 
                 oneBallData = {} #contains data for one individual ball found
 
-                score = self.score_box(box)
-                if score > best_box_score:
-                    best_box_score = score
-                    best_box = box
-                
                 alpha = 80 # deg, half the camera's field of view
                 focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
 
                 center = (box[2] + box[0]) / 2 # screen center x as a proportion
                 offset = (center - 0.5) # units in percentage of image, distance to center
                 target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
-                # super().log('Yaw: ' + str(math.degrees(target_yaw)))
 
                 center = (box[3] + box[1]) / 2 # screen center y as a proportion
                 offset = (center - 0.5) # units in percentage of image, distance to center
                 focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
                 target_pitch = math.atan(offset / focalLen) # plate scale
                 distance = self.get_distance_to_target(target_pitch)
-                # super().log('Pitch:' + str(math.degrees(target_pitch)))
-                # super().log('Distance: ' + str(distance))
 
                 oneBallData['target_yaw'] = target_yaw #adds yaw, distance, pitch to the dictionary containing info for one ball
                 oneBallData['distance'] = distance
                 oneBallData['pitch'] = math.degrees(target_pitch)
+                oneBallData['score'] = float(scores[i])
+                oneBallData['color'] = self.labels[int(class_id)]
 
-                ballJSON[counter] = oneBallData #add data for one individual ball to the json
+                ballJSON.append(oneBallData) #add data for one individual ball to the json
                 ballJSONString = json.dumps(ballJSON) #convert json to string
                 self.log(f"{ballJSONString}")
                 self.ball_data_entry.setString(ballJSONString)
@@ -137,33 +122,6 @@ class BallVision(VisionLayer):
 
         # self.output.putFrame(resized)
         self.debugOutput = resized
-
-        # write result to network tables
-        if best_box is None:
-            self.angle_entry.setDouble(0)
-            self.found_target_entry.setBoolean(False)
-            self.ball_data_entry.setString("{}")
-        else:
-            
-
-            alpha = 80 # deg, half the camera's field of view
-            focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
-
-            center = (best_box[2] + best_box[0]) / 2 # screen center x as a proportion
-            offset = (center - 0.5) # units in percentage of image, distance to center
-            target_yaw = math.atan(offset / focalLen) # plate scale , theta_y
-            self.angle_entry.setDouble(target_yaw)
-            self.found_target_entry.setBoolean(True)
-            super().log('Yaw: ' + str(math.degrees(target_yaw)))
-
-            center = (best_box[3] + best_box[1]) / 2 # screen center y as a proportion
-            offset = (center - 0.5) # units in percentage of image, distance to center
-            focalLen = 1.0 / (2.0 * math.tan(math.radians(alpha) / 2.0)) # constant, focal length of camera
-            target_pitch = math.atan(offset / focalLen) # plate scale
-            distance = self.get_distance_to_target(target_pitch)
-            self.distance_entry.setDouble(distance)
-            super().log('Pitch:' + str(math.degrees(target_pitch)))
-            super().log('Distance: ' + str(distance))
 
 
     def debug(self):
