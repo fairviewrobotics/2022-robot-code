@@ -25,15 +25,16 @@ abstract class ShooterSubsystem: SubsystemBase() {
     // get velocity in rad / s
     abstract fun getVelocity() : Double
 
+
     // set target speed in rad / s.
     // note: this target is only used for getTargetDiff,
     // and should not actually affect the system output.
     // A command may use the target to drive the shooter.
-    fun setTarget(target: Double) {
-        targetSpeed = target
-    }
+//    fun setTarget(target: Double) {
+//        targetSpeed = target
+//    }
     // get the difference between the target and current velocity (in rad/s)
-    fun getTargetDiff(): Double {
+    fun getTargetDiff() : Double {
         return targetSpeed - getVelocity()
     }
 

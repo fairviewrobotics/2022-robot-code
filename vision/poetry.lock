@@ -31,20 +31,17 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
-name = "tflite-runtime"
-version = "2.9.1"
-description = "TensorFlow Lite is for mobile and embedded devices."
+name = "pytorch"
+version = "1.0.2"
+description = ""
 category = "main"
 optional = false
 python-versions = "*"
 
-[package.dependencies]
-numpy = ">=1.19.2"
-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "500964cdf4ae6ca6e3a40d83ced6baf6aa9408c100f35c6b31ef4f7622662680"
+content-hash = "2738084b09b29b16f7f4c88d8cab3e9c0004abc7b0e78d17778925f3b3f2f350"
 
 [metadata.files]
 numpy = [
@@ -90,14 +87,6 @@ pynetworktables = [
     {file = "pynetworktables-2021.0.0-py3-none-any.whl", hash = "sha256:54604b1993515c43890be058263f158c1d168c69bedd802f0de644964cf3840d"},
     {file = "pynetworktables-2021.0.0.tar.gz", hash = "sha256:91167948e66c29d5c90f85f3e249403f4d2ebf11368b93f9b968ef315388c73c"},
 ]
-tflite-runtime = [
-    {file = "tflite_runtime-2.9.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:27cc0d16a943b53ec48c9bf0abceb4752f3233f9f28014c423a4870f8d2ff47e"},
-    {file = "tflite_runtime-2.9.1-cp37-cp37m-manylinux2014_armv7l.whl", hash = "sha256:403f6e7f99be9c340e9a4db3b11724deb65d679aec39e482de843330b1aeefef"},
-    {file = "tflite_runtime-2.9.1-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:144410cde0577a3652f360a12fed903cf975130bccb97dce2a9d323ea07f40a4"},
-    {file = "tflite_runtime-2.9.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:0b7a3d6085026987ebac8b50cee1324f4ffe6f9ac8867780925029e3b19be714"},
-    {file = "tflite_runtime-2.9.1-cp38-cp38-manylinux2014_armv7l.whl", hash = "sha256:b0f1eadc6b101ee0f0177a5450ff5ace922fcbc002788376497c7bf892090986"},
-    {file = "tflite_runtime-2.9.1-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:053a27c5bdac9101eae979fdd90edadecdcc51fa95e8b44449ea0d87534f233c"},
-    {file = "tflite_runtime-2.9.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:0b7a9efc624c1f9816dfb51aca53746e960412ffe8fb6b9a794a6cc491c96294"},
-    {file = "tflite_runtime-2.9.1-cp39-cp39-manylinux2014_armv7l.whl", hash = "sha256:d5ee8608b1b056ad03e4b32f2e066cce64d4cbf9b5135fc8d89161c82ff8e9c3"},
-    {file = "tflite_runtime-2.9.1-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:4d2422ca61879cf3125cc2bd149f0f0c92ab62c4cab7f89849cb0c06a55520e8"},
+pytorch = [
+    {file = "pytorch-1.0.2.tar.gz", hash = "sha256:a6915d372c085a02eceebf59d16cbcc18a2693ac3487a53e3cc8be31fee65079"},
 ]
