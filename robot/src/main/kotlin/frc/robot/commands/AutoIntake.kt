@@ -23,7 +23,6 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
         val instance = NetworkTableInstance.getDefault()
         val table = instance.getTable("ML")
         val entry = table.getEntry("ballvision").toString()
-        println(table)
         val ballvisionJSON = Json.decodeFromString<BallArray>(entry)
 
         var bestBall = ballvisionJSON.balls.get(0)
