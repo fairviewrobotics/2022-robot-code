@@ -51,7 +51,9 @@ def includeDesktopSupport = false
 dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
-    implementation 'com.beust:klaxon:5.6'
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0"
+
+
 
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
