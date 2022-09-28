@@ -60,7 +60,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
     override fun setSpeed(speed: Double) {
         motor.set(speed * speedGain)
     }
-        
+
     /* get current encoder velocity (in rad / s) */
     override fun getVelocity(): Double {
         if(!RobotBase.isSimulation()) {
@@ -72,7 +72,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
 
     override fun setVoltage(voltage: Double) {
         motor.setVoltage(voltage * speedGain)
-        
+
     }
 
     /* set spark to coast. Needed for bang bang */
@@ -97,7 +97,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
             flywheelSimUpper.setInputVoltage(Math.min(motor.appliedOutput, 12.0))
 
             flywheelSimUpper.update(Constants.refreshInterval)
-            
+
             encoderSim?.rate = flywheelSimUpper.angularVelocityRadPerSec
         }
 
