@@ -21,8 +21,7 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
     override fun execute() {
         val team = "Blue" //TODO: Idk how to get our team color, someone fix this
         val instance = NetworkTableInstance.getDefault()
-        val table = instance.getTable("ML")
-        val entry = table.getEntry("ballvision").toString()
+        val entry = instance.getTable("ML").getEntry("ballvision").toString()
         val ballvisionJSON = Json.decodeFromString<BallArray>(entry)
 
         var bestBall = ballvisionJSON.balls.get(0)
@@ -39,6 +38,7 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
             system.motor.setVoltage(12.0)
         } else {
             system.solenoids.set(DoubleSolenoid.Value.kReverse)
+            system.motor.setVoltage(0)
         }
     }
 
