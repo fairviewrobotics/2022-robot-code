@@ -25,16 +25,15 @@ abstract class ShooterSubsystem: SubsystemBase() {
     // get velocity in rad / s
     abstract fun getVelocity() : Double
 
-
     // set target speed in rad / s.
     // note: this target is only used for getTargetDiff,
     // and should not actually affect the system output.
     // A command may use the target to drive the shooter.
-//    fun setTarget(target: Double) {
-//        targetSpeed = target
-//    }
+    fun setTarget(target: Double) {
+        targetSpeed = target
+    }
     // get the difference between the target and current velocity (in rad/s)
-    fun getTargetDiff() : Double {
+    fun getTargetDiff(): Double {
         return targetSpeed - getVelocity()
     }
 
@@ -61,7 +60,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
     override fun setSpeed(speed: Double) {
         motor.set(speed * speedGain)
     }
-        
+
     /* get current encoder velocity (in rad / s) */
     override fun getVelocity(): Double {
         if(!RobotBase.isSimulation()) {
@@ -73,7 +72,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
 
     override fun setVoltage(voltage: Double) {
         motor.setVoltage(voltage * speedGain)
-        
+
     }
 
     /* set spark to coast. Needed for bang bang */
@@ -98,7 +97,7 @@ class SparkShooterSubsystem(val motor: CANSparkMax, val speedGain: Double) : Sho
             flywheelSimUpper.setInputVoltage(Math.min(motor.appliedOutput, 12.0))
 
             flywheelSimUpper.update(Constants.refreshInterval)
-            
+
             encoderSim?.rate = flywheelSimUpper.angularVelocityRadPerSec
         }
 

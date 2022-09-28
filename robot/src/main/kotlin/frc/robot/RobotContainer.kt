@@ -54,6 +54,10 @@ class RobotContainer {
     val motorBackRight = CANSparkMax(Constants.driveBackRightID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
 
+    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
+    val intakeMotor = CANSparkMax(Constants.gateID, CANSparkMaxLowLevel.MotorType.kBrushless) // TODO: Idk if this is the right shit for the intake moter but fuck u
+    val intake = IntakeSubsystem(intakeSolenoid, intakeMotor)
+
     // climber
 //    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
 //    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
@@ -122,6 +126,7 @@ class RobotContainer {
 
     private fun configureAutoOptions() {
         // Drive forwards for 1.5s to clear tarmac [2pt]
+        intake.defaultCommand = AutoIntake(intake) // TODO: Someone else do this shit
     }
 
 

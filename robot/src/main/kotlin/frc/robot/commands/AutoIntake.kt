@@ -14,8 +14,6 @@ class BallArray(val balls: Array<Ball>)
 class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
     init {
         addRequirements(system)
-        system.defaultCommand = this
-
     }
 
     override fun execute() {
@@ -26,7 +24,7 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
 
         var bestBall = ballvisionJSON.balls.get(0)
         for (ball in ballvisionJSON.balls) {
-            if (ball.score > bestBall.score) {
+            if (ball.score > bestBall.score && ball.color.lowercase() == team.lowercase()) {
                 bestBall = ball
             }
 
@@ -38,7 +36,7 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
             system.motor.setVoltage(12.0)
         } else {
             system.solenoids.set(DoubleSolenoid.Value.kReverse)
-            system.motor.setVoltage(0)
+            system.motor.setVoltage(0.0)
         }
     }
 
