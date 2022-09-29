@@ -2,8 +2,8 @@
     "team": 2036,
     "cameras": [
         {
-            "name": "HighGoal",
-            "id": "/dev/video2",
+            "name": "BallVision",
+            "id": 0,
             "props": []
         }
     ]
