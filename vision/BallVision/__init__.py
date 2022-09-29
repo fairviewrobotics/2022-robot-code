@@ -74,9 +74,6 @@ class BallVision(VisionLayer):
         width, height = self.input_size()
         resized = cv2.resize(frame, (width, height))
 
-        best_box = None
-        best_box_score = 0
-
         ballJSON = [] #json containing data about the balls found
         self.log(f"{boxes} | {class_ids} | {scores}")
         for i, box in enumerate(boxes):
@@ -129,6 +126,11 @@ class BallVision(VisionLayer):
 
         cv2.imshow("frame", self.debugOutput)
         cv2.waitKey(1)
+
+    def stream(self):
+        super().stream()
+
+        return ("BallVision", self.debugOutput)
 
     def input_size(self):
         """Returns input image size as (width, height) tuple."""

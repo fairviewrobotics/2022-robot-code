@@ -1,16 +1,15 @@
 [tool.poetry]
-name = "vision"
+name = "visionremotedebug"
 version = "0.1.0"
-description = "Computer vision for 2036"
-authors = ["Fairview Robotics <fairviewrobotics@gmail.com>"]
-license = "MIT"
+description = "For remote debugging of vision"
+authors = ["Tech0tron Roblox <tech0tron.roblox@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-numpy = "1.23.2"
 opencv-python = "^4.6.0"
-pynetworktables = "^2021.0.0"
 imagezmq = "^1.1.1"
+numpy = "^1.23.3"
+
 [tool.poetry.dev-dependencies]
 
 [build-system]

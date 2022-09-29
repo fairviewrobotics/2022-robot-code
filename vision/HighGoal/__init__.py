@@ -42,6 +42,7 @@ highGoalConfig = {
 class HighGoal(VisionLayer):
     def __init__(self, visionInstance: VisionInstance):
         super().__init__(visionInstance)
+        self.output = None
 
     def run(self):
         super().run()
@@ -55,5 +56,8 @@ class HighGoal(VisionLayer):
             x1, y1, x2, y2 = int(rect.box_points[0][0]), int(rect.box_points[0][1]), int(rect.box_points[2][0]), int(rect.box_points[2][1])
             frame = cv.rectangle(frame, (x1, y1), (x2,y2), (10,255,0), 4)
 
-        cv.imshow("Frame", frame)
-        cv.waitKey(1)
+        self.output = frame
+
+    def stream(self):
+        super().stream()
+        return ("HighGoal", self.output)
