@@ -121,7 +121,7 @@ class RobotContainer {
         JoystickButton(primaryController, kB.value).whenHeld(runGateBackward())
         JoystickButton(primaryController, kX.value).whenHeld(runIndexerForward())
         JoystickButton(primaryController, kY.value).whenHeld(runIndexerBackward())
-        Trigger({ primaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(fixedSpeedShooter())
+        Trigger { primaryController.leftTriggerAxis > 0.2 }.whileActiveOnce(fixedSpeedShooter())
     }
 
     private fun configureAutoOptions() {

@@ -32,11 +32,11 @@ class AutoIntake(val system: IntakeSubsystem) : CommandBase() {
 
         if (team.lowercase() == bestBall.color.lowercase() && bestBall.score > 0.3 && bestBall.distance < 1) {
             println("No way this works")
-            system.solenoids.set(DoubleSolenoid.Value.kForward)
-            system.motor.setVoltage(12.0)
+            system.setSolenoidsState(DoubleSolenoid.Value.kForward)
+            system.setMotorVoltage(12.0)
         } else {
-            system.solenoids.set(DoubleSolenoid.Value.kReverse)
-            system.motor.setVoltage(0.0)
+            system.setSolenoidsState(DoubleSolenoid.Value.kReverse)
+            system.setMotorVoltage(0.0)
         }
     }
 

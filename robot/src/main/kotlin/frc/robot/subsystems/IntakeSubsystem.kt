@@ -5,8 +5,8 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorController
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 
 class IntakeSubsystem(val solenoids: DoubleSolenoid, val motor: MotorController): SubsystemBase() {
-    fun setMotorSpeed(speed: Double) {
-        motor.set(speed)
+    fun setMotorVoltage(volts: Double) {
+        motor.setVoltage(volts)
     }
     fun setSolenoidsState(state: DoubleSolenoid.Value) {
         solenoids.set(state)
