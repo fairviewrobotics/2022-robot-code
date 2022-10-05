@@ -1,4 +1,5 @@
 import collections
+from socket import socket
 import cv2
 import math
 import numpy as np
@@ -6,8 +7,9 @@ import tensorflow as tf
 import json
 from networktables import NetworkTables
 import sys
-sys.path.append("..")
-from common import VisionLayer
+import imagezmq
+# sys.path.append("..")
+# from common import VisionLayer
 
 SCORE_THRESHOLD = 0.575
 
@@ -26,16 +28,35 @@ class BBox(collections.namedtuple('BBox', ['xmin', 'ymin', 'xmax', 'ymax'])):
                     ymax=sy * self.ymax)
 
 
-class BallVision(VisionLayer):
-    def __init__(self, visionInstance):
-        super().__init__(visionInstance)
-        self.visionInstance.log("Loading tflite model for ball vision...")
+class BallVision():
+    def __init__(self, camera_name, camera_id):
+
+        #Image ZMQ stuff
+        self.sender = imagezmq.ImageSender(connect_to='tcp://10.20.36.100:5555')
+        self.name = socket.gethostname()
+
+
+        self.log("Loading tflite model for ball vision...")
+        self.cameraSource
+        try:
+            cameraName = camera_name
+            cameraId = camera_id
+            camera = cv.VideoCapture(cameraId)
+
+            if not camera.isOpened():
+                self.error(f"Failed to open camera {cameraName} with id {cameraId}.")
+
+            self.cameraSource = camera
+        except Exception as e:
+            self.error(f"Failed to load camera:\n{cameraName}", e)
+
+        self.log(f'Success! VisionInstance was intialized.')
         try:
             model_path = "BallVision/four/output_tflite_graph_edgetpu.tflite"
             self.interpreter = tf.lite.Interpreter(model_path, experimental_delegates=[tf.lite.load_delegate('libedgetpu.so.1')])
             self.hardware_type = "Coral Edge TPU"
         except Exception as e:
-            self.visionInstance.log("Failed to create Coral interpreter, switching to unoptimized for ball vision")
+            self.log("Failed to create Coral interpreter, switching to unoptimized for ball vision")
             model_path = "BallVision/four/output_tflite_graph.tflite"
             self.interpreter = tf.lite.Interpreter(model_path)
             self.hardware_type = "Unoptimized"
@@ -46,7 +67,7 @@ class BallVision(VisionLayer):
         self.temp_entry = []
 
         # set up network tables
-        self.visionInstance.log("Getting networktables instance for ball vision")
+        self.log("Getting networktables instance for ball vision")
         NetworkTables.initialize(server="roborio-2036-frc.local")
         self.table = NetworkTables.getTable("ML")
 
@@ -64,10 +85,16 @@ class BallVision(VisionLayer):
         return height != 0 and abs(1 - width / height) <= 0.3
 
     def run(self):
-        super().run()
-        
-        frame = self.visionInstance.get("BallVision")
-        
+
+        frame = None
+        camera = "BallVision"
+
+        ret, this_frame = self.cameraSource.read()
+        if not ret:
+            self.error(f"Cannot recieve frame of camera {camera}. Stream end?")
+        else:
+            frame = this_frame
+                
         scale = self.set_input(frame)
         self.interpreter.invoke()
         boxes, class_ids, scores, _, _ = self.get_output(scale)
@@ -118,19 +145,11 @@ class BallVision(VisionLayer):
                 resized = self.label_frame(resized, self.labels[class_id], box, scores[i], width, height, color)
 
         # self.output.putFrame(resized)
-        self.debugOutput = resized
-
-
-    def debug(self):
-        super().debug()
-
-        cv2.imshow("frame", self.debugOutput)
-        cv2.waitKey(1)
+        self.output = resized
 
     def stream(self):
-        super().stream()
-
-        return ("BallVision", self.debugOutput)
+        # imagezmq logic
+        self.sender.send_image(self.name, self.output)
 
     def input_size(self):
         """Returns input image size as (width, height) tuple."""
@@ -206,3 +225,9 @@ class BallVision(VisionLayer):
         # Draw label text
         cv2.putText(frame, label, (xmin, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2)
         return frame
+    
+if __name__ == "main":
+  cameraID = sys.argv[1]
+  ballVision = BallVision("Ball Vision", cameraID)
+  while True:
+    ballVision.run()
