@@ -1,8 +1,7 @@
-import edu.wpi.first.networktables.NetworkTableEntry
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.CommandBase
-import frc.robot.commands.HighGoalVisionNT
+import frc.robot.commands.HighGoalVision
 
 
 /**
@@ -11,7 +10,7 @@ import frc.robot.commands.HighGoalVisionNT
  */
 class CheckVisionOrRumble(val controller: XboxController) : CommandBase() {
     override fun execute() {
-        if (!HighGoalVisionNT.found_target.getBoolean(false)) {
+        if (!HighGoalVision.found_target.getBoolean(false)) {
             controller.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0)
             controller.setRumble(GenericHID.RumbleType.kRightRumble, 1.0)
         }
@@ -23,6 +22,6 @@ class CheckVisionOrRumble(val controller: XboxController) : CommandBase() {
     }
 
     override fun isFinished(): Boolean {
-        return HighGoalVisionNT.found_target.getBoolean(false)
+        return HighGoalVision.found_target.getBoolean(false)
     }
 }

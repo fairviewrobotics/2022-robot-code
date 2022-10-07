@@ -3,7 +3,12 @@
     "cameras": [
         {
             "name": "BallVision",
-            "id": 0,
+            "id": "/dev/video0",
+            "props": []
+        },
+        {
+            "name": "HighGoal",
+            "id": "/dev/video2",
             "props": []
         }
     ]
