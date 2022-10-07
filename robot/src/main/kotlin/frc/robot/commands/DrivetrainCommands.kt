@@ -5,6 +5,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.XboxController
 import edu.wpi.first.wpilibj2.command.CommandBase
 import frc.robot.Constants
@@ -149,29 +150,24 @@ fun DualStickArcadeDrive(drivetrain: DrivetrainSubsystem, controller: XboxContro
     }
 }
 
-class DirectJoystickDrive(val drivetrain: DrivetrainSubsystem,
-                          val controller: XboxController): CommandBase() {
+class PIDTuneDrive(val drivetrain: DrivetrainSubsystem): CommandBase() {
+    var t = 0.0
+    var entry = NetworkTableInstance.getDefault().getTable("pidtunedrive").getEntry("result")
     init {
         addRequirements(drivetrain)
+        drivetrain.resetEncoders()
     }
 
     override fun execute() {
-        /* 2 joystick arcade drive:
-        * Left joystick for faster motion, right joystick for aiming.
-        * Right joystick y is inverted for shooting.
-        * */
-        drivetrain.arcadeDrive(controller.leftY  * Constants.kDrivetrainRegularForwardSpeed, controller.leftX * Constants.kDrivetrainRegularRotationSpeed)
-        /*val inverted = controller.rightBumper
+        drivetrain.tankDriveVolts(12.0,12.0)
+        t += (0.02)
+        val wheelSpeeds = drivetrain.wheelSpeeds
+        entry.setString("${t},${wheelSpeeds.leftMetersPerSecond},${wheelSpeeds.rightMetersPerSecond}")
+    }
 
-        val xPos = controller.rightX
-        val xAdjust = if(xPos < 0) { -sqrt(abs(xPos)) } else { sqrt(xPos) } / 2.4
-        val yAdjust = controller.leftY / 1.5
-
-        if(!inverted) {
-            drivetrain.curvatureDrive(yAdjust, xAdjust)
-        } else {
-            drivetrain.curvatureDrive(-yAdjust, xAdjust)
-        }*/
+    override fun end(interrupted: Boolean) {
+        drivetrain.tankDriveVolts(0.0,0.0)
+        drivetrain.resetEncoders()
     }
 }
 
