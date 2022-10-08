@@ -63,6 +63,7 @@ class CANSparkMaxDrivetrainSubsystem(
         rightMotors.inverted = true
         resetEncoders()
         odometry = DifferentialDriveOdometry(Rotation2d.fromDegrees(heading))
+        
     }
 
     override fun periodic() {

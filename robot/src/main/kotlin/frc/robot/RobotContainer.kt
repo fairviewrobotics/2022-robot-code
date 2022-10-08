@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot
 
-import CheckVisionOrRumble
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX
 import com.kauailabs.navx.frc.AHRS
@@ -12,23 +11,17 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup
 import edu.wpi.first.wpilibj.DoubleSolenoid
 import edu.wpi.first.wpilibj.PneumaticsModuleType
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup
-import edu.wpi.first.wpilibj.DigitalInput
 
 import com.revrobotics.*
-import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds
 import edu.wpi.first.networktables.NetworkTableEntry
 import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.wpilibj2.command.button.POVButton
 import edu.wpi.first.wpilibj.*
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.button.Trigger
 
 import frc.robot.subsystems.*
 import frc.robot.commands.*
-import java.lang.Math.PI
 
 fun newLiveRecord(name: String): NetworkTableEntry {
     val ntInst = NetworkTableInstance.getDefault()
@@ -43,43 +36,26 @@ fun newLiveRecord(name: String): NetworkTableEntry {
  * subsystems, commands, and button mappings) should be declared here.
  */
 class RobotContainer {
-    // Hardware and subsystem initialization
+    // Controllers
     val primaryController = XboxController(0)
     val secondaryController = XboxController(1)
 
-    // drivetrain
+    // Motors, Solenoids, and Hardware Defintiions
     val motorFrontLeft = CANSparkMax(Constants.driveFrontLeftID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val motorBackLeft = CANSparkMax(Constants.driveBackLeftID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val motorFrontRight = CANSparkMax(Constants.driveFrontRightID, CANSparkMaxLowLevel.MotorType.kBrushless)
     val motorBackRight = CANSparkMax(Constants.driveBackRightID, CANSparkMaxLowLevel.MotorType.kBrushless)
-    val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
-
-    // climber
-//    val winchMotor = CANSparkMax(Constants.climbWinchID, CANSparkMaxLowLevel.MotorType.kBrushless)
-//    val winch = WinchSubsystem(winchMotor, DigitalInput(0), DigitalInput(1), true)
-
-//    val climbSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.climbSolenoidID.first,Constants.climbSolenoidID.second)
-//    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
-//    val climbPneumatics = SolenoidSubsystem(climbSolenoid)
-//    val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
-
-    // shooter
-
+    val intakeSolenoid = DoubleSolenoid(PneumaticsModuleType.CTREPCM, Constants.intakeSolenoidID.first, Constants.intakeSolenoidID.second)
     val shooterMotor1 = WPI_TalonFX(Constants.shooterLowID)
     val shooterMotor2  = WPI_TalonFX(Constants.shooterHighID)
+
+    // Subsytem Definitions
+    val drivetrain = CANSparkMaxDrivetrainSubsystem(motorFrontLeft, motorBackLeft, motorFrontRight, motorBackRight, AHRS())
+    val intakePneumatics = SolenoidSubsystem(intakeSolenoid)
     val shooter1 = TalonFXShooterSubsystem(shooterMotor1, 1.0)
     val shooter2 = TalonFXShooterSubsystem(shooterMotor2, 1.0)
-    // intake / indexer / gate
-    //val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
-    val indexer = BallMotorSubsystem(WPI_TalonSRX(Constants.indexerID))
     val gate = BallMotorSubsystem(WPI_TalonSRX(Constants.gateID))
-    val intake = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
-
-    // gate color sensor
-    val colorSensor = ColorSensorV3(I2C.Port.kOnboard)
-
-    // auto command chooser
-    var autoCommandChooser: SendableChooser<Command> = SendableChooser()
+    val intakeIndexer = BallMotorSubsystem(WPI_TalonSRX(Constants.intakeID))
 
     init {
         configureButtonBindings()
@@ -90,49 +66,75 @@ class RobotContainer {
      * Controller ([GenericHID], [XboxController]) mapping.
      */
     private fun configureButtonBindings() {
-        val runGateForward = { FixedBallMotorSpeed(gate, { Constants.gateSpeed}) }
-        val runGateBackward = { FixedBallMotorSpeed(gate, { -Constants.gateSpeed}) }
-        val runIntakeForward = { FixedBallMotorSpeed(intake, { -Constants.intakeSpeed}) }
-        val runIntakeBackward = { FixedBallMotorSpeed(intake, { Constants.intakeSpeed })}
-        val runIndexerForward = { FixedBallMotorSpeed(indexer, { Constants.indexerSpeed}) }
-        val runIndexerBackward = { FixedBallMotorSpeed(indexer, { -Constants.indexerSpeed}) }
+        val runGate = { forward: Boolean ->
+            if (forward) {
+                FixedBallMotorSpeed(gate) { Constants.gateSpeed }
+            } else {
+                FixedBallMotorSpeed(gate) { -Constants.gateSpeed }
+            }
+        }
 
-        val turnToAngleOnDpad = { controller: XboxController ->
-            // D-Pad: Turn to fixed angle
-            for (i in 0 until 8) {
-                val angleDeg = 45 * i
-                POVButton(controller, angleDeg).whenHeld(
-                    TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
+        val runIntakeIndexer = { forward: Boolean ->
+            if (forward) {
+                ParallelCommandGroup(
+                    FixedBallMotorSpeed(intakeIndexer) { Constants.intakeIndexerSpeed },
+                    FixedBallMotorSpeed(gate) { Constants.gateSpeed * .15 }
+                )
+
+            } else {
+                ParallelCommandGroup(
+                    FixedBallMotorSpeed(intakeIndexer) { -Constants.intakeIndexerSpeed },
+                    FixedBallMotorSpeed(gate) { -Constants.gateSpeed * .15 }
                 )
             }
         }
-        
+
+
+        val setIntakePneumatics= { forward: Boolean ->
+            if (forward) {
+                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kForward)
+            } else {
+                PneumaticCommand(intakePneumatics, DoubleSolenoid.Value.kReverse)
+            }
+        }
+
+//        val turnToAngleOnDpad = { controller: XboxController ->
+//            // D-Pad: Turn to fixed angle
+//            for (i in 0 until 8) {
+//                val angleDeg = 45 * i
+//                POVButton(controller, angleDeg).whenHeld(
+//                    TurnToAngle(drivetrain, { angleDeg * PI / 180.0 })
+//                )
+//            }
+//        }
+
         val fixedSpeedShooter = {
             ParallelCommandGroup(
                 DualShooterPID(shooter1, shooter2) { DualShootSpeed(Constants.shooterRadPerS, Constants.shooterAdjustRadPerS) },
-                ShootBallMotor(shooter1, shooter2, gate, indexer),
+                ShootBallMotor(shooter1, shooter2, gate, intakeIndexer),
                 MaintainAngle(drivetrain)
             )
         }
+
         drivetrain.defaultCommand = DualStickArcadeDrive(drivetrain, primaryController)
-        turnToAngleOnDpad(primaryController)
-        JoystickButton(primaryController, kA.value).whenHeld(runIntakeForward())
-        JoystickButton(primaryController, kB.value).whenHeld(runIntakeBackward())
-        JoystickButton(primaryController, kX.value).whenHeld(runIndexerForward())
-        JoystickButton(primaryController, kX.value).whenHeld(runIndexerBackward())
-        Trigger({ primaryController.leftTriggerAxis > 0.2 }).whileActiveOnce(fixedSpeedShooter())
+
+        //turnToAngleOnDpad(primaryController)
+
+        JoystickButton(primaryController, kA.value).whenHeld(runIntakeIndexer(true))
+        JoystickButton(primaryController, kB.value).whenHeld(runIntakeIndexer(false))
+        JoystickButton(primaryController, kX.value).whenHeld(setIntakePneumatics(true))
+        JoystickButton(primaryController, kY.value).whenHeld(setIntakePneumatics(false))
+
+        JoystickButton(secondaryController, kA.value).whenHeld(runIntakeIndexer(true))
+        JoystickButton(secondaryController, kB.value).whenHeld(runIntakeIndexer(false))
+        JoystickButton(secondaryController, kX.value).whenHeld(setIntakePneumatics(true))
+        JoystickButton(secondaryController, kY.value).whenHeld(setIntakePneumatics(false))
+
+
+        Trigger({ primaryController.rightTriggerAxis > 0.2 }).whileActiveOnce(fixedSpeedShooter())
     }
 
-    private fun configureAutoOptions() {
-        // Drive forwards for 1.5s to clear tarmac [2pt]
-    }
-
-
-    /**
-     * Use this to pass the autonomous command to the main [Robot] class.
-     *
-     * @return the command to run in autonomous
-     */
-    val autonomousCommand: Command
-        get() = autoCommandChooser.selected
+    var autoCommandChooser: SendableChooser<Command> = SendableChooser()
+    private fun configureAutoOptions() {}
+    val autonomousCommand: Command get() = autoCommandChooser.selected
 }

@@ -28,8 +28,7 @@ class Constants {
 
         // intake / indexer / gate (on talon each)
         val intakeSolenoidID = Pair(0, 1)
-        val intakeID = 9
-        val indexerID = 7
+        val intakeID = 7
         val gateID = 8
 
         val refreshInterval = 0.02
@@ -129,9 +128,7 @@ class Constants {
         // constants for flywheel LQR
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
 
-        // base top speeds for intake, indexer, and gate
-        val intakeSpeed = 0.75
-        val indexerSpeed = 0.5
+        val intakeIndexerSpeed = 1.0
         val gateSpeed = -0.75
 
 
