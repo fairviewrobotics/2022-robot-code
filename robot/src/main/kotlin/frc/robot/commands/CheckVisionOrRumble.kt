@@ -10,7 +10,7 @@ import frc.robot.commands.HighGoalVision
  */
 class CheckVisionOrRumble(val controller: XboxController) : CommandBase() {
     override fun execute() {
-        if (!HighGoalVision.found_target.getBoolean(false)) {
+        if (!HighGoalVision.found_target()) {
             controller.setRumble(GenericHID.RumbleType.kLeftRumble, 1.0)
             controller.setRumble(GenericHID.RumbleType.kRightRumble, 1.0)
         }
@@ -22,6 +22,6 @@ class CheckVisionOrRumble(val controller: XboxController) : CommandBase() {
     }
 
     override fun isFinished(): Boolean {
-        return HighGoalVision.found_target.getBoolean(false)
+        return HighGoalVision.found_target()
     }
 }

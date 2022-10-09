@@ -20,9 +20,9 @@ class DrivetrainPIDController(val drivetrain: DrivetrainSubsystem) {
         Constants.kDrivetrainPidD)
 
     val rightPID = PIDController(
-        Constants.kDrivetrainPidP,
-        Constants.kDrivetrainPidI,
-        Constants.kDrivetrainPidD)
+        Constants.kDrivetrainPidRightP,
+        Constants.kDrivetrainPidRightI,
+        Constants.kDrivetrainPidRightD)
 
     init {
         leftPID.setIntegratorRange(-0.5, 0.5)
