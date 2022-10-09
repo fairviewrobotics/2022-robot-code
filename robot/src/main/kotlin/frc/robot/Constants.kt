@@ -69,10 +69,13 @@ class Constants {
         val kColorSensorProximityThreshold get() = generateConstantGetter<Double>("kColorSensorProximityThreshold", 100.0)()
 
         // these are used for linear drivetrain velocity control
-        val kDrivetrainPidP  get() = generateConstantGetter<Double>("kDrivetrainPidP", 4.5)()
-        val kDrivetrainPidI get() = generateConstantGetter<Double>("kDrivetrainPidI", 13.5)()
-        val kDrivetrainPidD  get() = generateConstantGetter<Double>("kDrivetrainPidD", 0.0)()
+        val kDrivetrainPidP  get() = 1.0359
+        val kDrivetrainPidI get() = 0.1749
+        val kDrivetrainPidD  get() = 0.0
 
+        val kDrivetrainPidRightP  get() = 1.9039
+        val kDrivetrainPidRightI get() = 0.0924
+        val kDrivetrainPidRightD get() = 0.0
         // values used for drivetrain commands
         val kDrivetrainSlewRateForwardLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateForwardLimit", 15.0)()
         val kDrivetrainSlewRateRotationLimit  get() = generateConstantGetter<Double>("kDrivetrainSlewRateRotationLimit", 10000.0)()
@@ -96,8 +99,8 @@ class Constants {
         val shooterD get() = generateConstantGetter<Double>("shooterD", 0.0)()
 
         // shooter target rpm
-        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRadPerS", 500.0)()
-        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS", 0.0)()
+        val shooterRadPerS get() = generateConstantGetter<Double>("shooterRadPerS", 250.0)()
+        val shooterAdjustRadPerS get() = generateConstantGetter<Double>("shooterAdjustRadPerS",-150.0)()
 
         // distance to assume we are from the center of the target if we don't have a measurement (m)
         val shooterDefaultDist = 3.0
@@ -129,8 +132,7 @@ class Constants {
         val shooterInertia get() = 0.0020521 //  units: kg / m^2
 
         val intakeIndexerSpeed = 1.0
-        val gateSpeed = -0.75
-
+        val gateSpeed = -1.0
 
         private fun onNetworkTablesChange(key: String, value: Double) {
             /** update map **/
