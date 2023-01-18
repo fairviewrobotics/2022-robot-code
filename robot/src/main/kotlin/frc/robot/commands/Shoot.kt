@@ -35,7 +35,7 @@ class ShootBallMotor(
 
     companion object {
         // tolerance (in rad/s) on shooter being at speed
-        val speedTolerance = 7.0
+        val speedTolerance = 15
     }
 
     // number of cycles that we have been at speed for
@@ -89,7 +89,7 @@ class ShootBallMotor(
             // if we can shoot, run the gate
             gate.setSpeed(Constants.gateSpeed)
             indexer.setSpeed(Constants.intakeIndexerSpeed)
-            
+
             // only run the indexer if we've already shot one ball
             // otherwise, running the indexer + gate will advance the second ball to far
             if (belowSpeedOnce) {
@@ -133,7 +133,7 @@ object HighGoalVision {
     }
 
     fun best_target(): PhotonTrackedTarget {
-        return result().bestTarget;
+        return result().bestTarget
     }
     fun found_target(): Boolean {
         return result().hasTargets()
